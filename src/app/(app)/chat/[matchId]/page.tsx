@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 interface Message {
   id: string;
@@ -23,24 +23,10 @@ interface ChatData {
 }
 
 export default function ChatPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="p-12 text-center text-neutral-500">
-          Loading chat...
-        </div>
-      }
-    >
-      <ChatContent />
-    </Suspense>
-  );
-}
-
-function ChatContent() {
+  const { data: session, status: sessionStatus } = useSession();
   const params = useParams();
-  const searchParams = useSearchParams();
   const matchId = params.matchId as string;
-  const ownerId = searchParams.get("ownerId");
+  const ownerId = session?.user?.id;
 
   const [chat, setChat] = useState<ChatData | null>(null);
   const [newMessage, setNewMessage] = useState("");
@@ -49,6 +35,7 @@ function ChatContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (sessionStatus !== "authenticated") return;
     fetch(`/api/chat?matchId=${matchId}`)
       .then((r) => r.json())
       .then((data) => {
@@ -59,7 +46,7 @@ function ChatContent() {
         }
       })
       .catch(() => setError("Failed to load chat"));
-  }, [matchId]);
+  }, [matchId, sessionStatus]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -72,7 +59,7 @@ function ChatContent() {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ matchId, ownerId, content: newMessage.trim() }),
+      body: JSON.stringify({ matchId, content: newMessage.trim() }),
     });
 
     const msg = await res.json();
@@ -81,6 +68,14 @@ function ChatContent() {
       setNewMessage("");
     }
     setSending(false);
+  }
+
+  if (sessionStatus === "loading") {
+    return (
+      <div className="max-w-xl mx-auto p-12 text-center text-neutral-500 text-sm">
+        Loading chat...
+      </div>
+    );
   }
 
   if (error) {
@@ -95,14 +90,6 @@ function ChatContent() {
     return (
       <div className="max-w-xl mx-auto p-12 text-center text-neutral-500 text-sm">
         Loading chat...
-      </div>
-    );
-  }
-
-  if (!ownerId) {
-    return (
-      <div className="max-w-xl mx-auto p-12 text-center text-neutral-500 text-sm">
-        Missing ownerId parameter.
       </div>
     );
   }

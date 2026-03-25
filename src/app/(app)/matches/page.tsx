@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 interface MatchItem {
@@ -22,44 +22,23 @@ interface MatchItem {
 }
 
 export default function MatchesPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="p-12 text-center text-neutral-500">Loading...</div>
-      }
-    >
-      <MatchesContent />
-    </Suspense>
-  );
-}
-
-function MatchesContent() {
-  const searchParams = useSearchParams();
-  const ownerId = searchParams.get("ownerId");
+  const { status } = useSession();
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [tab, setTab] = useState<"active" | "dormant">("active");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!ownerId) return;
-    fetch(`/api/matches?ownerId=${ownerId}`)
+    if (status !== "authenticated") return;
+    fetch("/api/matches")
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) setMatches(data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [ownerId]);
+  }, [status]);
 
-  if (!ownerId) {
-    return (
-      <div className="max-w-xl mx-auto p-12 text-center text-neutral-500 text-sm">
-        Missing ownerId parameter.
-      </div>
-    );
-  }
-
-  if (loading) {
+  if (status === "loading" || loading) {
     return (
       <div className="max-w-xl mx-auto p-12 text-center text-neutral-500 text-sm">
         Loading matches...
@@ -150,7 +129,7 @@ function MatchesContent() {
           <div className="flex gap-3">
             {match.status === "MATCHED" && match.chatId && (
               <Link
-                href={`/chat/${match.matchId}?ownerId=${ownerId}`}
+                href={`/chat/${match.matchId}`}
                 className="inline-block px-5 py-2.5 text-sm font-semibold bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors"
               >
                 Open chat
@@ -158,7 +137,7 @@ function MatchesContent() {
             )}
             {match.status === "PROPOSED" && !match.confirmedByMe && (
               <Link
-                href={`/notify?ownerId=${ownerId}`}
+                href="/notify"
                 className="inline-block px-5 py-2.5 text-sm font-semibold bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors"
               >
                 Review proposal

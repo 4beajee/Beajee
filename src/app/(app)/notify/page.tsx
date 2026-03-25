@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 interface MatchProposal {
   matchId: string;
@@ -19,50 +19,39 @@ interface MatchProposal {
 }
 
 export default function NotifyPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="p-12 text-center text-neutral-500">Loading...</div>
-      }
-    >
-      <NotifyContent />
-    </Suspense>
-  );
-}
-
-function NotifyContent() {
-  const searchParams = useSearchParams();
-  const ownerId = searchParams.get("ownerId");
+  const { status: sessionStatus } = useSession();
   const [matches, setMatches] = useState<MatchProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!ownerId) return;
-    fetch(`/api/matches?ownerId=${ownerId}`)
+    if (sessionStatus !== "authenticated") return;
+    fetch("/api/matches")
       .then((r) => r.json())
       .then((data) => {
-        setMatches(
-          data.filter(
-            (m: MatchProposal) => m.status === "PROPOSED" && !m.confirmedByMe
-          )
-        );
+        if (Array.isArray(data)) {
+          setMatches(
+            data.filter(
+              (m: MatchProposal) => m.status === "PROPOSED" && !m.confirmedByMe
+            )
+          );
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [ownerId]);
+  }, [sessionStatus]);
 
   async function handleAction(matchId: string, action: "confirm" | "dormant") {
     setActionLoading(matchId);
     const res = await fetch("/api/matches", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ matchId, ownerId, action }),
+      body: JSON.stringify({ matchId, action }),
     });
     const result = await res.json();
 
     if (result.status === "MATCHED" && result.chatId) {
-      window.location.href = `/chat/${result.chatId}?ownerId=${ownerId}`;
+      window.location.href = `/chat/${result.chatId}`;
       return;
     }
 
@@ -70,15 +59,7 @@ function NotifyContent() {
     setActionLoading(null);
   }
 
-  if (!ownerId) {
-    return (
-      <div className="max-w-xl mx-auto p-12 text-center text-neutral-500 text-sm">
-        Missing ownerId parameter.
-      </div>
-    );
-  }
-
-  if (loading) {
+  if (sessionStatus === "loading" || loading) {
     return (
       <div className="max-w-xl mx-auto p-12 text-center text-neutral-500 text-sm">
         Loading proposals...

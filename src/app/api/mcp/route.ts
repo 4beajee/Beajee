@@ -8,7 +8,12 @@ import { proposeMatchTool } from "@/lib/mcp/tools/propose-match";
 import { confirmMatchTool } from "@/lib/mcp/tools/confirm-match";
 import { markDormantTool } from "@/lib/mcp/tools/mark-dormant";
 import { getMatchesTool } from "@/lib/mcp/tools/get-matches";
+import { getContextStatusTool } from "@/lib/mcp/tools/get-context-status";
+import { reportChatTool } from "@/lib/mcp/tools/report-chat";
+import { blockUserTool } from "@/lib/mcp/tools/block-user";
+import { archiveChatTool } from "@/lib/mcp/tools/archive-chat";
 import { authenticateAgent } from "@/lib/mcp/auth";
+import { rateLimit } from "@/lib/rate-limit";
 
 const tools = [
   publishContextTool,
@@ -20,10 +25,17 @@ const tools = [
   confirmMatchTool,
   markDormantTool,
   getMatchesTool,
+  getContextStatusTool,
+  reportChatTool,
+  blockUserTool,
+  archiveChatTool,
 ];
 
 // JSON-RPC 2.0 handler for MCP protocol
 export async function POST(request: NextRequest) {
+  const rateLimited = rateLimit(request, { maxRequests: 60, windowMs: 60_000, keyPrefix: "mcp" });
+  if (rateLimited) return rateLimited;
+
   try {
     // Authenticate via API key in Authorization header
     const authHeader = request.headers.get("authorization");
@@ -118,7 +130,10 @@ export async function POST(request: NextRequest) {
       }
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message =
+      process.env.NODE_ENV === "development"
+        ? (error instanceof Error ? error.message : String(error))
+        : "Internal server error";
     return NextResponse.json(
       { jsonrpc: "2.0", error: { code: -32603, message }, id: null },
       { status: 500 }

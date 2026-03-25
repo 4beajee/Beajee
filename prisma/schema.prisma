@@ -11,17 +11,55 @@ datasource db {
 }
 
 model Owner {
-  id             String   @id @default(cuid())
-  email          String   @unique
-  name           String?
-  networkingGoal String?  @map("networking_goal") // nullable — заполняется на onboarding
-  privacyConsent Boolean  @default(false) @map("privacy_consent")
-  excludedTopics String[] @default([]) @map("excluded_topics")
-  onboarded      Boolean  @default(false)         // прошёл ли онбординг
-  createdAt      DateTime @default(now()) @map("created_at")
-  agent          Agent?
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String?
+  passwordHash    String?   @map("password_hash")
+  emailVerified   DateTime? @map("email_verified")
+  image           String?
+  networkingGoal  String?   @map("networking_goal")
+  privacyConsent  Boolean   @default(false) @map("privacy_consent")
+  researchConsent Boolean   @default(false) @map("research_consent") // Purpose B — separate GDPR basis
+  excludedTopics  String[]  @default([]) @map("excluded_topics")
+  onboarded       Boolean   @default(false)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  agent           Agent?
+  accounts        Account[]
+  consentLogs     ConsentLog[]
+  blockedUsers    Block[]   @relation("Blocker")
+  blockedBy       Block[]   @relation("Blocked")
+  reports         Report[]
 
   @@map("owners")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user Owner @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
 }
 
 model Agent {
@@ -34,10 +72,13 @@ model Agent {
   createdAt    DateTime @default(now()) @map("created_at")
   lastActiveAt DateTime @updatedAt @map("last_active_at")
 
+  displayName  String?  @map("display_name")  // public name for activity feed
+
   context  AgentContext?
   beacons  Beacon[]
   matchesAsA Match[] @relation("AgentA")
   matchesAsB Match[] @relation("AgentB")
+  negotiationLogs NegotiationLog[]
 
   @@map("agents")
 }
@@ -90,13 +131,16 @@ model Match {
   status         MatchStatus @default(NEGOTIATING)
   confirmedByA   Boolean     @default(false) @map("confirmed_by_a")
   confirmedByB   Boolean     @default(false) @map("confirmed_by_b")
+  isPublic       Boolean     @default(true) @map("is_public")
 
   createdAt      DateTime    @default(now()) @map("created_at")
   proposedAt     DateTime?   @map("proposed_at")
   matchedAt      DateTime?   @map("matched_at")
 
   chat           Chat?
+  negotiationLogs NegotiationLog[]
 
+  @@unique([agentAId, agentBId])
   @@map("matches")
 }
 
@@ -109,13 +153,21 @@ enum MatchStatus {
 }
 
 model Chat {
-  id        String    @id @default(cuid())
-  matchId   String    @unique @map("match_id")
-  match     Match     @relation(fields: [matchId], references: [id])
-  createdAt DateTime  @default(now()) @map("created_at")
+  id        String     @id @default(cuid())
+  matchId   String     @unique @map("match_id")
+  match     Match      @relation(fields: [matchId], references: [id])
+  status    ChatStatus @default(OPEN)
+  createdAt DateTime   @default(now()) @map("created_at")
   messages  Message[]
+  reports   Report[]
 
   @@map("chats")
+}
+
+enum ChatStatus {
+  OPEN
+  ARCHIVED
+  BLOCKED
 }
 
 model Message {
@@ -127,4 +179,55 @@ model Message {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("messages")
+}
+
+model NegotiationLog {
+  id        String   @id @default(cuid())
+  matchId   String   @map("match_id")
+  match     Match    @relation(fields: [matchId], references: [id])
+  agentId   String   @map("agent_id")
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  role      String   // "initiator" | "responder"
+  type      String   // "reasoning" | "proposal" | "evaluation" | "agreement" | "decline"
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([matchId])
+  @@map("negotiation_logs")
+}
+
+model ConsentLog {
+  id          String    @id @default(cuid())
+  ownerId     String    @map("owner_id")
+  owner       Owner     @relation(fields: [ownerId], references: [id])
+  purpose     String    // "A" (networking) | "B" (research)
+  consentedAt DateTime  @default(now()) @map("consented_at")
+  withdrawnAt DateTime? @map("withdrawn_at")
+
+  @@index([ownerId])
+  @@map("consent_logs")
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String   @map("blocker_id")
+  blocker   Owner    @relation("Blocker", fields: [blockerId], references: [id])
+  blockedId String   @map("blocked_id")
+  blocked   Owner    @relation("Blocked", fields: [blockedId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([blockerId, blockedId])
+  @@map("blocks")
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  chatId     String   @map("chat_id")
+  chat       Chat     @relation(fields: [chatId], references: [id])
+  reporterId String   @map("reporter_id")
+  reporter   Owner    @relation(fields: [reporterId], references: [id])
+  reason     String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("reports")
 }

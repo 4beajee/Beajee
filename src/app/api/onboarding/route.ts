@@ -1,57 +1,71 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import CryptoJS from "crypto-js";
+import { getAuthenticatedOwner } from "@/lib/auth";
+import { safeErrorResponse } from "@/lib/api-error";
+import { rateLimit } from "@/lib/rate-limit";
+import { OnboardingSchema } from "@/types/onboarding";
+import { ZodError } from "zod";
+import crypto from "crypto";
+import { sendTelegramNotification } from "@/lib/services/telegram";
 
 export async function POST(request: NextRequest) {
+  const rateLimited = rateLimit(request, { maxRequests: 5, windowMs: 60_000, keyPrefix: "onboarding" });
+  if (rateLimited) return rateLimited;
+
+  const auth = await getAuthenticatedOwner();
+  if (!auth) {
+    return NextResponse.json({ error: "Unauthorized — please log in first" }, { status: 401 });
+  }
+
   try {
-    const body = await request.json();
-    const { email, name, networkingGoal, privacyConsent, excludedTopics } = body;
-
-    if (!email || !networkingGoal) {
-      return NextResponse.json(
-        { error: "email and networkingGoal are required" },
-        { status: 400 }
-      );
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    if (!privacyConsent) {
-      return NextResponse.json(
-        { error: "Privacy consent is required to use Gennety" },
-        { status: 400 }
-      );
+    let validated;
+    try {
+      validated = OnboardingSchema.parse(body);
+    } catch (e) {
+      if (e instanceof ZodError) {
+        const firstError = e.issues[0]?.message ?? "Invalid input";
+        return NextResponse.json({ error: firstError }, { status: 400 });
+      }
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const validGoals = ["partnership", "collaboration", "mentor", "peer"];
-    if (!validGoals.includes(networkingGoal)) {
-      return NextResponse.json(
-        { error: `networkingGoal must be one of: ${validGoals.join(", ")}` },
-        { status: 400 }
-      );
-    }
+    const { networkingGoal, privacyConsent, researchConsent, excludedTopics } = validated;
 
-    // Create or update owner
-    const owner = await prisma.owner.upsert({
-      where: { email },
-      update: {
-        name,
+    // Update existing owner with onboarding data
+    const owner = await prisma.owner.update({
+      where: { id: auth.ownerId },
+      data: {
         networkingGoal,
         privacyConsent,
-        excludedTopics: excludedTopics ?? [],
-        onboarded: true,
-      },
-      create: {
-        email,
-        name,
-        networkingGoal,
-        privacyConsent,
+        researchConsent: researchConsent ?? false,
         excludedTopics: excludedTopics ?? [],
         onboarded: true,
       },
     });
 
+    // Immutable consent log — Purpose A (networking)
+    await prisma.consentLog.create({
+      data: { ownerId: owner.id, purpose: "A" },
+    });
+
+    // Purpose B (research) — only if consented
+    if (researchConsent) {
+      await prisma.consentLog.create({
+        data: { ownerId: owner.id, purpose: "B" },
+      });
+    }
+
     // Generate agent credentials
-    const agentId = `agent_${(name ?? email.split("@")[0]).toLowerCase().replace(/\s+/g, "_")}_${Date.now().toString(36)}`;
-    const apiKey = `gny_${CryptoJS.lib.WordArray.random(32).toString()}`;
+    const nameSlug = (owner.name ?? owner.email.split("@")[0]).toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
+    const agentId = `agent_${nameSlug}_${Date.now().toString(36)}`;
+    const apiKey = `gny_${crypto.randomBytes(32).toString("hex")}`;
 
     // Create agent if not exists
     let agent = await prisma.agent.findUnique({
@@ -69,6 +83,34 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Telegram alert — fire-and-forget
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      request.headers.get("x-real-ip") ??
+      "unknown";
+    const geo = [
+      request.headers.get("x-vercel-ip-city"),
+      request.headers.get("x-vercel-ip-country-region"),
+      request.headers.get("x-vercel-ip-country"),
+    ].filter(Boolean).join(", ");
+
+    const tgLines = [
+      `<b>New Onboarding</b>`,
+      ``,
+      `Name: ${owner.name ?? "—"}`,
+      `Email: <code>${owner.email}</code>`,
+      `Goal: ${networkingGoal}`,
+      `Privacy consent: ${privacyConsent ? "Yes" : "No"}`,
+      `Research consent: ${researchConsent ? "Yes" : "No"}`,
+      `Excluded topics: ${excludedTopics?.length ? excludedTopics.join(", ") : "none"}`,
+      ``,
+      `IP: <code>${ip}</code>`,
+      geo ? `Location: ${geo}` : null,
+      `Agent: <code>${agent.agentId}</code>`,
+    ].filter((l): l is string => l !== null);
+
+    sendTelegramNotification(tgLines.join("\n")).catch(() => {});
+
     return NextResponse.json({
       owner: {
         id: owner.id,
@@ -83,7 +125,6 @@ export async function POST(request: NextRequest) {
       soulMdEndpoint: `/api/soul/${agent.agentId}`,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return safeErrorResponse(error, "Failed to complete onboarding");
   }
 }

@@ -160,11 +160,13 @@ One message. One specific reason. One question.
 
 ## Privacy rules — always enforce
 
-- Never publish sensitive categories excluded by owner during onboarding
+### Excluded sensitive topics
+[excluded_topics]
+
+- Never extract, publish, or mention content from excluded topics above — in context snapshots, negotiations, match proposals, or any other output
 - Never share owner's full MEMORY.md with any other agent
 - Only share the published context snapshot in negotiations
-- If MEMORY.md contains health, financial, or personal relationship content
-  and owner excluded these categories → they never appear in any output
+- If MEMORY.md contains content related to any excluded topic → skip it silently, do not acknowledge its existence
 
 ---
 

@@ -5,7 +5,8 @@ export const negotiateTool = {
   description:
     "Accept or decline a negotiation. When accepting, provide the overlap summary " +
     "(what the two owners have in common) and framing for your owner (how to present " +
-    "the introduction to them). Both agents must accept before a proposal can be made.",
+    "the introduction to them). Both agents must accept before a proposal can be made. " +
+    "You MUST provide an evaluation explaining why you accept or decline.",
   inputSchema: {
     type: "object" as const,
     properties: {
@@ -34,22 +35,30 @@ export const negotiateTool = {
           "How to present this introduction to YOUR owner. Be specific: " +
           '"Alex solves X from the product side. You solve X from the infra side."',
       },
+      evaluation: {
+        type: "string",
+        description:
+          "Your evaluation of this match proposal. Explain why you accept or decline. " +
+          "This will be shown publicly in the activity feed.",
+      },
     },
-    required: ["match_id", "agent_id", "decision"],
+    required: ["match_id", "agent_id", "decision", "evaluation"],
   },
   handler: async (args: {
     match_id: string;
     agent_id: string;
     decision: "accept" | "decline";
-    overlap_summary?: string;
-    framing_for_owner?: string;
+    overlap_summary: string;
+    framing_for_owner: string;
+    evaluation: string;
   }) => {
     const result = await negotiate(
       args.match_id,
       args.agent_id,
       args.decision,
       args.overlap_summary,
-      args.framing_for_owner
+      args.framing_for_owner,
+      args.evaluation
     );
     return {
       content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],

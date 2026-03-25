@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { sendMatchProposalEmail } from "@/lib/services/notification";
+import { createChatWithOpeningMessages } from "@/lib/services/chat";
 
 /**
  * NegotiationFSM — state machine for agent-to-agent match negotiation
@@ -18,8 +19,13 @@ import { sendMatchProposalEmail } from "@/lib/services/notification";
 
 export async function initiateNegotiation(
   initiatorAgentId: string, // external agent_id like "agent_arlan_001"
-  targetAgentId: string // external agent_id of the other agent
+  targetAgentId: string, // external agent_id of the other agent
+  reasoning?: string // why the initiator thinks this match is valuable
 ) {
+  if (initiatorAgentId === targetAgentId) {
+    throw new Error("Cannot initiate negotiation with yourself");
+  }
+
   const agentA = await prisma.agent.findUnique({
     where: { agentId: initiatorAgentId },
     include: { context: true, owner: true },
@@ -34,13 +40,15 @@ export async function initiateNegotiation(
   if (!agentB) throw new Error(`Agent not found: ${targetAgentId}`);
   if (!agentB.context) throw new Error(`Agent has no context: ${targetAgentId}`);
 
+  // Normalize agent pair order for unique constraint
+  const [normalizedAId, normalizedBId] =
+    agentA.id < agentB.id ? [agentA.id, agentB.id] : [agentB.id, agentA.id];
+
   // Check for existing active negotiation between these two agents
   const existing = await prisma.match.findFirst({
     where: {
-      OR: [
-        { agentAId: agentA.id, agentBId: agentB.id },
-        { agentAId: agentB.id, agentBId: agentA.id },
-      ],
+      agentAId: normalizedAId,
+      agentBId: normalizedBId,
       status: { in: ["NEGOTIATING", "PROPOSED", "MATCHED"] },
     },
   });
@@ -56,14 +64,27 @@ export async function initiateNegotiation(
 
   const match = await prisma.match.create({
     data: {
-      agentAId: agentA.id,
-      agentBId: agentB.id,
+      agentAId: normalizedAId,
+      agentBId: normalizedBId,
       overlapSummary: "",
       framingForA: "",
       framingForB: "",
       status: "NEGOTIATING",
     },
   });
+
+  // Log reasoning step if provided
+  if (reasoning) {
+    await prisma.negotiationLog.create({
+      data: {
+        matchId: match.id,
+        agentId: agentA.id,
+        role: "initiator",
+        type: "reasoning",
+        content: reasoning,
+      },
+    });
+  }
 
   return {
     matchId: match.id,
@@ -91,7 +112,8 @@ export async function negotiate(
   agentExternalId: string,
   decision: "accept" | "decline",
   overlapSummary?: string,
-  framingForOwner?: string
+  framingForOwner?: string,
+  evaluation?: string // agent's evaluation of the match proposal
 ) {
   const match = await prisma.match.findUnique({
     where: { id: matchId },
@@ -120,6 +142,18 @@ export async function negotiate(
       where: { id: matchId },
       data: { status: "DECLINED" },
     });
+
+    // Log decline
+    await prisma.negotiationLog.create({
+      data: {
+        matchId,
+        agentId: agent.id,
+        role: isAgentA ? "initiator" : "responder",
+        type: "decline",
+        content: evaluation || "Declined without explanation.",
+      },
+    });
+
     return { matchId, status: "DECLINED", message: "Negotiation declined" };
   }
 
@@ -133,6 +167,32 @@ export async function negotiate(
     where: { id: matchId },
     data: updateData,
   });
+
+  // Log evaluation step
+  if (evaluation) {
+    await prisma.negotiationLog.create({
+      data: {
+        matchId,
+        agentId: agent.id,
+        role: isAgentA ? "initiator" : "responder",
+        type: "evaluation",
+        content: evaluation,
+      },
+    });
+  }
+
+  // Log proposal step (overlap + framing provided = concrete proposal)
+  if (overlapSummary && framingForOwner) {
+    await prisma.negotiationLog.create({
+      data: {
+        matchId,
+        agentId: agent.id,
+        role: isAgentA ? "initiator" : "responder",
+        type: "proposal",
+        content: `Overlap: ${overlapSummary}\n\nFraming for owner: ${framingForOwner}`,
+      },
+    });
+  }
 
   // Fetch updated match to check state
   const updated = await prisma.match.findUnique({ where: { id: matchId } });
@@ -183,6 +243,17 @@ export async function proposeMatch(matchId: string) {
     data: {
       status: "PROPOSED",
       proposedAt: new Date(),
+    },
+  });
+
+  // Log agreement step
+  await prisma.negotiationLog.create({
+    data: {
+      matchId,
+      agentId: match.agentAId,
+      role: "initiator",
+      type: "agreement",
+      content: `Mutual agreement reached. Both agents confirmed real value.\n\nOverlap: ${match.overlapSummary}\n\nProposal sent to both owners.`,
     },
   });
 
@@ -260,25 +331,7 @@ export async function confirmMatch(matchId: string, ownerId: string) {
       data: { status: "MATCHED", matchedAt: new Date() },
     });
 
-    const chat = await prisma.chat.create({
-      data: {
-        matchId,
-        messages: {
-          createMany: {
-            data: [
-              {
-                fromOwner: "agent_a",
-                content: `Here's why you should talk: ${match.overlapSummary}\n\n${match.framingForA}`,
-              },
-              {
-                fromOwner: "agent_b",
-                content: `Here's why you should talk: ${match.overlapSummary}\n\n${match.framingForB}`,
-              },
-            ],
-          },
-        },
-      },
-    });
+    const chat = await createChatWithOpeningMessages(matchId);
 
     return {
       matchId,

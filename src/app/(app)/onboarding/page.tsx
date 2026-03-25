@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 
-type Step = "goal" | "consent" | "sensitive" | "complete";
+type Step = "goal" | "consent" | "sensitive" | "research" | "complete";
 type Goal = "partnership" | "collaboration" | "mentor" | "peer";
 
 const GOALS: { value: Goal; label: string; description: string }[] = [
@@ -37,11 +38,11 @@ const SENSITIVE_CATEGORIES = [
 ];
 
 export default function OnboardingPage() {
+  const { data: session, update: updateSession } = useSession();
   const [step, setStep] = useState<Step>("goal");
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const [excludedTopics, setExcludedTopics] = useState<string[]>([]);
+  const [researchConsent, setResearchConsent] = useState(false);
   const [result, setResult] = useState<{
     owner: { id: string };
     agent: { agentId: string; apiKey: string };
@@ -74,7 +75,7 @@ export default function OnboardingPage() {
   };
 
   const handleComplete = async () => {
-    if (!selectedGoal || !email) return;
+    if (!selectedGoal) return;
     setLoading(true);
     setError(null);
 
@@ -83,16 +84,18 @@ export default function OnboardingPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email,
-          name: name || undefined,
           networkingGoal: selectedGoal,
           privacyConsent: true,
+          researchConsent,
           excludedTopics,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+
+      // Update session to reflect onboarded status
+      await updateSession({ onboarded: true });
 
       setResult(data);
       setStep("complete");
@@ -121,7 +124,7 @@ export default function OnboardingPage() {
   };
 
   const stepNumber =
-    step === "goal" ? 1 : step === "consent" ? 2 : step === "sensitive" ? 3 : 4;
+    step === "goal" ? 1 : step === "consent" ? 2 : step === "sensitive" ? 3 : step === "research" ? 4 : 5;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
@@ -137,12 +140,17 @@ export default function OnboardingPage() {
           <p className="mt-2 text-sm text-neutral-500">
             Your agent finds the right people. You just say yes.
           </p>
+          {session?.user?.email && (
+            <p className="mt-1 text-xs text-neutral-600">
+              Signed in as {session.user.email}
+            </p>
+          )}
         </div>
 
         {/* Progress */}
         {step !== "complete" && (
           <div className="flex items-center gap-2 justify-center mb-8">
-            {[1, 2, 3].map((s) => (
+            {[1, 2, 3, 4].map((s) => (
               <div
                 key={s}
                 className={`h-1 w-12 rounded-full transition-colors ${
@@ -178,7 +186,7 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Step 2: Consent + Email/Name */}
+        {/* Step 2: Consent */}
         {step === "consent" && (
           <div>
             <h2 className="text-lg font-medium text-neutral-200 mb-4 text-center">
@@ -197,28 +205,10 @@ export default function OnboardingPage() {
               </p>
             </div>
 
-            <div className="space-y-3 mb-6">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-3 rounded-lg bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-600 text-sm focus:outline-none focus:border-neutral-600"
-              />
-              <input
-                type="text"
-                placeholder="Your name (optional)"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full p-3 rounded-lg bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-600 text-sm focus:outline-none focus:border-neutral-600"
-              />
-            </div>
-
             <div className="flex gap-3">
               <button
                 onClick={handleConsentYes}
-                disabled={!email}
-                className="flex-1 py-3 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex-1 py-3 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition-colors"
               >
                 Yes, I consent
               </button>
@@ -284,6 +274,67 @@ export default function OnboardingPage() {
             </div>
 
             <button
+              onClick={() => setStep("research")}
+              className="w-full py-3 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition-colors"
+            >
+              Continue
+            </button>
+
+            <button
+              onClick={() => setStep("consent")}
+              className="mt-4 w-full text-xs text-neutral-600 hover:text-neutral-400"
+            >
+              Back
+            </button>
+          </div>
+        )}
+
+        {/* Step 4: Research Consent (Purpose B — optional) */}
+        {step === "research" && (
+          <div>
+            <h2 className="text-lg font-medium text-neutral-200 mb-2 text-center">
+              Research consent
+            </h2>
+            <p className="text-sm text-neutral-500 mb-6 text-center">
+              This is completely optional and does not affect how Gennety works for you.
+            </p>
+
+            <div className="p-5 rounded-lg border border-neutral-800 mb-6">
+              <p className="text-sm text-neutral-300 leading-relaxed">
+                May we use anonymised patterns from your activity to improve our
+                matching algorithm and conduct research on human connection?
+              </p>
+              <p className="text-xs text-neutral-500 mt-3">
+                This is a separate consent under GDPR (Purpose B). Your personal
+                data is never used — only anonymised, aggregated patterns. You can
+                withdraw this consent at any time.
+              </p>
+            </div>
+
+            <div className="flex gap-3 mb-6">
+              <button
+                onClick={() => setResearchConsent(true)}
+                className={`flex-1 py-3 rounded-lg border text-sm font-medium transition-all ${
+                  researchConsent
+                    ? "border-white bg-white text-black"
+                    : "border-neutral-700 text-neutral-400 hover:border-neutral-500"
+                }`}
+              >
+                Yes, I consent
+              </button>
+              <button
+                onClick={() => setResearchConsent(false)}
+                className={`flex-1 py-3 rounded-lg border text-sm font-medium transition-all ${
+                  !researchConsent
+                    ? "border-white bg-white text-black"
+                    : "border-neutral-700 text-neutral-400 hover:border-neutral-500"
+                }`}
+              >
+                No thanks
+              </button>
+            </div>
+
+            <button
               onClick={handleComplete}
               disabled={loading}
               className="w-full py-3 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition-colors disabled:opacity-50"
@@ -296,7 +347,7 @@ export default function OnboardingPage() {
             )}
 
             <button
-              onClick={() => setStep("consent")}
+              onClick={() => setStep("sensitive")}
               className="mt-4 w-full text-xs text-neutral-600 hover:text-neutral-400"
             >
               Back
@@ -304,7 +355,7 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Step 4: Complete — SOUL.md download */}
+        {/* Step 5: Complete — SOUL.md download */}
         {step === "complete" && result && (
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-green-950/50 border border-green-800/50 flex items-center justify-center">
@@ -375,7 +426,7 @@ export default function OnboardingPage() {
             )}
 
             <Link
-              href={`/matches?ownerId=${result.owner.id}`}
+              href="/matches"
               className="inline-block text-sm text-neutral-500 hover:text-white transition-colors"
             >
               Go to matches &rarr;

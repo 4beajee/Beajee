@@ -1,18 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getAuthenticatedOwner } from "@/lib/auth";
+import { safeErrorResponse } from "@/lib/api-error";
+import { MatchActionSchema } from "@/types/match-action";
+import { ZodError } from "zod";
 import { confirmMatch, markDormant } from "@/lib/services/negotiation";
 
-// GET /api/matches?ownerId=xxx — get all proposed/matched/dormant matches for an owner
-export async function GET(request: NextRequest) {
-  const ownerId = request.nextUrl.searchParams.get("ownerId");
-  if (!ownerId) {
-    return NextResponse.json({ error: "ownerId is required" }, { status: 400 });
+// GET /api/matches — get all proposed/matched/dormant matches for an owner (requires auth)
+export async function GET() {
+  const auth = await getAuthenticatedOwner();
+  if (!auth) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const owner = await prisma.owner.findUnique({
-    where: { id: ownerId },
-    include: { agent: true },
-  });
+  const ownerId = auth.ownerId;
+
+  let owner;
+  try {
+    owner = await prisma.owner.findUnique({
+      where: { id: ownerId },
+      include: { agent: true },
+    });
+  } catch {
+    return NextResponse.json({ error: "Owner not found" }, { status: 404 });
+  }
   if (!owner || !owner.agent) {
     return NextResponse.json({ error: "Owner or agent not found" }, { status: 404 });
   }
@@ -57,27 +68,43 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(result);
 }
 
-// POST /api/matches — confirm or mark dormant
+// POST /api/matches — confirm or mark dormant (requires auth)
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { matchId, ownerId, action } = body;
-
-  if (!matchId || !ownerId || !action) {
-    return NextResponse.json({ error: "matchId, ownerId, and action are required" }, { status: 400 });
+  const auth = await getAuthenticatedOwner();
+  if (!auth) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  let validated;
+  try {
+    validated = MatchActionSchema.parse(body);
+  } catch (e) {
+    if (e instanceof ZodError) {
+      const firstError = e.issues[0]?.message ?? "Invalid input";
+      return NextResponse.json({ error: firstError }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+
+  const matchId = validated.matchId;
+  const action = validated.action;
+  const ownerId = auth.ownerId;
 
   try {
     if (action === "confirm") {
       const result = await confirmMatch(matchId, ownerId);
       return NextResponse.json(result);
-    } else if (action === "dormant") {
+    } else {
       const result = await markDormant(matchId, ownerId);
       return NextResponse.json(result);
-    } else {
-      return NextResponse.json({ error: "action must be 'confirm' or 'dormant'" }, { status: 400 });
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: message }, { status: 400 });
+    return safeErrorResponse(error, "Match action failed", 400);
   }
 }

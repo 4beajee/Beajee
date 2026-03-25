@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { generateEmbedding, contextToEmbeddingText } from "@/lib/embeddings";
 import { ContextSchema } from "@/types/context";
-import CryptoJS from "crypto-js";
+import crypto from "crypto";
 
 interface RawContextInput {
   current_work: string;
@@ -14,7 +14,7 @@ interface RawContextInput {
 }
 
 function hashContext(context: RawContextInput): string {
-  return CryptoJS.SHA256(JSON.stringify(context)).toString();
+  return crypto.createHash("sha256").update(JSON.stringify(context)).digest("hex");
 }
 
 export async function publishContext(agentId: string, rawContext: RawContextInput) {

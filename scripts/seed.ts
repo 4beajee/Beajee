@@ -1,12 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 import OpenAI from "openai";
-import CryptoJS from "crypto-js";
+import crypto from "crypto";
 
 const prisma = new PrismaClient();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function generateApiKey(): string {
-  return `gny_${CryptoJS.lib.WordArray.random(32).toString()}`;
+  return `gny_${crypto.randomBytes(32).toString("hex")}`;
 }
 
 async function generateEmbedding(text: string): Promise<number[]> {
@@ -562,7 +562,7 @@ async function seed() {
     // Generate embedding
     const embeddingText = contextToText(a.context);
     const embedding = await generateEmbedding(embeddingText);
-    const hash = CryptoJS.SHA256(JSON.stringify(a.context)).toString();
+    const hash = crypto.createHash("sha256").update(JSON.stringify(a.context)).digest("hex");
 
     // Insert context with embedding using raw SQL
     await prisma.$executeRaw`

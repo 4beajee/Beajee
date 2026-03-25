@@ -4,6 +4,14 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 interface MatchNotification {
   ownerEmail: string;
   ownerName: string | null;
@@ -28,7 +36,7 @@ export async function sendMatchProposalEmail(notification: MatchNotification) {
     const { data, error } = await resend.emails.send({
       from: "Gennety <notifications@gennety.com>",
       to: notification.ownerEmail,
-      subject: `Your agent found someone: ${notification.otherPersonName ?? "a new connection"}`,
+      subject: `Your agent found someone: ${escapeHtml(notification.otherPersonName ?? "a new connection")}`,
       html: `
         <div style="font-family: system-ui, sans-serif; max-width: 500px; margin: 0 auto; padding: 40px 20px;">
           <h2 style="font-size: 20px; color: #111; margin-bottom: 24px;">
@@ -36,7 +44,7 @@ export async function sendMatchProposalEmail(notification: MatchNotification) {
           </h2>
           <div style="background: #f7f7f7; border-left: 3px solid #111; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
             <p style="margin: 0; color: #333; line-height: 1.6;">
-              ${notification.framing}
+              ${escapeHtml(notification.framing)}
             </p>
           </div>
           <a href="${notifyUrl}" style="display: inline-block; padding: 12px 24px; background: #111; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">
