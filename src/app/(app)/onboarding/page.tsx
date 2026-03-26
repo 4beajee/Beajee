@@ -38,7 +38,7 @@ const SENSITIVE_CATEGORIES = [
 ];
 
 export default function OnboardingPage() {
-  const { data: session, update: updateSession } = useSession();
+  const { data: session } = useSession();
   const [step, setStep] = useState<Step>("goal");
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [excludedTopics, setExcludedTopics] = useState<string[]>([]);
@@ -100,8 +100,13 @@ export default function OnboardingPage() {
       }
       if (!res.ok) throw new Error(data.error);
 
-      // Update session to reflect onboarded status
-      await updateSession({ onboarded: true });
+      // Refresh JWT so middleware sees onboarded=true.
+      // GET /api/auth/session triggers the jwt callback which now checks the DB.
+      try {
+        await fetch("/api/auth/session");
+      } catch {
+        // Non-critical — session refreshes on next navigation
+      }
 
       setResult(data);
       setStep("complete");

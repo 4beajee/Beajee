@@ -138,6 +138,23 @@ export const authOptions: NextAuthOptions = {
         token.onboarded = session.onboarded;
       }
 
+      // Safety net: if JWT says not onboarded, verify from DB.
+      // Handles the case where updateSession() fails (NextAuth v4 + App Router).
+      // Only runs for non-onboarded users — once true, never queries again.
+      if (!token.onboarded && token.id) {
+        try {
+          const owner = await prisma.owner.findUnique({
+            where: { id: token.id as string },
+            select: { onboarded: true },
+          });
+          if (owner?.onboarded) {
+            token.onboarded = true;
+          }
+        } catch {
+          // Ignore — next request will retry
+        }
+      }
+
       return token;
     },
 
