@@ -32,6 +32,10 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
+            # Free port 3000 if any non-docker process is holding it
+            fuser -k 3000/tcp 2>/dev/null || true
+            sleep 2
+
             # Rebuild and restart (only app service, DB is Supabase)
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans app
 
