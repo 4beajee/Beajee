@@ -9,11 +9,27 @@ import {
 import { recordEvent } from "@/lib/services/reputation";
 
 interface RawContextInput {
+  // From USER.md
+  owner_name?: string;
+  owner_location?: string;
+  owner_profession?: string;
+  owner_domain?: string;
+  owner_experience?: string;
+  owner_goals?: string;
+  // From AGENTS.md
+  agent_specialization?: string;
+  agent_domains?: string[];
+  agent_constraints?: string;
+  // From SOUL.md
+  collaboration_style?: string;
+  communication_style?: string;
+  // From MEMORY.md
   current_work: string;
   expertise: string[];
   looking_for: string;
   not_looking_for?: string;
   recent_problems?: string;
+  recent_wins?: string;
   location?: string;
   networking_goal: string;
 }
@@ -27,37 +43,67 @@ export async function publishContext(agentId: string, rawContext: RawContextInpu
 
   if (!agent) throw new Error(`Agent not found: ${agentId}`);
 
-  // Compute hash of KEY fields only (current_work, looking_for, recent_problems)
+  // Compute hash of KEY fields (includes new fields for significant change detection)
   const newKeyHash = computeContextHash({
     current_work: context.current_work,
     looking_for: context.looking_for,
     recent_problems: context.recent_problems,
+    owner_profession: context.owner_profession,
+    owner_domain: context.owner_domain,
+    agent_specialization: context.agent_specialization,
   });
   const significant = isSignificantUpdate(newKeyHash, agent.context?.previousHash ?? null);
   const contextChanged = significant;
 
-  // Generate embedding from context text
+  // Generate embedding from richer context text (all four sources)
   const embeddingText = contextToEmbeddingText({
     currentWork: context.current_work,
     expertise: context.expertise,
     lookingFor: context.looking_for,
     notLookingFor: context.not_looking_for,
     recentProblems: context.recent_problems,
+    recentWins: context.recent_wins,
     networkingGoal: context.networking_goal,
+    ownerProfession: context.owner_profession,
+    ownerDomain: context.owner_domain,
+    ownerGoals: context.owner_goals,
+    agentSpecialization: context.agent_specialization,
+    agentDomains: context.agent_domains,
+    collaborationStyle: context.collaboration_style,
   });
   const embedding = await generateEmbedding(embeddingText);
 
-  // Upsert context with embedding
+  // Upsert context with embedding — includes all new fields
   await prisma.$executeRaw`
-    INSERT INTO agent_contexts (id, agent_id, current_work, expertise, looking_for, not_looking_for, recent_problems, location, networking_goal, embedding, updated_at, previous_hash, freshness_state, last_significant_update_at)
+    INSERT INTO agent_contexts (
+      id, agent_id,
+      owner_name, owner_location, owner_profession, owner_domain, owner_experience, owner_goals,
+      agent_specialization, agent_domains, agent_constraints,
+      collaboration_style, communication_style,
+      current_work, expertise, looking_for, not_looking_for, recent_problems, recent_wins,
+      location, networking_goal,
+      embedding, updated_at, previous_hash, freshness_state, last_significant_update_at
+    )
     VALUES (
       ${generateCuid()},
       ${agent.id},
+      ${context.owner_name ?? null},
+      ${context.owner_location ?? null},
+      ${context.owner_profession ?? null},
+      ${context.owner_domain ?? null},
+      ${context.owner_experience ?? null},
+      ${context.owner_goals ?? null},
+      ${context.agent_specialization ?? null},
+      ${context.agent_domains ?? []},
+      ${context.agent_constraints ?? null},
+      ${context.collaboration_style ?? null},
+      ${context.communication_style ?? null},
       ${context.current_work},
       ${context.expertise},
       ${context.looking_for},
       ${context.not_looking_for ?? null},
       ${context.recent_problems ?? null},
+      ${context.recent_wins ?? null},
       ${context.location ?? null},
       ${context.networking_goal},
       ${embedding}::vector,
@@ -67,11 +113,23 @@ export async function publishContext(agentId: string, rawContext: RawContextInpu
       NOW()
     )
     ON CONFLICT (agent_id) DO UPDATE SET
+      owner_name = EXCLUDED.owner_name,
+      owner_location = EXCLUDED.owner_location,
+      owner_profession = EXCLUDED.owner_profession,
+      owner_domain = EXCLUDED.owner_domain,
+      owner_experience = EXCLUDED.owner_experience,
+      owner_goals = EXCLUDED.owner_goals,
+      agent_specialization = EXCLUDED.agent_specialization,
+      agent_domains = EXCLUDED.agent_domains,
+      agent_constraints = EXCLUDED.agent_constraints,
+      collaboration_style = EXCLUDED.collaboration_style,
+      communication_style = EXCLUDED.communication_style,
       current_work = EXCLUDED.current_work,
       expertise = EXCLUDED.expertise,
       looking_for = EXCLUDED.looking_for,
       not_looking_for = EXCLUDED.not_looking_for,
       recent_problems = EXCLUDED.recent_problems,
+      recent_wins = EXCLUDED.recent_wins,
       location = EXCLUDED.location,
       networking_goal = EXCLUDED.networking_goal,
       embedding = EXCLUDED.embedding,

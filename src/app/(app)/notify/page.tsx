@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 interface MatchProposal {
   matchId: string;
@@ -19,6 +20,7 @@ interface MatchProposal {
 }
 
 export default function NotifyPage() {
+  const t = useTranslations();
   const { status: sessionStatus } = useSession();
   const [matches, setMatches] = useState<MatchProposal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,9 +31,10 @@ export default function NotifyPage() {
     fetch("/api/matches")
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data)) {
+        const list = data.matches ?? data ?? [];
+        if (Array.isArray(list)) {
           setMatches(
-            data.filter(
+            list.filter(
               (m: MatchProposal) => m.status === "PROPOSED" && !m.confirmedByMe
             )
           );
@@ -61,29 +64,57 @@ export default function NotifyPage() {
 
   if (sessionStatus === "loading" || loading) {
     return (
-      <div className="max-w-xl mx-auto p-12 text-center text-neutral-500 text-sm">
-        Loading proposals...
+      <div className="p-12 text-center text-neutral-500 text-sm">
+        {t("notify.loadingProposals")}
       </div>
     );
   }
 
   if (matches.length === 0) {
     return (
-      <div className="max-w-xl mx-auto px-6 pt-24 text-center">
-        <h2 className="text-xl font-semibold text-white mb-2">
-          No pending proposals
+      <div className="px-6 pt-16 text-center">
+        <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-4">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            className="text-neutral-500"
+          >
+            <path
+              d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M8 14v1a2 2 0 004 0v-1"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
+        <h2 className="text-base font-medium text-white mb-1">
+          {t("notify.noPending")}
         </h2>
-        <p className="text-sm text-neutral-500">
-          Your agent is looking. You&apos;ll be notified when someone matches.
+        <p className="text-sm text-neutral-500 max-w-xs mx-auto mb-5">
+          {t("notify.noPendingDesc")}
         </p>
+        <a
+          href="/activity"
+          className="text-xs text-neutral-400 hover:text-white transition-colors"
+        >
+          {t("notify.browseNetwork")} &rarr;
+        </a>
       </div>
     );
   }
 
   return (
-    <div className="max-w-xl mx-auto px-6 py-12">
+    <div className="px-6 py-10">
       <h1 className="text-2xl font-semibold text-white mb-8">
-        New introductions
+        {t("notify.title")}
       </h1>
       {matches.map((match) => (
         <div
@@ -132,14 +163,14 @@ export default function NotifyPage() {
               disabled={actionLoading === match.matchId}
               className="flex-1 py-3 text-sm font-semibold bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors disabled:opacity-50"
             >
-              Yes, introduce us
+              {t("notify.yesIntroduce")}
             </button>
             <button
               onClick={() => handleAction(match.matchId, "dormant")}
               disabled={actionLoading === match.matchId}
               className="flex-1 py-3 text-sm font-medium border border-neutral-700 text-neutral-400 rounded-lg hover:border-neutral-500 transition-colors disabled:opacity-50"
             >
-              Not now
+              {t("notify.notNow")}
             </button>
           </div>
         </div>

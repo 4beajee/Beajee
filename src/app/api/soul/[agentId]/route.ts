@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import {
+  PLATFORM_FILE_NAMES,
+  PLATFORM_TEMPLATE_FILES,
+  type AgentPlatform,
+} from "@/types/onboarding";
 import fs from "fs";
 import path from "path";
 
-// GET /api/soul/[agentId] — serve personalized SOUL.md for an agent
+// GET /api/soul/[agentId] — serve personalized instruction file for any platform
 export async function GET(
   request: NextRequest,
-  { params }: { params: { agentId: string } }
+  { params }: { params: Promise<{ agentId: string }> }
 ) {
-  const { agentId } = params;
+  const { agentId } = await params;
 
   let agent;
   try {
@@ -24,39 +29,51 @@ export async function GET(
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
 
-  // Read the base SOUL.md template
-  const soulPath = path.join(process.cwd(), "SOUL.md");
-  let soulContent: string;
+  // Determine platform — fall back to open_claw
+  const platform = (agent.owner.agentPlatform ?? "open_claw") as AgentPlatform;
+  const templateFile =
+    PLATFORM_TEMPLATE_FILES[platform] ?? PLATFORM_TEMPLATE_FILES.open_claw;
+  const fileName =
+    PLATFORM_FILE_NAMES[platform] ?? PLATFORM_FILE_NAMES.open_claw;
+
+  const templatePath = path.join(process.cwd(), "templates", templateFile);
+  let templateContent: string;
 
   try {
-    soulContent = fs.readFileSync(soulPath, "utf-8");
+    templateContent = fs.readFileSync(templatePath, "utf-8");
   } catch {
-    return NextResponse.json({ error: "SOUL.md template not found" }, { status: 500 });
+    return NextResponse.json(
+      { error: `Template not found: ${templateFile}` },
+      { status: 500 }
+    );
   }
 
   // Build excluded topics block
-  const excludedTopics: string[] = (agent.owner.excludedTopics as string[]) ?? [];
+  const excludedTopics: string[] =
+    (agent.owner.excludedTopics as string[]) ?? [];
   const excludedBlock =
     excludedTopics.length > 0
       ? excludedTopics.map((t) => `- ${t}`).join("\n")
       : "None — owner chose to share all categories.";
 
-  // Mask API key — the full key was already provided during onboarding
-  const maskedKey = `${agent.apiKey.slice(0, 8)}${"*".repeat(12)}${agent.apiKey.slice(-4)}`;
-
   // Replace placeholders with agent-specific values
-  const personalizedSoul = soulContent
-    .replace("[agent_id]", agent.agentId)
-    .replace("[api_key]", maskedKey)
+  const personalized = templateContent
+    .replace(/\[agent_id\]/g, agent.agentId)
+    .replace(/\[api_key\]/g, agent.apiKey)
     .replace(
-      "[partnership | collaboration | mentor | peer]",
+      /\[networking_goal\]/g,
       agent.owner.networkingGoal ?? "collaboration"
     )
-    .replace("[excluded_topics]", excludedBlock);
+    .replace(
+      /\[partnership \| collaboration \| mentor \| peer\]/g,
+      agent.owner.networkingGoal ?? "collaboration"
+    )
+    .replace(/\[excluded_topics\]/g, excludedBlock);
 
-  return new NextResponse(personalizedSoul, {
+  return new NextResponse(personalized, {
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${fileName}"`,
     },
   });
 }

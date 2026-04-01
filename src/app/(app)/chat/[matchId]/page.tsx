@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { useUnread } from "@/contexts/unread-context";
+import { useTranslations } from "next-intl";
+
+const POLL_INTERVAL = 5_000; // Poll for new messages every 5 seconds
 
 interface Message {
   id: string;
@@ -27,26 +32,79 @@ export default function ChatPage() {
   const params = useParams();
   const matchId = params.matchId as string;
   const ownerId = session?.user?.id;
+  const { markAsRead } = useUnread();
+  const t = useTranslations();
 
   const [chat, setChat] = useState<ChatData | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageIdsRef = useRef<Set<string>>(new Set());
 
+  // Fetch chat data
+  const fetchChat = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/chat?matchId=${matchId}`);
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setChat(data);
+        // Track known message IDs
+        const ids = new Set<string>(data.messages.map((m: Message) => m.id));
+        messageIdsRef.current = ids;
+      }
+    } catch {
+      setError("Failed to load chat");
+    }
+  }, [matchId]);
+
+  // Initial load + mark as read
   useEffect(() => {
     if (sessionStatus !== "authenticated") return;
-    fetch(`/api/chat?matchId=${matchId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) {
-          setError(data.error);
-        } else {
+    fetchChat().then(() => markAsRead());
+  }, [matchId, sessionStatus, fetchChat, markAsRead]);
+
+  // Poll for new messages
+  useEffect(() => {
+    if (sessionStatus !== "authenticated" || !chat) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/chat?matchId=${matchId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.error) return;
+
+        // Check if there are new messages
+        const newMsgs = data.messages as Message[];
+        const hasNew = newMsgs.some((m: Message) => !messageIdsRef.current.has(m.id));
+
+        if (hasNew) {
           setChat(data);
+          messageIdsRef.current = new Set(newMsgs.map((m: Message) => m.id));
+          markAsRead();
         }
-      })
-      .catch(() => setError("Failed to load chat"));
-  }, [matchId, sessionStatus]);
+      } catch {
+        // Retry next interval
+      }
+    }, POLL_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [sessionStatus, chat, matchId, markAsRead]);
+
+  // Mark as read when tab becomes visible
+  useEffect(() => {
+    function handleVisibility() {
+      if (!document.hidden && chat) {
+        fetch(`/api/chat?matchId=${matchId}`).catch(() => {});
+        markAsRead();
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [chat, matchId, markAsRead]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -65,22 +123,24 @@ export default function ChatPage() {
     const msg = await res.json();
     if (!msg.error && chat) {
       setChat({ ...chat, messages: [...chat.messages, msg] });
+      messageIdsRef.current.add(msg.id);
       setNewMessage("");
+      markAsRead();
     }
     setSending(false);
   }
 
   if (sessionStatus === "loading") {
     return (
-      <div className="max-w-xl mx-auto p-12 text-center text-neutral-500 text-sm">
-        Loading chat...
+      <div className="w-full p-12 text-center text-neutral-500 text-sm">
+        {t("chat.loadingChat")}
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-xl mx-auto p-12 text-center text-neutral-500 text-sm">
+      <div className="w-full p-12 text-center text-neutral-500 text-sm">
         {error}
       </div>
     );
@@ -88,8 +148,8 @@ export default function ChatPage() {
 
   if (!chat) {
     return (
-      <div className="max-w-xl mx-auto p-12 text-center text-neutral-500 text-sm">
-        Loading chat...
+      <div className="w-full p-12 text-center text-neutral-500 text-sm">
+        {t("chat.loadingChat")}
       </div>
     );
   }
@@ -108,22 +168,32 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-6 flex flex-col h-screen">
+    <div className="w-full px-6 flex flex-col h-screen">
       {/* Header */}
-      <div className="py-6 border-b border-neutral-800">
-        <h2 className="text-xl font-semibold text-white">
-          {otherPerson.name ?? "Unknown"}
-        </h2>
-        {otherPerson.currentWork && (
-          <p className="text-xs text-neutral-500 mt-1">
-            {otherPerson.currentWork}
-          </p>
-        )}
+      <div className="py-6 border-b border-neutral-800 flex items-center gap-3">
+        <Link
+          href="/chats"
+          className="text-neutral-500 hover:text-white transition-colors lg:hidden"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 4l-6 6 6 6" />
+          </svg>
+        </Link>
+        <div>
+          <h2 className="text-xl font-semibold text-white">
+            {otherPerson.name ?? "Unknown"}
+          </h2>
+          {otherPerson.currentWork && (
+            <p className="text-xs text-neutral-500 mt-1">
+              {otherPerson.currentWork}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Overlap banner */}
       <div className="text-xs text-neutral-400 p-3 bg-neutral-900 border border-neutral-800 rounded-lg my-4 leading-relaxed">
-        <strong className="text-neutral-300">Why you matched:</strong>{" "}
+        <strong className="text-neutral-300">{t("chat.whyMatched")}</strong>{" "}
         {chat.overlapSummary}
       </div>
 
@@ -142,7 +212,7 @@ export default function ChatPage() {
           >
             {isAgentMessage(msg) && (
               <span className="block text-[11px] text-neutral-500 uppercase tracking-wide mb-1">
-                Agent intro
+                {t("chat.agentIntro")}
               </span>
             )}
             <p className="m-0">{msg.content}</p>
@@ -158,7 +228,7 @@ export default function ChatPage() {
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Type a message..."
+          placeholder={t("chat.typePlaceholder")}
           className="flex-1 px-4 py-3 text-sm bg-neutral-900 border border-neutral-800 rounded-lg text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600"
         />
         <button
@@ -166,7 +236,7 @@ export default function ChatPage() {
           disabled={sending || !newMessage.trim()}
           className="px-5 py-3 text-sm font-semibold bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          Send
+          {t("common.send")}
         </button>
       </div>
     </div>

@@ -3,6 +3,9 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { CookieConsent } from "@/components/cookie-consent";
+import { VisitorTracker } from "@/components/visitor-tracker";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -21,20 +24,27 @@ export const metadata: Metadata = {
     "Your agent finds the right people at the right moment. Context-driven mutual matching.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en" className="dark">
+    <html lang={locale} className="dark" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#050505]`}
+        suppressHydrationWarning
       >
-        <Providers>
-          {children}
-          <CookieConsent />
-        </Providers>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Providers>
+            {children}
+            <VisitorTracker />
+            <CookieConsent />
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

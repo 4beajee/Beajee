@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface MatchItem {
   matchId: string;
@@ -27,6 +28,7 @@ export default function MatchesPage() {
   const [freshnessState, setFreshnessState] = useState<string | null>(null);
   const [tab, setTab] = useState<"active" | "dormant">("active");
   const [loading, setLoading] = useState(true);
+  const t = useTranslations();
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -47,8 +49,8 @@ export default function MatchesPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="max-w-xl mx-auto p-12 text-center text-neutral-500 text-sm">
-        Loading matches...
+      <div className="p-12 text-center text-neutral-500 text-sm">
+        {t("matches.loadingMatches")}
       </div>
     );
   }
@@ -60,8 +62,8 @@ export default function MatchesPage() {
   const displayed = tab === "active" ? activeMatches : dormantMatches;
 
   return (
-    <div className="max-w-xl mx-auto px-6 py-12">
-      <h1 className="text-2xl font-semibold text-white mb-6">Your matches</h1>
+    <div className="px-6 py-10">
+      <h1 className="text-2xl font-semibold text-white mb-6">{t("matches.title")}</h1>
 
       <FreshnessIndicator state={freshnessState} />
 
@@ -74,7 +76,7 @@ export default function MatchesPage() {
               : "text-neutral-500 border-transparent hover:text-neutral-300"
           }`}
         >
-          Active ({activeMatches.length})
+          {t("matches.active", { count: activeMatches.length })}
         </button>
         <button
           onClick={() => setTab("dormant")}
@@ -84,17 +86,46 @@ export default function MatchesPage() {
               : "text-neutral-500 border-transparent hover:text-neutral-300"
           }`}
         >
-          Dormant ({dormantMatches.length})
+          {t("matches.dormant", { count: dormantMatches.length })}
         </button>
       </div>
 
       {displayed.length === 0 && (
-        <div className="text-center pt-16">
-          <p className="text-neutral-500 text-sm">
-            {tab === "active"
-              ? "No active matches yet. Your agent is looking."
-              : "No dormant matches."}
-          </p>
+        <div className="text-center pt-12 pb-8">
+          {tab === "active" ? (
+            <>
+              <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-4">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className="text-neutral-500"
+                >
+                  <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" />
+                  <path d="M10 6v4l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </div>
+              <p className="text-white font-medium text-sm mb-1">
+                {t("matches.agentSearching")}
+              </p>
+              <p className="text-neutral-500 text-xs leading-relaxed max-w-xs mx-auto mb-5">
+                {t("matches.agentSearchingDesc")}
+              </p>
+              <div className="flex flex-col items-center gap-2">
+                <Link
+                  href="/activity"
+                  className="text-xs text-neutral-400 hover:text-white transition-colors"
+                >
+                  {t("matches.seeNetwork")} &rarr;
+                </Link>
+              </div>
+            </>
+          ) : (
+            <p className="text-neutral-500 text-sm">
+              {t("matches.noDormant")}
+            </p>
+          )}
         </div>
       )}
 
@@ -116,7 +147,7 @@ export default function MatchesPage() {
 
           {match.otherPerson.currentWork && (
             <p className="text-xs text-neutral-400 mb-2">
-              <strong className="text-neutral-300">Working on:</strong>{" "}
+              <strong className="text-neutral-300">{t("matches.workingOn")}</strong>{" "}
               {match.otherPerson.currentWork}
             </p>
           )}
@@ -141,7 +172,7 @@ export default function MatchesPage() {
                 href={`/chat/${match.matchId}`}
                 className="inline-block px-5 py-2.5 text-sm font-semibold bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors"
               >
-                Open chat
+                {t("matches.openChat")}
               </Link>
             )}
             {match.status === "PROPOSED" && !match.confirmedByMe && (
@@ -149,12 +180,12 @@ export default function MatchesPage() {
                 href="/notify"
                 className="inline-block px-5 py-2.5 text-sm font-semibold bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors"
               >
-                Review proposal
+                {t("matches.reviewProposal")}
               </Link>
             )}
             {match.status === "DORMANT" && (
               <span className="text-xs text-neutral-500 italic">
-                You can revisit this match anytime
+                {t("matches.revisitMatch")}
               </span>
             )}
           </div>
@@ -165,6 +196,8 @@ export default function MatchesPage() {
 }
 
 function FreshnessIndicator({ state }: { state: string | null }) {
+  const t = useTranslations("matches");
+
   if (!state || state === "ACTIVE") return null;
 
   const config = {
@@ -172,19 +205,19 @@ function FreshnessIndicator({ state }: { state: string | null }) {
       dot: "bg-amber-400",
       bg: "bg-amber-950/30 border-amber-800/40",
       text: "text-amber-200",
-      message: "Your agent's context may be getting outdated",
+      message: t("freshnessAging"),
     },
     STALE: {
       dot: "bg-red-400",
       bg: "bg-red-950/30 border-red-800/40",
       text: "text-red-200",
-      message: "Matching paused — ask your agent to update your context",
+      message: t("freshnessStale"),
     },
     INACTIVE: {
       dot: "bg-neutral-500",
       bg: "bg-neutral-800/50 border-neutral-700",
       text: "text-neutral-300",
-      message: "Your profile is sleeping — ask your agent to reconnect",
+      message: t("freshnessInactive"),
     },
   }[state];
 
@@ -201,6 +234,8 @@ function FreshnessIndicator({ state }: { state: string | null }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const t = useTranslations("status");
+
   const colors =
     status === "MATCHED"
       ? "bg-green-950/50 text-green-400 border-green-800/50"
@@ -212,7 +247,7 @@ function StatusBadge({ status }: { status: string }) {
     <span
       className={`text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wide border ${colors}`}
     >
-      {status}
+      {t(status.toLowerCase())}
     </span>
   );
 }

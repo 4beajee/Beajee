@@ -3,12 +3,13 @@ import { prisma } from "@/lib/db";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { matchId: string } }
+  { params }: { params: Promise<{ matchId: string }> }
 ) {
+  const { matchId } = await params;
   let match;
   try {
     match = await prisma.match.findUnique({
-      where: { id: params.matchId },
+      where: { id: matchId },
       include: {
         agentA: { include: { context: true } },
         agentB: { include: { context: true } },
@@ -16,6 +17,8 @@ export async function GET(
           orderBy: { createdAt: "asc" },
           include: { agent: true },
         },
+        _count: { select: { comments: true } },
+        reactions: true,
       },
     });
   } catch {
@@ -43,6 +46,9 @@ export async function GET(
     createdAt: log.createdAt.toISOString(),
   }));
 
+  const likes = match.reactions.filter((r) => r.type === "LIKE").length;
+  const dislikes = match.reactions.filter((r) => r.type === "DISLIKE").length;
+
   return NextResponse.json({
     id: match.id,
     status: match.status,
@@ -53,6 +59,9 @@ export async function GET(
     outcome,
     negotiationSteps: negotiationLog.length,
     negotiationLog,
+    likes,
+    dislikes,
+    commentCount: match._count.comments,
   });
 }
 

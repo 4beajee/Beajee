@@ -17,6 +17,7 @@ import { reportChatTool } from "./tools/report-chat";
 import { blockUserTool } from "./tools/block-user";
 import { archiveChatTool } from "./tools/archive-chat";
 import { getReputationTool } from "./tools/get-reputation";
+import { checkInTool } from "./tools/check-in";
 
 const tools = [
   publishContextTool,
@@ -33,6 +34,7 @@ const tools = [
   reportChatTool,
   blockUserTool,
   archiveChatTool,
+  checkInTool,
 ];
 
 export function createMcpServer() {

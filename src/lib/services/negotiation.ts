@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { sendMatchProposalEmail } from "@/lib/services/notification";
+import { sendMatchProposalEmail, sendMatchConfirmedEmail, shouldSend } from "@/lib/services/notification";
 import { createChatWithOpeningMessages } from "@/lib/services/chat";
 import { recordEvent } from "@/lib/services/reputation";
 
@@ -96,6 +96,10 @@ export async function initiateNegotiation(
       currentWork: agentA.context.currentWork,
       expertise: agentA.context.expertise,
       lookingFor: agentA.context.lookingFor,
+      ownerProfession: agentA.context.ownerProfession,
+      ownerDomain: agentA.context.ownerDomain,
+      agentSpecialization: agentA.context.agentSpecialization,
+      collaborationStyle: agentA.context.collaborationStyle,
       networkingGoal: agentA.context.networkingGoal,
       reputationScore: Math.round(agentA.reputationScore),
       freshnessState: agentA.context.freshnessState,
@@ -105,6 +109,10 @@ export async function initiateNegotiation(
       currentWork: agentB.context.currentWork,
       expertise: agentB.context.expertise,
       lookingFor: agentB.context.lookingFor,
+      ownerProfession: agentB.context.ownerProfession,
+      ownerDomain: agentB.context.ownerDomain,
+      agentSpecialization: agentB.context.agentSpecialization,
+      collaborationStyle: agentB.context.collaborationStyle,
       networkingGoal: agentB.context.networkingGoal,
       reputationScore: Math.round(agentB.reputationScore),
       freshnessState: agentB.context.freshnessState,
@@ -276,25 +284,40 @@ export async function proposeMatch(matchId: string) {
     recordEvent(match.agentBId, "MATCH_PROPOSED"),
   ]);
 
-  // Send email notifications to both owners (non-blocking)
-  Promise.all([
-    sendMatchProposalEmail({
-      ownerEmail: match.agentA.owner.email,
-      ownerName: match.agentA.owner.name,
-      otherPersonName: match.agentB.owner.name,
-      framing: match.framingForA,
-      matchId,
-      ownerId: match.agentA.owner.id,
-    }),
-    sendMatchProposalEmail({
-      ownerEmail: match.agentB.owner.email,
-      ownerName: match.agentB.owner.name,
-      otherPersonName: match.agentA.owner.name,
-      framing: match.framingForB,
-      matchId,
-      ownerId: match.agentB.owner.id,
-    }),
-  ]).catch((err) => console.error("[notification] Email batch failed:", err));
+  // Send email notifications to both owners (non-blocking, respects preferences)
+  const emailPromises: Promise<unknown>[] = [];
+  const ownerA = match.agentA.owner;
+  const ownerB = match.agentB.owner;
+
+  if (shouldSend(ownerA, "match")) {
+    emailPromises.push(
+      sendMatchProposalEmail({
+        ownerEmail: ownerA.email,
+        ownerName: ownerA.name,
+        otherPersonName: ownerB.name,
+        framing: match.framingForA,
+        matchId,
+        ownerId: ownerA.id,
+      })
+    );
+  }
+  if (shouldSend(ownerB, "match")) {
+    emailPromises.push(
+      sendMatchProposalEmail({
+        ownerEmail: ownerB.email,
+        ownerName: ownerB.name,
+        otherPersonName: ownerA.name,
+        framing: match.framingForB,
+        matchId,
+        ownerId: ownerB.id,
+      })
+    );
+  }
+  if (emailPromises.length > 0) {
+    Promise.all(emailPromises).catch((err) =>
+      console.error("[notification] Email batch failed:", err)
+    );
+  }
 
   return {
     matchId,
@@ -361,6 +384,41 @@ export async function confirmMatch(matchId: string, ownerId: string) {
       recordEvent(match.agentAId, "MATCH_COMPLETED"),
       recordEvent(match.agentBId, "MATCH_COMPLETED"),
     ]);
+
+    // Send "match confirmed" email to both owners (non-blocking, respects preferences)
+    const confirmEmailPromises: Promise<unknown>[] = [];
+    const oA = match.agentA.owner;
+    const oB = match.agentB.owner;
+
+    if (shouldSend(oA, "match")) {
+      confirmEmailPromises.push(
+        sendMatchConfirmedEmail({
+          ownerEmail: oA.email,
+          ownerName: oA.name,
+          otherPersonName: oB.name,
+          overlapSummary: match.overlapSummary,
+          matchId,
+          ownerId: oA.id,
+        })
+      );
+    }
+    if (shouldSend(oB, "match")) {
+      confirmEmailPromises.push(
+        sendMatchConfirmedEmail({
+          ownerEmail: oB.email,
+          ownerName: oB.name,
+          otherPersonName: oA.name,
+          overlapSummary: match.overlapSummary,
+          matchId,
+          ownerId: oB.id,
+        })
+      );
+    }
+    if (confirmEmailPromises.length > 0) {
+      Promise.all(confirmEmailPromises).catch((err) =>
+        console.error("[notification] Match confirmed email failed:", err)
+      );
+    }
 
     return {
       matchId,

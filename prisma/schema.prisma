@@ -1,6 +1,7 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -21,14 +22,24 @@ model Owner {
   privacyConsent  Boolean   @default(false) @map("privacy_consent")
   researchConsent Boolean   @default(false) @map("research_consent") // Purpose B — separate GDPR basis
   excludedTopics  String[]  @default([]) @map("excluded_topics")
+  agentPlatform   String?   @map("agent_platform") // "open_claw" | "nemo_claw" | "zero_claw" | "nano_claw"
   onboarded       Boolean   @default(false)
+
+  // Notification preferences
+  notifyAllEmails      Boolean @default(true) @map("notify_all_emails")
+  notifyMatchProposals Boolean @default(true) @map("notify_match_proposals")
+  notifyNewMessages    Boolean @default(true) @map("notify_new_messages")
+  notifyFreshness      Boolean @default(true) @map("notify_freshness")
+
   createdAt       DateTime  @default(now()) @map("created_at")
   agent           Agent?
   accounts        Account[]
   consentLogs     ConsentLog[]
-  blockedUsers    Block[]   @relation("Blocker")
-  blockedBy       Block[]   @relation("Blocked")
+  blockedUsers    Block[]          @relation("Blocker")
+  blockedBy       Block[]          @relation("Blocked")
   reports         Report[]
+  matchReactions  MatchReaction[]
+  matchComments   MatchComment[]
 
   @@map("owners")
 }
@@ -70,9 +81,14 @@ model Agent {
   apiKey       String   @unique @map("api_key")
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at")
-  lastActiveAt DateTime @updatedAt @map("last_active_at")
+  lastActiveAt DateTime @default(now()) @map("last_active_at")
 
   displayName  String?  @map("display_name")  // public name for activity feed
+
+  // Multi-agent support
+  agentType         AgentType         @default(OPENCLAW) @map("agent_type")
+  agentVersion      String?           @map("agent_version") // e.g. "openclaw-2.1", "claude-cowork-jan2026"
+  integrationMethod IntegrationMethod @default(MCP) @map("integration_method")
 
   // Reputation fields
   reputationScore           Float  @default(40) @map("reputation_score")
@@ -99,14 +115,34 @@ model AgentContext {
   agentId        String   @unique @map("agent_id")
   agent          Agent    @relation(fields: [agentId], references: [id])
 
+  // From USER.md — stable owner facts
+  ownerName        String?  @map("owner_name")
+  ownerLocation    String?  @map("owner_location")
+  ownerProfession  String?  @map("owner_profession")
+  ownerDomain      String?  @map("owner_domain")       // primary professional domain
+  ownerExperience  String?  @map("owner_experience")    // years or level of experience
+  ownerGoals       String?  @map("owner_goals")         // stated long-term goals
+
+  // From AGENTS.md — agent role and specialization
+  agentSpecialization String? @map("agent_specialization") // what the agent helps with
+  agentDomains        String[] @default([]) @map("agent_domains") // domains the agent operates in
+  agentConstraints    String?  @map("agent_constraints")   // focus areas or explicit limits
+
+  // From SOUL.md — collaboration style signals
+  collaborationStyle String? @map("collaboration_style") // how owner prefers to work with others
+  communicationStyle String? @map("communication_style") // direct/async/structured etc.
+
+  // From MEMORY.md — current active context
   currentWork    String   @map("current_work")    // what owner is building/working on right now
   expertise      String[]                          // areas of expertise
   lookingFor     String   @map("looking_for")      // what kind of person/collaboration owner needs
   notLookingFor  String?  @map("not_looking_for")  // what to filter out
   recentProblems String?  @map("recent_problems")  // what owner is stuck on
+  recentWins     String?  @map("recent_wins")      // what owner just accomplished
   location       String?
   networkingGoal String   @map("networking_goal")   // partnership | collaboration | mentor | peer
 
+  // Derived — combined embedding across all sources
   embedding      Unsupported("vector(1536)")?
   updatedAt      DateTime @updatedAt @map("updated_at")
   previousHash   String?  @map("previous_hash")    // hash of previous context for change detection
@@ -155,6 +191,8 @@ model Match {
 
   chat           Chat?
   negotiationLogs NegotiationLog[]
+  reactions       MatchReaction[]
+  comments        MatchComment[]
 
   @@unique([agentAId, agentBId])
   @@map("matches")
@@ -175,12 +213,29 @@ enum FreshnessState {
   INACTIVE
 }
 
+enum AgentType {
+  OPENCLAW          // OpenClaw and all derivatives (ZeroClaw, NemoClaw, SoulClaw, IronClaw)
+}
+
+enum IntegrationMethod {
+  MCP               // Connected via MCP
+}
+
 model Chat {
   id        String     @id @default(cuid())
   matchId   String     @unique @map("match_id")
   match     Match      @relation(fields: [matchId], references: [id])
   status    ChatStatus @default(OPEN)
   createdAt DateTime   @default(now()) @map("created_at")
+
+  // Read cursors — tracks when each owner last viewed this chat
+  lastReadByA DateTime? @map("last_read_by_a")
+  lastReadByB DateTime? @map("last_read_by_b")
+
+  // Email notification throttle — tracks when each owner was last emailed about new messages
+  lastNotifiedA DateTime? @map("last_notified_a")
+  lastNotifiedB DateTime? @map("last_notified_b")
+
   messages  Message[]
   reports   Report[]
 
@@ -219,6 +274,38 @@ model NegotiationLog {
   @@map("negotiation_logs")
 }
 
+model MatchReaction {
+  id        String       @id @default(cuid())
+  matchId   String       @map("match_id")
+  match     Match        @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  ownerId   String       @map("owner_id")
+  owner     Owner        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  type      ReactionType
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  @@unique([matchId, ownerId])
+  @@index([matchId])
+  @@map("match_reactions")
+}
+
+model MatchComment {
+  id        String   @id @default(cuid())
+  matchId   String   @map("match_id")
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  ownerId   String   @map("owner_id")
+  owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([matchId])
+  @@map("match_comments")
+}
+
+enum ReactionType {
+  LIKE
+  DISLIKE
+}
+
 model ConsentLog {
   id          String    @id @default(cuid())
   ownerId     String    @map("owner_id")
@@ -253,4 +340,17 @@ model Report {
   createdAt  DateTime @default(now()) @map("created_at")
 
   @@map("reports")
+}
+
+model EmailNotification {
+  id          String   @id @default(cuid())
+  ownerId     String   @map("owner_id")
+  type        String   // MATCH_PROPOSAL | MATCH_CONFIRMED | NEW_MESSAGE | FRESHNESS_WARNING
+  referenceId String   @map("reference_id") // matchId or chatId
+  resendId    String?  @map("resend_id")
+  sentAt      DateTime @default(now()) @map("sent_at")
+
+  @@index([ownerId, type, referenceId])
+  @@index([sentAt])
+  @@map("email_notifications")
 }

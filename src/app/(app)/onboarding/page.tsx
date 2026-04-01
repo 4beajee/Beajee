@@ -3,53 +3,100 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
-type Step = "goal" | "consent" | "sensitive" | "research" | "complete";
+type Step = "platform" | "goal" | "consent" | "sensitive" | "research" | "complete";
+type Platform = "open_claw" | "nemo_claw" | "zero_claw" | "nano_claw";
 type Goal = "partnership" | "collaboration" | "mentor" | "peer";
 
-const GOALS: { value: Goal; label: string; description: string }[] = [
-  {
-    value: "partnership",
-    label: "Find a business partner",
-    description: "Someone to build with — complementary skills, shared vision",
-  },
-  {
-    value: "collaboration",
-    label: "Find a collaborator",
-    description: "Someone working on a similar problem from a different angle",
-  },
-  {
-    value: "mentor",
-    label: "Find a mentor or mentee",
-    description: "Learn from experience or share your knowledge",
-  },
-  {
-    value: "peer",
-    label: "Find a peer",
-    description: "Someone in your field to exchange ideas and challenges",
-  },
-];
-
-const SENSITIVE_CATEGORIES = [
-  "Health & personal issues",
-  "Finances & debts",
-  "Personal relationships",
-  "Psychological topics",
-];
+const PLATFORM_FILE_NAMES: Record<Platform, string> = {
+  open_claw: "SOUL.md",
+  nemo_claw: "SOUL.md",
+  zero_claw: "SOUL.md",
+  nano_claw: "SOUL.md",
+};
 
 export default function OnboardingPage() {
   const { data: session } = useSession();
-  const [step, setStep] = useState<Step>("goal");
+  const t = useTranslations();
+  const [step, setStep] = useState<Step>("platform");
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [excludedTopics, setExcludedTopics] = useState<string[]>([]);
   const [researchConsent, setResearchConsent] = useState(false);
   const [result, setResult] = useState<{
     owner: { id: string };
     agent: { agentId: string; apiKey: string };
+    fileName: string;
     soulMdEndpoint: string;
+    setupPrompt: string;
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [showManual, setShowManual] = useState(false);
+
+  const PLATFORMS: { value: Platform; label: string; description: string }[] = [
+    {
+      value: "open_claw",
+      label: t("onboarding.openClaw"),
+      description: t("onboarding.openClawDesc"),
+    },
+    {
+      value: "nemo_claw",
+      label: t("onboarding.nemoClaw"),
+      description: t("onboarding.nemoClawDesc"),
+    },
+    {
+      value: "zero_claw",
+      label: t("onboarding.zeroClaw"),
+      description: t("onboarding.zeroClawDesc"),
+    },
+    {
+      value: "nano_claw",
+      label: t("onboarding.nanoClaw"),
+      description: t("onboarding.nanoClawDesc"),
+    },
+  ];
+
+  const GOALS: { value: Goal; label: string; description: string }[] = [
+    {
+      value: "partnership",
+      label: t("goals.partnership"),
+      description: t("goals.partnershipDesc"),
+    },
+    {
+      value: "collaboration",
+      label: t("goals.collaboration"),
+      description: t("goals.collaborationDesc"),
+    },
+    {
+      value: "mentor",
+      label: t("goals.mentor"),
+      description: t("goals.mentorDesc"),
+    },
+    {
+      value: "peer",
+      label: t("goals.peer"),
+      description: t("goals.peerDesc"),
+    },
+  ];
+
+  const SENSITIVE_CATEGORIES = [
+    t("sensitiveTopics.health"),
+    t("sensitiveTopics.finances"),
+    t("sensitiveTopics.relationships"),
+    t("sensitiveTopics.psychological"),
+  ];
+
+  const fileName = selectedPlatform
+    ? PLATFORM_FILE_NAMES[selectedPlatform]
+    : "SOUL.md";
+
+  const handlePlatformSelect = (platform: Platform) => {
+    setSelectedPlatform(platform);
+    setStep("goal");
+  };
 
   const handleGoalSelect = (goal: Goal) => {
     setSelectedGoal(goal);
@@ -62,7 +109,7 @@ export default function OnboardingPage() {
 
   const handleConsentNo = () => {
     setError(
-      "Gennety requires access to your agent's memory for networking. Without consent, the platform cannot function."
+      t("onboarding.consentError")
     );
   };
 
@@ -75,20 +122,23 @@ export default function OnboardingPage() {
   };
 
   const handleComplete = async () => {
-    if (!selectedGoal) return;
+    if (!selectedGoal || !selectedPlatform) return;
     setLoading(true);
     setError(null);
 
     try {
+      const body = {
+        agentPlatform: selectedPlatform,
+        networkingGoal: selectedGoal,
+        privacyConsent: true,
+        researchConsent,
+        excludedTopics,
+      };
+
       const res = await fetch("/api/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          networkingGoal: selectedGoal,
-          privacyConsent: true,
-          researchConsent,
-          excludedTopics,
-        }),
+        body: JSON.stringify(body),
       });
 
       const text = await res.text();
@@ -101,23 +151,43 @@ export default function OnboardingPage() {
       if (!res.ok) throw new Error(data.error);
 
       // Refresh JWT so middleware sees onboarded=true.
-      // GET /api/auth/session triggers the jwt callback which now checks the DB.
       try {
         await fetch("/api/auth/session");
       } catch {
-        // Non-critical — session refreshes on next navigation
+        // Non-critical
       }
 
       setResult(data);
       setStep("complete");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("onboarding.somethingWentWrong"));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDownloadSoul = async () => {
+  const handleCopy = async (text: string, label: string) => {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopied(label);
+      setTimeout(() => setCopied(null), 2000);
+    } catch {
+      // silently fail
+    }
+  };
+
+  const handleDownloadFile = async () => {
     if (!result) return;
     try {
       const res = await fetch(result.soulMdEndpoint);
@@ -126,16 +196,22 @@ export default function OnboardingPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "SOUL.md";
+      a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setError("Failed to download SOUL.md");
+      setError(`Failed to download ${fileName}`);
     }
   };
 
+  const TOTAL_STEPS = 5;
   const stepNumber =
-    step === "goal" ? 1 : step === "consent" ? 2 : step === "sensitive" ? 3 : step === "research" ? 4 : 5;
+    step === "platform" ? 1
+      : step === "goal" ? 2
+      : step === "consent" ? 3
+      : step === "sensitive" ? 4
+      : step === "research" ? 5
+      : 6;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
@@ -146,14 +222,14 @@ export default function OnboardingPage() {
             href="/"
             className="text-3xl font-bold tracking-tight text-white hover:text-neutral-300 transition-colors"
           >
-            Gennety
+            {t("common.gennety")}
           </Link>
           <p className="mt-2 text-sm text-neutral-500">
-            Your agent finds the right people. You just say yes.
+            {t("onboarding.tagline")}
           </p>
           {session?.user?.email && (
             <p className="mt-1 text-xs text-neutral-600">
-              Signed in as {session.user.email}
+              {t("onboarding.signedInAs", { email: session.user.email })}
             </p>
           )}
         </div>
@@ -161,10 +237,10 @@ export default function OnboardingPage() {
         {/* Progress */}
         {step !== "complete" && (
           <div className="flex items-center gap-2 justify-center mb-8">
-            {[1, 2, 3, 4].map((s) => (
+            {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((s) => (
               <div
                 key={s}
-                className={`h-1 w-12 rounded-full transition-colors ${
+                className={`h-1 w-8 rounded-full transition-colors ${
                   s <= stepNumber ? "bg-white" : "bg-neutral-800"
                 }`}
               />
@@ -172,11 +248,36 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Step 1: Goal Selection */}
+        {/* Step 1: Platform Selection */}
+        {step === "platform" && (
+          <div>
+            <h2 className="text-lg font-medium text-neutral-200 mb-6 text-center">
+              {t("onboarding.platformTitle")}
+            </h2>
+            <div className="space-y-3">
+              {PLATFORMS.map((p) => (
+                <button
+                  key={p.value}
+                  onClick={() => handlePlatformSelect(p.value)}
+                  className="w-full text-left p-4 rounded-lg border border-neutral-800 hover:border-neutral-600 hover:bg-neutral-900 transition-all group"
+                >
+                  <span className="text-white font-medium group-hover:text-white">
+                    {p.label}
+                  </span>
+                  <span className="block mt-1 text-sm text-neutral-500">
+                    {p.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Goal Selection */}
         {step === "goal" && (
           <div>
             <h2 className="text-lg font-medium text-neutral-200 mb-6 text-center">
-              What do you want from Gennety?
+              {t("onboarding.goalTitle")}
             </h2>
             <div className="space-y-3">
               {GOALS.map((goal) => (
@@ -194,25 +295,28 @@ export default function OnboardingPage() {
                 </button>
               ))}
             </div>
+
+            <button
+              onClick={() => setStep("platform")}
+              className="mt-4 w-full text-xs text-neutral-600 hover:text-neutral-400"
+            >
+              {t("common.back")}
+            </button>
           </div>
         )}
 
-        {/* Step 2: Consent */}
+        {/* Step 3: Consent */}
         {step === "consent" && (
           <div>
             <h2 className="text-lg font-medium text-neutral-200 mb-4 text-center">
-              Privacy consent
+              {t("onboarding.consentTitle")}
             </h2>
             <div className="p-5 rounded-lg border border-neutral-800 mb-6">
               <p className="text-sm text-neutral-300 leading-relaxed">
-                Allow your agent to use your <strong>MEMORY.md</strong> for
-                networking on Gennety?
+                {t("onboarding.consentQuestion")}
               </p>
               <p className="text-xs text-neutral-500 mt-3">
-                Your agent will read your memory file, extract a structured
-                context snapshot, and publish it to the Gennety index. Other
-                agents can then find semantic matches. Your full MEMORY.md is
-                never shared — only the structured snapshot.
+                {t("onboarding.consentDesc")}
               </p>
             </div>
 
@@ -221,13 +325,13 @@ export default function OnboardingPage() {
                 onClick={handleConsentYes}
                 className="flex-1 py-3 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition-colors"
               >
-                Yes, I consent
+                {t("onboarding.yesConsent")}
               </button>
               <button
                 onClick={handleConsentNo}
                 className="flex-1 py-3 rounded-lg border border-neutral-700 text-neutral-400 font-medium text-sm hover:border-neutral-500 transition-colors"
               >
-                No
+                {t("onboarding.noConsent")}
               </button>
             </div>
 
@@ -242,21 +346,20 @@ export default function OnboardingPage() {
               }}
               className="mt-4 w-full text-xs text-neutral-600 hover:text-neutral-400"
             >
-              Back
+              {t("common.back")}
             </button>
           </div>
         )}
 
-        {/* Step 3: Sensitive Topics */}
+        {/* Step 4: Sensitive Topics */}
         {step === "sensitive" && (
           <div>
             <h2 className="text-lg font-medium text-neutral-200 mb-2 text-center">
-              Sensitive topics
+              {t("onboarding.sensitiveTitle")}
             </h2>
-            <p className="text-sm text-neutral-500 mb-6 text-center">
-              Select topics to <strong>exclude</strong> from your published
-              context. Everything else will be shared.
-            </p>
+            <p className="text-sm text-neutral-500 mb-6 text-center"
+              dangerouslySetInnerHTML={{ __html: t("onboarding.sensitiveDesc") }}
+            />
 
             <div className="space-y-2 mb-8">
               {SENSITIVE_CATEGORIES.map((topic) => {
@@ -277,7 +380,7 @@ export default function OnboardingPage() {
                         excluded ? "text-red-400" : "text-neutral-600"
                       }`}
                     >
-                      {excluded ? "Excluded" : "Shared"}
+                      {excluded ? t("status.excluded") : t("status.shared")}
                     </span>
                   </button>
                 );
@@ -288,37 +391,34 @@ export default function OnboardingPage() {
               onClick={() => setStep("research")}
               className="w-full py-3 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition-colors"
             >
-              Continue
+              {t("common.continue")}
             </button>
 
             <button
               onClick={() => setStep("consent")}
               className="mt-4 w-full text-xs text-neutral-600 hover:text-neutral-400"
             >
-              Back
+              {t("common.back")}
             </button>
           </div>
         )}
 
-        {/* Step 4: Research Consent (Purpose B — optional) */}
+        {/* Step 5: Research Consent (Purpose B — optional) */}
         {step === "research" && (
           <div>
             <h2 className="text-lg font-medium text-neutral-200 mb-2 text-center">
-              Research consent
+              {t("onboarding.researchTitle")}
             </h2>
             <p className="text-sm text-neutral-500 mb-6 text-center">
-              This is completely optional and does not affect how Gennety works for you.
+              {t("onboarding.researchOptional")}
             </p>
 
             <div className="p-5 rounded-lg border border-neutral-800 mb-6">
               <p className="text-sm text-neutral-300 leading-relaxed">
-                May we use anonymised patterns from your activity to improve our
-                matching algorithm and conduct research on human connection?
+                {t("onboarding.researchQuestion")}
               </p>
               <p className="text-xs text-neutral-500 mt-3">
-                This is a separate consent under GDPR (Purpose B). Your personal
-                data is never used — only anonymised, aggregated patterns. You can
-                withdraw this consent at any time.
+                {t("onboarding.researchDesc")}
               </p>
             </div>
 
@@ -331,7 +431,7 @@ export default function OnboardingPage() {
                     : "border-neutral-700 text-neutral-400 hover:border-neutral-500"
                 }`}
               >
-                Yes, I consent
+                {t("onboarding.yesConsent")}
               </button>
               <button
                 onClick={() => setResearchConsent(false)}
@@ -341,7 +441,7 @@ export default function OnboardingPage() {
                     : "border-neutral-700 text-neutral-400 hover:border-neutral-500"
                 }`}
               >
-                No thanks
+                {t("onboarding.noThanks")}
               </button>
             </div>
 
@@ -350,7 +450,7 @@ export default function OnboardingPage() {
               disabled={loading}
               className="w-full py-3 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition-colors disabled:opacity-50"
             >
-              {loading ? "Setting up your agent..." : "Create my agent"}
+              {loading ? t("onboarding.settingUp") : t("onboarding.createAgent")}
             </button>
 
             {error && (
@@ -361,87 +461,167 @@ export default function OnboardingPage() {
               onClick={() => setStep("sensitive")}
               className="mt-4 w-full text-xs text-neutral-600 hover:text-neutral-400"
             >
-              Back
+              {t("common.back")}
             </button>
           </div>
         )}
 
-        {/* Step 5: Complete — SOUL.md download */}
+        {/* Complete — Copy setup prompt */}
         {step === "complete" && result && (
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-green-950/50 border border-green-800/50 flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-green-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
+          <div>
+            <div className="w-14 h-14 mx-auto mb-6 rounded-full bg-green-950/50 border border-green-800/50 flex items-center justify-center">
+              <svg className="w-7 h-7 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-xl font-medium text-white mb-2">
-              Your agent is ready
-            </h2>
-            <p className="text-sm text-neutral-400 mb-8">
-              Download your personalized SOUL.md and add it to your AI agent.
-            </p>
 
-            {/* Download SOUL.md */}
-            <button
-              onClick={handleDownloadSoul}
-              className="w-full py-3.5 rounded-lg bg-white text-black font-semibold text-sm hover:bg-neutral-200 transition-colors mb-4"
-            >
-              Download SOUL.md
-            </button>
-
-            {/* Credentials */}
-            <div className="text-left p-4 rounded-lg bg-neutral-900 border border-neutral-800 mb-6">
-              <div className="mb-3">
-                <label className="text-xs text-neutral-500 uppercase tracking-wider">
-                  Agent ID
-                </label>
-                <p className="text-sm text-white font-mono mt-1">
-                  {result.agent.agentId}
-                </p>
-              </div>
-              <div className="mb-3">
-                <label className="text-xs text-neutral-500 uppercase tracking-wider">
-                  API Key
-                </label>
-                <p className="text-sm text-white font-mono mt-1 break-all">
-                  {result.agent.apiKey}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs text-neutral-500 uppercase tracking-wider">
-                  MCP Endpoint
-                </label>
-                <p className="text-sm text-white font-mono mt-1">
-                  /api/mcp
-                </p>
-              </div>
+            <div className="text-center mb-8">
+              <h2 className="text-lg font-medium text-white">
+                {t("onboarding.agentReady")}
+              </h2>
+              <p className="mt-2 text-sm text-neutral-500">
+                {t("onboarding.copyPromptDesc")}
+              </p>
             </div>
 
-            <p className="text-xs text-neutral-600 mb-6">
-              Your agent will autonomously find relevant people and propose
-              introductions. You&apos;ll only be asked: &ldquo;Meet this person?&rdquo;
-            </p>
+            {/* Setup prompt */}
+            <div className="relative mb-4">
+              <div className="p-4 rounded-lg border border-neutral-700 bg-neutral-900 font-mono text-xs text-neutral-300 leading-relaxed break-all select-all">
+                {result.setupPrompt}
+              </div>
+              <button
+                onClick={() => handleCopy(result.setupPrompt, "prompt")}
+                className="absolute top-2 right-2 p-1.5 rounded-md bg-neutral-800 hover:bg-neutral-700 transition-colors"
+              >
+                {copied === "prompt" ? (
+                  <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            <button
+              onClick={() => handleCopy(result.setupPrompt, "prompt")}
+              className="w-full py-3.5 rounded-lg bg-white text-black font-semibold text-sm hover:bg-neutral-200 transition-colors mb-6"
+            >
+              {copied === "prompt" ? t("common.copied") : t("onboarding.copySetupPrompt")}
+            </button>
+
+            {/* How it works */}
+            <div className="space-y-3 mb-6">
+              {[
+                {
+                  num: "1",
+                  title: t("onboarding.step1Title"),
+                  desc: t("onboarding.step1Desc"),
+                },
+                {
+                  num: "2",
+                  title: t("onboarding.step2Title", { fileName }),
+                  desc: t("onboarding.step2Desc"),
+                },
+                {
+                  num: "3",
+                  title: t("onboarding.step3Title"),
+                  desc: t("onboarding.step3Desc"),
+                },
+              ].map((item) => (
+                <div
+                  key={item.num}
+                  className="flex gap-4 p-3 rounded-lg border border-neutral-800/50 text-left"
+                >
+                  <div className="w-6 h-6 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-[10px] font-semibold text-neutral-400">{item.num}</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-neutral-300">{item.title}</p>
+                    <p className="text-xs text-neutral-600 mt-0.5">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Manual setup fallback */}
+            <div className="border-t border-neutral-800 pt-4">
+              <button
+                onClick={() => setShowManual(!showManual)}
+                className="w-full flex items-center justify-between text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
+              >
+                <span>{t("onboarding.preferManual")}</span>
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform ${showManual ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showManual && (
+                <div className="mt-3 space-y-2">
+                  <button
+                    onClick={handleDownloadFile}
+                    className="w-full py-2.5 rounded-lg border border-neutral-800 text-neutral-400 text-xs font-medium hover:border-neutral-600 hover:text-neutral-300 transition-colors"
+                  >
+                    {t("onboarding.downloadFile", { fileName })}
+                  </button>
+                  <div className="p-3 rounded-lg bg-neutral-900/50 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-neutral-600">{t("onboarding.agentId")}</span>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-[10px] text-neutral-400 font-mono truncate">{result.agent.agentId}</span>
+                        <button
+                          onClick={() => handleCopy(result.agent.agentId, "agentId")}
+                          className="text-neutral-700 hover:text-neutral-400 transition-colors shrink-0"
+                        >
+                          {copied === "agentId" ? (
+                            <svg className="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                          ) : (
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-neutral-600">{t("onboarding.apiKey")}</span>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-[10px] text-neutral-400 font-mono truncate">{result.agent.apiKey}</span>
+                        <button
+                          onClick={() => handleCopy(result.agent.apiKey, "apiKey")}
+                          className="text-neutral-700 hover:text-neutral-400 transition-colors shrink-0"
+                        >
+                          {copied === "apiKey" ? (
+                            <svg className="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                          ) : (
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {error && (
-              <p className="mb-4 text-sm text-red-400">{error}</p>
+              <p className="mt-4 text-sm text-red-400 text-center">{error}</p>
             )}
 
-            <Link
-              href="/matches"
-              className="inline-block text-sm text-neutral-500 hover:text-white transition-colors"
-            >
-              Go to matches &rarr;
-            </Link>
+            {/* Go to dashboard */}
+            <div className="mt-6 text-center">
+              <Link
+                href="/home"
+                className="inline-block py-2.5 px-6 rounded-lg border border-neutral-700 text-neutral-300 font-medium text-sm hover:border-neutral-500 hover:text-white transition-colors"
+              >
+                {t("onboarding.goToDashboard")}
+              </Link>
+            </div>
           </div>
         )}
       </div>

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
+import { sendFreshnessWarningEmail, shouldSend } from "@/lib/services/notification";
 
 // Freshness thresholds in days
 const AGING_THRESHOLD_DAYS = 30;
@@ -12,10 +13,15 @@ interface RawContextKeyFields {
   current_work: string;
   looking_for: string;
   recent_problems?: string | null;
+  owner_profession?: string | null;
+  owner_domain?: string | null;
+  agent_specialization?: string | null;
 }
 
 /**
- * Hash the three key fields that determine a "significant" context update.
+ * Hash key fields that determine a "significant" context update.
+ * Includes owner profession/domain and agent specialization — shifts in these
+ * are significant context changes that should update beacons and freshness.
  * Normalises whitespace before hashing so minor formatting changes don't count.
  */
 export function computeContextHash(fields: RawContextKeyFields): string {
@@ -23,6 +29,9 @@ export function computeContextHash(fields: RawContextKeyFields): string {
     fields.current_work,
     fields.looking_for,
     fields.recent_problems ?? "",
+    fields.owner_profession ?? "",
+    fields.owner_domain ?? "",
+    fields.agent_specialization ?? "",
   ]
     .map((s) => s.trim().replace(/\s+/g, " "))
     .join("|");
@@ -144,7 +153,7 @@ export async function checkFreshnessDecay(): Promise<{
   transitioned: Array<{ agentId: string; from: string; to: string }>;
 }> {
   const contexts = await prisma.agentContext.findMany({
-    include: { agent: true },
+    include: { agent: { include: { owner: true } } },
   });
 
   const transitioned: Array<{ agentId: string; from: string; to: string }> = [];
@@ -185,6 +194,23 @@ export async function checkFreshnessDecay(): Promise<{
     console.log(
       `[freshness-decay] ${ctx.agent.agentId}: ${currentState} → ${newState}`
     );
+
+    // Send freshness warning email for AGING and STALE transitions (not INACTIVE — they've been warned)
+    if ((newState === "AGING" || newState === "STALE") && shouldSend(ctx.agent.owner, "freshness")) {
+      const daysSince = Math.floor(
+        (Date.now() - ctx.lastSignificantUpdateAt.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      sendFreshnessWarningEmail({
+        ownerEmail: ctx.agent.owner.email,
+        ownerName: ctx.agent.owner.name,
+        newState,
+        daysSinceUpdate: daysSince,
+        ownerId: ctx.agent.owner.id,
+        agentId: ctx.agent.id,
+      }).catch((err) =>
+        console.error(`[freshness-decay] Failed to send freshness email to ${ctx.agent.owner.email}:`, err)
+      );
+    }
   }
 
   return { transitioned };

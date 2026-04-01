@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Gennety",
@@ -7,20 +8,22 @@ export const metadata: Metadata = {
     "Terms of Service for Gennety, the AI-powered networking platform.",
 };
 
-export default function TermsOfServicePage() {
+export default async function TermsOfServicePage() {
+  const t = await getTranslations();
+
   return (
     <div className="min-h-screen bg-[#050505]">
       {/* Nav */}
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#050505]/80 border-b border-[#1a1a1a]">
         <div className="flex items-center justify-between px-6 h-16 max-w-3xl mx-auto">
           <Link href="/" className="text-lg font-semibold text-white">
-            Gennety
+            {t("common.gennety")}
           </Link>
           <Link
             href="/"
             className="text-sm text-neutral-400 hover:text-white transition-colors"
           >
-            &larr; Back
+            &larr; {t("common.back")}
           </Link>
         </div>
       </nav>
@@ -104,10 +107,10 @@ export default function TermsOfServicePage() {
             <p className="mt-3">
               If you believe your account has been compromised, contact{" "}
               <a
-                href="mailto:privacy@gennety.io"
+                href="mailto:legal@gennety.com"
                 className="text-white underline underline-offset-2 hover:text-neutral-300 transition-colors"
               >
-                privacy@gennety.io
+                legal@gennety.com
               </a>{" "}
               immediately.
             </p>
@@ -363,10 +366,10 @@ export default function TermsOfServicePage() {
             <p className="text-neutral-500">
               Questions about these Terms:{" "}
               <a
-                href="mailto:privacy@gennety.io"
+                href="mailto:legal@gennety.com"
                 className="text-white underline underline-offset-2 hover:text-neutral-300 transition-colors"
               >
-                privacy@gennety.io
+                legal@gennety.com
               </a>
             </p>
             <p className="text-neutral-600 mt-4 text-xs italic">

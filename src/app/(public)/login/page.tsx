@@ -5,6 +5,44 @@ import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
+import { useTranslations } from "next-intl";
+
+function collectVisitorInfo() {
+  const nav = navigator as Navigator & {
+    deviceMemory?: number;
+    connection?: { effectiveType?: string };
+  };
+
+  return {
+    language: nav.language,
+    languages: [...nav.languages],
+    userAgent: nav.userAgent,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    screenWidth: screen.width,
+    screenHeight: screen.height,
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+    referrer: document.referrer,
+    pageUrl: window.location.href,
+    platform: nav.platform ?? "",
+    colorDepth: screen.colorDepth,
+    cookieEnabled: nav.cookieEnabled,
+    online: nav.onLine,
+    touchPoints: nav.maxTouchPoints ?? 0,
+    deviceMemory: nav.deviceMemory,
+    hardwareConcurrency: nav.hardwareConcurrency,
+    connectionType: nav.connection?.effectiveType,
+  };
+}
+
+function sendTrackEvent(event: string, extra?: Record<string, unknown>) {
+  const info = collectVisitorInfo();
+  fetch("/api/track", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ event, ...info, ...extra }),
+  }).catch(() => {});
+}
 
 export default function LoginPage() {
   return (
@@ -17,6 +55,7 @@ export default function LoginPage() {
 const landingUrl = process.env.NEXT_PUBLIC_LANDING_URL ?? "";
 
 function LoginContent() {
+  const t = useTranslations();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/home";
   const authError = searchParams.get("error");
@@ -28,7 +67,7 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(
     authError === "OAuthAccountNotLinked"
-      ? "This email is already registered with a different sign-in method."
+      ? t("auth.oauthConflict")
       : null
   );
 
@@ -38,7 +77,9 @@ function LoginContent() {
     setLoading(true);
     setError(null);
 
-    if (mode === "signup") {
+    const isSignup = mode === "signup";
+
+    if (isSignup) {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -61,12 +102,19 @@ function LoginContent() {
     if (result?.error) {
       setError(
         mode === "login"
-          ? "Invalid email or password."
-          : "Account created but sign-in failed. Try logging in."
+          ? t("auth.invalidCredentials")
+          : t("auth.signupFailed")
       );
       setLoading(false);
       return;
     }
+
+    // Track login/signup event
+    sendTrackEvent(isSignup ? "signup" : "login", {
+      loginMethod: "credentials",
+      email,
+      userName: name || undefined,
+    });
 
     window.location.href = callbackUrl;
   }
@@ -84,10 +132,10 @@ function LoginContent() {
             href={landingUrl || "/"}
             className="text-3xl font-bold tracking-tight text-white hover:text-neutral-300 transition-colors"
           >
-            Gennety
+            {t("common.gennety")}
           </a>
           <p className="mt-2 text-sm text-neutral-500">
-            {mode === "login" ? "Welcome back" : "Create your account"}
+            {mode === "login" ? t("auth.welcomeBack") : t("auth.createAccount")}
           </p>
         </div>
 
@@ -114,13 +162,13 @@ function LoginContent() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          Sign in with Google
+          {t("auth.signInGoogle")}
         </button>
 
         {/* Divider */}
         <div className="flex items-center gap-4 my-6">
           <div className="flex-1 border-t border-neutral-800" />
-          <span className="text-xs text-neutral-600">or</span>
+          <span className="text-xs text-neutral-600">{t("common.or")}</span>
           <div className="flex-1 border-t border-neutral-800" />
         </div>
 
@@ -129,7 +177,7 @@ function LoginContent() {
           {mode === "signup" && (
             <input
               type="text"
-              placeholder="Name (optional)"
+              placeholder={t("auth.namePlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full p-3 rounded-lg bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-600 text-sm focus:outline-none focus:border-neutral-600"
@@ -137,7 +185,7 @@ function LoginContent() {
           )}
           <input
             type="email"
-            placeholder="Email"
+            placeholder={t("auth.emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -145,7 +193,7 @@ function LoginContent() {
           />
           <input
             type="password"
-            placeholder={mode === "signup" ? "Password (min 8 characters)" : "Password"}
+            placeholder={mode === "signup" ? t("auth.passwordSignupPlaceholder") : t("auth.passwordPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -159,7 +207,7 @@ function LoginContent() {
                 href={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`}
                 className="text-xs text-neutral-500 hover:text-white transition-colors"
               >
-                Forgot password?
+                {t("auth.forgotPassword")}
               </Link>
             </div>
           )}
@@ -175,11 +223,11 @@ function LoginContent() {
           >
             {loading
               ? mode === "signup"
-                ? "Creating account..."
-                : "Signing in..."
+                ? t("auth.creatingAccount")
+                : t("auth.signingIn")
               : mode === "signup"
-              ? "Create account"
-              : "Sign in"}
+              ? t("auth.createAccountBtn")
+              : t("auth.signIn")}
           </button>
         </form>
 
@@ -187,22 +235,22 @@ function LoginContent() {
         <p className="mt-6 text-center text-sm text-neutral-500">
           {mode === "login" ? (
             <>
-              No account?{" "}
+              {t("auth.noAccount")}{" "}
               <button
                 onClick={() => { setMode("signup"); setError(null); }}
                 className="text-white hover:underline"
               >
-                Sign up
+                {t("auth.signUp")}
               </button>
             </>
           ) : (
             <>
-              Already have an account?{" "}
+              {t("auth.alreadyHaveAccount")}{" "}
               <button
                 onClick={() => { setMode("login"); setError(null); }}
                 className="text-white hover:underline"
               >
-                Sign in
+                {t("auth.signIn")}
               </button>
             </>
           )}

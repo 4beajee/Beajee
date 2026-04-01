@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/db";
+import { sendTelegramNotification } from "@/lib/services/telegram";
 import bcrypt from "bcryptjs";
 
 // Cookie domain for cross-subdomain session sharing (e.g. ".gennety.com")
@@ -98,6 +99,8 @@ export const authOptions: NextAuthOptions = {
           where: { email: user.email! },
         });
 
+        let isNewUser = false;
+
         if (existing) {
           // Update image/name if not set
           await prisma.owner.update({
@@ -137,6 +140,8 @@ export const authOptions: NextAuthOptions = {
           user.id = existing.id;
           user.onboarded = existing.onboarded;
         } else {
+          isNewUser = true;
+
           // Create new Owner from Google profile
           const newOwner = await prisma.owner.create({
             data: {
@@ -166,7 +171,35 @@ export const authOptions: NextAuthOptions = {
           user.id = newOwner.id;
           user.onboarded = false;
         }
+
+        // Telegram notification for Google login/signup — fire-and-forget
+        const title = isNewUser ? "New Signup (Google)" : "User Login (Google)";
+        const tgLines = [
+          `<b>${title}</b>`,
+          ``,
+          `Email: <code>${user.email}</code>`,
+          user.name ? `Name: ${user.name}` : null,
+          `Method: Google OAuth`,
+          isNewUser ? null : `Onboarded: ${user.onboarded ? "Yes" : "No"}`,
+        ].filter((l): l is string => l !== null);
+
+        sendTelegramNotification(tgLines.join("\n")).catch(() => {});
       }
+
+      // Telegram notification for credentials login
+      if (account?.provider === "credentials") {
+        const tgLines = [
+          `<b>User Login (Email)</b>`,
+          ``,
+          `Email: <code>${user.email}</code>`,
+          user.name ? `Name: ${user.name}` : null,
+          `Method: Email + Password`,
+          `Onboarded: ${user.onboarded ? "Yes" : "No"}`,
+        ].filter((l): l is string => l !== null);
+
+        sendTelegramNotification(tgLines.join("\n")).catch(() => {});
+      }
+
       return true;
     },
 

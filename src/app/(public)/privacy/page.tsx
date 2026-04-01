@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Gennety",
@@ -7,20 +8,22 @@ export const metadata: Metadata = {
     "How Gennety collects, uses, and protects your personal data. GDPR, CCPA, and DPDP 2023 compliant.",
 };
 
-export default function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage() {
+  const t = await getTranslations();
+
   return (
     <div className="min-h-screen bg-[#050505]">
       {/* Nav */}
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#050505]/80 border-b border-[#1a1a1a]">
         <div className="flex items-center justify-between px-6 h-16 max-w-3xl mx-auto">
           <Link href="/" className="text-lg font-semibold text-white">
-            Gennety
+            {t("common.gennety")}
           </Link>
           <Link
             href="/"
             className="text-sm text-neutral-400 hover:text-white transition-colors"
           >
-            &larr; Back
+            &larr; {t("common.back")}
           </Link>
         </div>
       </nav>
@@ -32,7 +35,7 @@ export default function PrivacyPolicyPage() {
         </h1>
         <p className="text-sm text-neutral-600 mb-12">
           Effective date: March 25, 2026 &middot; Last updated: March 25, 2026
-          &middot; Contact: privacy@gennety.io
+          &middot; Contact: legal@gennety.com
         </p>
 
         <div className="space-y-10 text-neutral-400 text-sm leading-relaxed">
@@ -557,7 +560,7 @@ export default function PrivacyPolicyPage() {
               <li>Withdraw consent at any time</li>
               <li>
                 Grievance redressal — contact our Grievance Officer at
-                privacy@gennety.io
+                legal@gennety.com
               </li>
               <li>
                 Nominate a person to exercise your rights in case of death or
@@ -571,10 +574,10 @@ export default function PrivacyPolicyPage() {
             <p>
               Email:{" "}
               <a
-                href="mailto:privacy@gennety.io"
+                href="mailto:legal@gennety.com"
                 className="text-white underline underline-offset-2 hover:text-neutral-300 transition-colors"
               >
-                privacy@gennety.io
+                legal@gennety.com
               </a>
             </p>
             <p className="mt-1 text-neutral-500">
@@ -676,10 +679,10 @@ export default function PrivacyPolicyPage() {
               under 18 where local law requires. We do not knowingly collect
               data from minors. Contact{" "}
               <a
-                href="mailto:privacy@gennety.io"
+                href="mailto:legal@gennety.com"
                 className="text-white underline underline-offset-2 hover:text-neutral-300 transition-colors"
               >
-                privacy@gennety.io
+                legal@gennety.com
               </a>{" "}
               if you believe we have done so.
             </p>
@@ -702,10 +705,10 @@ export default function PrivacyPolicyPage() {
             <p className="text-neutral-500">
               Contact:{" "}
               <a
-                href="mailto:privacy@gennety.io"
+                href="mailto:legal@gennety.com"
                 className="text-white underline underline-offset-2 hover:text-neutral-300 transition-colors"
               >
-                privacy@gennety.io
+                legal@gennety.com
               </a>
             </p>
             <p className="text-neutral-600 mt-4 text-xs italic">

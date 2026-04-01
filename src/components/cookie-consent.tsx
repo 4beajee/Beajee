@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 const STORAGE_KEY = "gennety_cookie_consent";
@@ -52,6 +53,7 @@ function sendTrackEvent(event: string) {
 }
 
 export function CookieConsent() {
+  const t = useTranslations();
   const [visible, setVisible] = useState(false);
   const [hiding, setHiding] = useState(false);
 
@@ -65,9 +67,7 @@ export function CookieConsent() {
     setHiding(true);
     localStorage.setItem(STORAGE_KEY, accepted ? "accepted" : "declined");
 
-    if (accepted) {
-      sendTrackEvent("cookie_accept");
-    }
+    sendTrackEvent(accepted ? "cookie_accept" : "cookie_decline");
 
     setTimeout(() => setVisible(false), 300);
   }, []);
@@ -86,12 +86,12 @@ export function CookieConsent() {
       <div className="max-w-2xl mx-auto rounded-xl border border-[#1a1a1a] bg-[#0a0a0a]/95 backdrop-blur-xl p-5 shadow-[0_-4px_40px_rgba(0,0,0,0.5)]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <p className="text-sm text-neutral-400 leading-relaxed flex-1">
-            We use essential cookies to make Gennety work.{" "}
+            {t("cookie.message")}{" "}
             <Link
               href="/cookie-policy"
               className="text-white underline underline-offset-2 hover:text-neutral-300 transition-colors"
             >
-              Cookie Policy
+              {t("cookie.policy")}
             </Link>
           </p>
           <div className="flex items-center gap-3 shrink-0">
@@ -100,14 +100,14 @@ export function CookieConsent() {
               className="px-4 py-2 text-sm text-neutral-500 hover:text-white border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-lg transition-colors"
               aria-label="Decline cookies"
             >
-              Decline
+              {t("cookie.decline")}
             </button>
             <button
               onClick={() => dismiss(true)}
               className="px-5 py-2 text-sm font-medium text-black bg-white hover:bg-neutral-200 rounded-lg transition-colors"
               aria-label="Accept cookies"
             >
-              Accept
+              {t("cookie.accept")}
             </button>
           </div>
         </div>

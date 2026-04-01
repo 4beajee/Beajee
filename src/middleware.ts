@@ -13,11 +13,11 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 const landingExact = ["/", "/feed", "/cookie-policy", "/privacy", "/terms"];
 
 // Routes that belong on the app subdomain
-const appPrefixes = ["/home", "/matches", "/profile", "/activity", "/notify", "/chat", "/onboarding"];
+const appPrefixes = ["/home", "/matches", "/profile", "/activity", "/notify", "/chat", "/onboarding", "/settings"];
 const appExact = ["/login", "/forgot-password", "/reset-password"];
 
 // Public API routes — no auth required
-const publicApiPrefixes = ["/api/auth", "/api/feed", "/api/mcp", "/api/soul", "/api/track", "/api/oauth", "/api/.well-known", "/api/a2a", "/api/cron", "/api/stats"];
+const publicApiPrefixes = ["/api/auth", "/api/feed", "/api/mcp", "/api/soul", "/api/track", "/api/oauth", "/api/.well-known", "/api/a2a", "/api/cron", "/api/stats", "/api/locale"];
 
 function isAppRoute(pathname: string) {
   return (

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
+import { sendTelegramNotification } from "@/lib/services/telegram";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -49,6 +50,30 @@ export async function POST(request: NextRequest) {
       onboarded: false,
     },
   });
+
+  // Telegram notification — fire-and-forget
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown";
+  const geo = [
+    request.headers.get("x-vercel-ip-city"),
+    request.headers.get("x-vercel-ip-country-region"),
+    request.headers.get("x-vercel-ip-country"),
+  ].filter(Boolean).join(", ");
+
+  const tgLines = [
+    `<b>New Signup (Email)</b>`,
+    ``,
+    `Email: <code>${email}</code>`,
+    name ? `Name: ${name}` : null,
+    `Method: Email + Password`,
+    ``,
+    `IP: <code>${ip}</code>`,
+    geo ? `Location: ${geo}` : null,
+  ].filter((l): l is string => l !== null);
+
+  sendTelegramNotification(tgLines.join("\n")).catch(() => {});
 
   return NextResponse.json({ ok: true });
 }

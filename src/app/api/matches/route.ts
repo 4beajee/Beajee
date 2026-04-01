@@ -75,8 +75,6 @@ export async function GET() {
     matches: result,
     freshnessState: agentContext?.freshnessState ?? null,
   });
-
-  return NextResponse.json(result);
 }
 
 // POST /api/matches — confirm or mark dormant (requires auth)

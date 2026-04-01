@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendTelegramNotification } from "@/lib/services/telegram";
 
-interface VisitorPayload {
-  event: "cookie_accept" | "onboarding_complete";
+interface VisitorInfo {
   language: string;
   languages: string[];
   userAgent: string;
@@ -23,9 +22,24 @@ interface VisitorPayload {
   connectionType?: string;
 }
 
-const EVENT_LABELS: Record<string, string> = {
+interface TrackPayload extends VisitorInfo {
+  event: string;
+  // Login/signup specific
+  loginMethod?: "google" | "credentials";
+  email?: string;
+  userName?: string;
+  // Cookie consent specific
+  cookieDecision?: "accepted" | "declined";
+}
+
+const ALLOWED_EVENTS = ["page_visit", "cookie_accept", "cookie_decline", "login", "signup"];
+
+const EVENT_TITLES: Record<string, string> = {
+  page_visit: "New Visitor",
   cookie_accept: "Cookie Accepted",
-  onboarding_complete: "Onboarding Completed",
+  cookie_decline: "Cookie Declined",
+  login: "User Login",
+  signup: "New Signup",
 };
 
 function extractIp(request: NextRequest): string {
@@ -34,6 +48,14 @@ function extractIp(request: NextRequest): string {
     request.headers.get("x-real-ip") ??
     "unknown"
   );
+}
+
+function extractGeo(request: NextRequest) {
+  return {
+    country: request.headers.get("x-vercel-ip-country") ?? "",
+    region: request.headers.get("x-vercel-ip-country-region") ?? "",
+    city: request.headers.get("x-vercel-ip-city") ?? "",
+  };
 }
 
 function parseUserAgent(ua: string) {
@@ -53,70 +75,91 @@ function parseUserAgent(ua: string) {
   return { browser, os, isMobile };
 }
 
-function formatMessage(payload: VisitorPayload, ip: string, geo: Record<string, string>): string {
+function formatDeviceBlock(payload: VisitorInfo): string[] {
   const { browser, os, isMobile } = parseUserAgent(payload.userAgent);
   const device = isMobile ? "Mobile" : "Desktop";
-  const eventLabel = EVENT_LABELS[payload.event] ?? payload.event;
 
   const lines = [
-    `<b>${eventLabel}</b>`,
-    "",
-    `<b>Visitor</b>`,
-    `IP: <code>${ip}</code>`,
-  ];
-
-  if (geo.country) lines.push(`Location: ${[geo.city, geo.region, geo.country].filter(Boolean).join(", ")}`);
-
-  lines.push(
-    `Language: ${payload.language} (${payload.languages.join(", ")})`,
-    `Timezone: ${payload.timezone}`,
-    "",
     `<b>Device</b>`,
     `Type: ${device}`,
     `OS: ${os}`,
     `Browser: ${browser}`,
     `Screen: ${payload.screenWidth}x${payload.screenHeight}`,
     `Viewport: ${payload.viewportWidth}x${payload.viewportHeight}`,
-    `Color depth: ${payload.colorDepth}-bit`,
-    `Touch: ${payload.touchPoints > 0 ? `Yes (${payload.touchPoints} points)` : "No"}`,
-  );
+  ];
 
+  if (payload.touchPoints > 0) lines.push(`Touch: ${payload.touchPoints} points`);
   if (payload.hardwareConcurrency) lines.push(`CPU cores: ${payload.hardwareConcurrency}`);
   if (payload.deviceMemory) lines.push(`RAM: ~${payload.deviceMemory}GB`);
   if (payload.connectionType) lines.push(`Connection: ${payload.connectionType}`);
 
+  return lines;
+}
+
+function formatVisitorBlock(ip: string, geo: Record<string, string>, payload: VisitorInfo): string[] {
+  const lines = [
+    `<b>Visitor</b>`,
+    `IP: <code>${ip}</code>`,
+  ];
+
+  const location = [geo.city, geo.region, geo.country].filter(Boolean).join(", ");
+  if (location) lines.push(`Location: ${location}`);
+
   lines.push(
-    "",
+    `Language: ${payload.language} (${payload.languages.join(", ")})`,
+    `Timezone: ${payload.timezone}`,
+  );
+
+  return lines;
+}
+
+function formatContextBlock(payload: VisitorInfo): string[] {
+  return [
     `<b>Context</b>`,
     `Page: ${payload.pageUrl}`,
     `Referrer: ${payload.referrer || "Direct"}`,
-    `Platform: ${payload.platform}`,
     `Cookies enabled: ${payload.cookieEnabled ? "Yes" : "No"}`,
     `Online: ${payload.online ? "Yes" : "No"}`,
-  );
+  ];
+}
+
+function buildMessage(payload: TrackPayload, ip: string, geo: Record<string, string>): string {
+  const title = EVENT_TITLES[payload.event] ?? payload.event;
+  const lines: string[] = [`<b>${title}</b>`, ""];
+
+  // Event-specific info
+  if (payload.event === "login" || payload.event === "signup") {
+    if (payload.email) lines.push(`Email: <code>${payload.email}</code>`);
+    if (payload.userName) lines.push(`Name: ${payload.userName}`);
+    if (payload.loginMethod) {
+      lines.push(`Method: ${payload.loginMethod === "google" ? "Google" : "Email + Password"}`);
+    }
+    lines.push("");
+  }
+
+  if (payload.event === "cookie_decline") {
+    lines.push(`Decision: Declined all cookies`, "");
+  }
+
+  // Common blocks
+  lines.push(...formatVisitorBlock(ip, geo, payload), "");
+  lines.push(...formatDeviceBlock(payload), "");
+  lines.push(...formatContextBlock(payload));
 
   return lines.join("\n");
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const payload: VisitorPayload = await request.json();
+    const payload: TrackPayload = await request.json();
 
-    const allowedEvents = ["cookie_accept", "onboarding_complete"];
-    if (!allowedEvents.includes(payload.event)) {
+    if (!ALLOWED_EVENTS.includes(payload.event)) {
       return NextResponse.json({ error: "Unknown event" }, { status: 400 });
     }
 
     const ip = extractIp(request);
-
-    // Vercel geo headers (available in production)
-    const geo = {
-      country: request.headers.get("x-vercel-ip-country") ?? "",
-      region: request.headers.get("x-vercel-ip-country-region") ?? "",
-      city: request.headers.get("x-vercel-ip-city") ?? "",
-    };
-
-    const message = formatMessage(payload, ip, geo);
+    const geo = extractGeo(request);
+    const message = buildMessage(payload, ip, geo);
     const result = await sendTelegramNotification(message);
 
     return NextResponse.json({ ok: result.sent });

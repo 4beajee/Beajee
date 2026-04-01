@@ -42,6 +42,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Chat not available — match not confirmed" }, { status: 400 });
   }
 
+  // Verify caller is a participant of this chat
+  const isOwnerA = match.agentA.owner.id === auth.ownerId;
+  const isOwnerB = match.agentB.owner.id === auth.ownerId;
+  if (!isOwnerA && !isOwnerB) {
+    return NextResponse.json({ error: "You are not a participant of this chat" }, { status: 403 });
+  }
+
+  // Mark chat as read for this owner
+  const readField = isOwnerA ? "lastReadByA" : "lastReadByB";
+  await prisma.chat.update({
+    where: { id: match.chat.id },
+    data: { [readField]: new Date() },
+  });
+
   return NextResponse.json({
     chatId: match.chat.id,
     matchId: match.id,
@@ -135,6 +149,13 @@ export async function POST(request: NextRequest) {
       fromOwner: ownerId,
       content,
     },
+  });
+
+  // Update read cursor — sender has seen everything up to now
+  const readField = isOwnerA ? "lastReadByA" : "lastReadByB";
+  await prisma.chat.update({
+    where: { id: match.chat.id },
+    data: { [readField]: new Date() },
   });
 
   return NextResponse.json({
