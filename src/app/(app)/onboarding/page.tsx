@@ -214,7 +214,7 @@ export default function OnboardingPage() {
       : 6;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-dvh flex items-start sm:items-center justify-center px-4 py-8 sm:p-6">
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="mb-10 text-center">
@@ -320,7 +320,7 @@ export default function OnboardingPage() {
               </p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col xs:flex-row gap-3">
               <button
                 onClick={handleConsentYes}
                 className="flex-1 py-3 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition-colors"
@@ -422,7 +422,7 @@ export default function OnboardingPage() {
               </p>
             </div>
 
-            <div className="flex gap-3 mb-6">
+            <div className="flex flex-col xs:flex-row gap-3 mb-6">
               <button
                 onClick={() => setResearchConsent(true)}
                 className={`flex-1 py-3 rounded-lg border text-sm font-medium transition-all ${
@@ -571,35 +571,37 @@ export default function OnboardingPage() {
                   >
                     {t("onboarding.downloadFile", { fileName })}
                   </button>
-                  <div className="p-3 rounded-lg bg-neutral-900/50 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
+                  <div className="p-3 rounded-lg bg-neutral-900/50 space-y-3">
+                    {/* agentId row */}
+                    <div className="flex flex-col gap-1">
                       <span className="text-xs text-neutral-600">{t("onboarding.agentId")}</span>
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="text-[10px] text-neutral-400 font-mono truncate">{result.agent.agentId}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="flex-1 text-[10px] text-neutral-400 font-mono overflow-x-auto no-scrollbar whitespace-nowrap py-1">{result.agent.agentId}</span>
                         <button
                           onClick={() => handleCopy(result.agent.agentId, "agentId")}
-                          className="text-neutral-700 hover:text-neutral-400 transition-colors shrink-0"
+                          className="text-neutral-700 hover:text-neutral-400 transition-colors shrink-0 p-1"
                         >
                           {copied === "agentId" ? (
-                            <svg className="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            <svg className="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                           ) : (
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                           )}
                         </button>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between gap-2">
+                    {/* apiKey row */}
+                    <div className="flex flex-col gap-1">
                       <span className="text-xs text-neutral-600">{t("onboarding.apiKey")}</span>
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="text-[10px] text-neutral-400 font-mono truncate">{result.agent.apiKey}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="flex-1 text-[10px] text-neutral-400 font-mono overflow-x-auto no-scrollbar whitespace-nowrap py-1">{result.agent.apiKey}</span>
                         <button
                           onClick={() => handleCopy(result.agent.apiKey, "apiKey")}
-                          className="text-neutral-700 hover:text-neutral-400 transition-colors shrink-0"
+                          className="text-neutral-700 hover:text-neutral-400 transition-colors shrink-0 p-1"
                         >
                           {copied === "apiKey" ? (
-                            <svg className="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            <svg className="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                           ) : (
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                           )}
                         </button>
                       </div>

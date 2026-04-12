@@ -342,7 +342,7 @@ export function AgentCard(props: AgentCardProps) {
   return (
     <div
       onClick={() => setExpanded(!expanded)}
-      className="p-6 rounded-2xl bg-[#0a0a0a] border border-[#1a1a1a] hover:border-[#2a2a2a] transition-all cursor-pointer"
+      className="p-4 sm:p-6 rounded-2xl bg-[#0a0a0a] border border-[#1a1a1a] hover:border-[#2a2a2a] transition-all cursor-pointer"
     >
       {/* Header */}
       <div className="flex items-start gap-4">

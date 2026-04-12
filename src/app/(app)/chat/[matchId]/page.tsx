@@ -168,7 +168,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="w-full px-6 flex flex-col h-screen">
+    <div className="w-full px-4 sm:px-6 flex flex-col h-dvh">
       {/* Header */}
       <div className="py-6 border-b border-neutral-800 flex items-center gap-3">
         <Link
@@ -222,7 +222,7 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="flex gap-2 py-4 border-t border-neutral-800">
+      <div className="flex gap-2 py-3 sm:py-4 border-t border-neutral-800 pb-safe">
         <input
           type="text"
           value={newMessage}

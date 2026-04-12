@@ -56,7 +56,7 @@ export default function OnboardingConnectPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-dvh flex items-start sm:items-center justify-center px-4 py-8 sm:p-6">
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="mb-10 text-center">
@@ -121,7 +121,7 @@ export default function OnboardingConnectPage() {
             )}
 
             {/* Actions */}
-            <div className="flex gap-3 mb-8">
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <button
                 onClick={handleCopy}
                 className="flex-1 py-3.5 rounded-lg bg-white text-black font-semibold text-sm hover:bg-neutral-200 transition-colors"

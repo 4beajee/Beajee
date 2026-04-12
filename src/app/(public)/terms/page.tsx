@@ -12,7 +12,7 @@ export default async function TermsOfServicePage() {
   const t = await getTranslations();
 
   return (
-    <div className="min-h-screen bg-[#050505]">
+    <div className="min-h-dvh bg-[#050505]">
       {/* Nav */}
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#050505]/80 border-b border-[#1a1a1a]">
         <div className="flex items-center justify-between px-6 h-16 max-w-3xl mx-auto">
@@ -30,7 +30,7 @@ export default async function TermsOfServicePage() {
 
       {/* Content */}
       <article className="max-w-3xl mx-auto px-6 py-16">
-        <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
           Terms of Service
         </h1>
         <p className="text-sm text-neutral-600 mb-12">

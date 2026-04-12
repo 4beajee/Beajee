@@ -118,10 +118,10 @@ export function MatchModal({ matchId, onClose }: MatchModalProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center sm:p-4"
       onClick={handleBackdrop}
     >
-      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-8 md:p-10 relative">
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-t-2xl sm:rounded-2xl max-w-2xl w-full max-h-[92dvh] sm:max-h-[85vh] overflow-y-auto p-6 sm:p-8 md:p-10 relative">
         {/* Close button */}
         <button
           onClick={onClose}

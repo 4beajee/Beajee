@@ -79,6 +79,7 @@ export default function LandingPage() {
   const activityRef = useReveal();
   const [feedMatches, setFeedMatches] = useState<FeedMatch[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/feed?limit=3")
@@ -88,32 +89,26 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#050505]">
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#050505]/80 border-b border-[#1a1a1a]">
-        <div className="flex items-center justify-between px-6 h-16 max-w-5xl mx-auto">
-          <span className="text-lg font-semibold text-white">{t("common.gennety")}</span>
-          <div className="flex items-center gap-6">
+    <div className="min-h-dvh bg-[#050505]">
+      {/* ── Nav ── */}
+      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#050505]/80 border-b border-[#1a1a1a]"
+           style={{ paddingTop: "var(--safe-top)" }}>
+        <div className="flex items-center justify-between px-4 sm:px-6 h-14 sm:h-16 max-w-5xl mx-auto">
+          <span className="text-base sm:text-lg font-semibold text-white">{t("common.gennety")}</span>
+
+          {/* Desktop nav links */}
+          <div className="hidden sm:flex items-center gap-4 md:gap-6">
             <LanguageSwitcher compact />
-            <Link
-              href="/feed"
-              className="text-sm text-neutral-400 hover:text-white transition-colors"
-            >
+            <Link href="/feed" className="text-sm text-neutral-400 hover:text-white transition-colors">
               {t("nav.feed")}
             </Link>
             {session ? (
-              <a
-                href={`${appUrl}/home`}
-                className="text-sm text-neutral-400 hover:text-white transition-colors"
-              >
+              <a href={`${appUrl}/home`} className="text-sm text-neutral-400 hover:text-white transition-colors">
                 {t("nav.dashboard")}
               </a>
             ) : (
               <>
-                <a
-                  href={`${appUrl}/login`}
-                  className="text-sm text-neutral-400 hover:text-white transition-colors"
-                >
+                <a href={`${appUrl}/login`} className="text-sm text-neutral-400 hover:text-white transition-colors">
                   {t("nav.logIn")}
                 </a>
                 <a
@@ -125,30 +120,73 @@ export default function LandingPage() {
               </>
             )}
           </div>
+
+          {/* Mobile: language + hamburger */}
+          <div className="flex sm:hidden items-center gap-2">
+            <LanguageSwitcher compact />
+            <button
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              className="p-2 text-neutral-400 hover:text-white transition-colors"
+              aria-label="Menu"
+            >
+              {mobileMenuOpen ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile dropdown */}
+        {mobileMenuOpen && (
+          <div className="sm:hidden border-t border-[#1a1a1a] px-4 py-3 flex flex-col gap-1 bg-[#050505]/95">
+            <Link href="/feed" className="py-2.5 text-sm text-neutral-400 hover:text-white transition-colors" onClick={() => setMobileMenuOpen(false)}>
+              {t("nav.feed")}
+            </Link>
+            {session ? (
+              <a href={`${appUrl}/home`} className="py-2.5 text-sm text-neutral-400 hover:text-white transition-colors">
+                {t("nav.dashboard")}
+              </a>
+            ) : (
+              <>
+                <a href={`${appUrl}/login`} className="py-2.5 text-sm text-neutral-400 hover:text-white transition-colors">
+                  {t("nav.logIn")}
+                </a>
+                <a
+                  href={`${appUrl}/login`}
+                  className="mt-1 w-full text-center py-2.5 bg-white text-black rounded-full text-sm font-medium hover:bg-neutral-200 transition-colors"
+                >
+                  {t("common.getStarted")}
+                </a>
+              </>
+            )}
+          </div>
+        )}
       </nav>
 
-      {/* Hero */}
+      {/* ── Hero ── */}
       <section
-        className="min-h-[90vh] flex items-center justify-center px-6 relative"
-        style={{
-          background:
-            "radial-gradient(ellipse at center, rgba(255,255,255,0.02) 0%, transparent 70%)",
-        }}
+        className="min-h-[85dvh] sm:min-h-[90vh] flex items-center justify-center px-4 sm:px-6 relative"
+        style={{ background: "radial-gradient(ellipse at center, rgba(255,255,255,0.02) 0%, transparent 70%)" }}
       >
-        <div className="max-w-2xl text-center">
-          <h1 className="hero-title text-5xl md:text-7xl font-bold tracking-tight text-white leading-[1.1]">
+        <div className="max-w-2xl text-center w-full">
+          <h1 className="hero-title text-[2.25rem] leading-[1.15] sm:text-5xl md:text-7xl font-bold tracking-tight text-white">
             {t("landing.heroTitle1")}
             <br />
             {t("landing.heroTitle2")}
           </h1>
-          <p className="hero-subtitle text-lg md:text-xl text-neutral-500 max-w-xl mx-auto mt-6 leading-relaxed">
+          <p className="hero-subtitle text-base sm:text-lg md:text-xl text-neutral-500 max-w-xl mx-auto mt-5 sm:mt-6 leading-relaxed">
             {t("landing.heroSubtitle")}
           </p>
-          <div className="hero-cta mt-10">
+          <div className="hero-cta mt-8 sm:mt-10">
             <a
               href={`${appUrl}/login`}
-              className="inline-block px-8 py-4 bg-white text-black rounded-full text-sm font-medium hover:bg-neutral-200 transition-colors"
+              className="inline-block px-6 sm:px-8 py-3.5 sm:py-4 bg-white text-black rounded-full text-sm font-medium hover:bg-neutral-200 transition-colors"
             >
               {t("common.getStarted")} <span aria-hidden="true">&rarr;</span>
             </a>
@@ -156,16 +194,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Live Activity */}
+      {/* ── Live Activity ── */}
       {feedMatches.length > 0 && (
-        <section ref={activityRef} className="reveal py-24 px-6 max-w-5xl mx-auto">
-          <p className="text-sm uppercase tracking-[0.2em] text-neutral-600 mb-12 text-center">
+        <section ref={activityRef} className="reveal py-16 sm:py-24 px-4 sm:px-6 max-w-5xl mx-auto">
+          <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-neutral-600 mb-8 sm:mb-12 text-center">
             {t("landing.liveActivity")}
           </p>
-          <p className="text-center text-neutral-500 text-sm mb-10">
+          <p className="text-center text-neutral-500 text-sm mb-8 sm:mb-10">
             {t("landing.happeningNow")}
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {feedMatches.map((m) => (
               <MatchCardCompact
                 key={m.id}
@@ -178,183 +216,118 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="text-center mt-8">
-            <Link
-              href="/feed"
-              className="text-sm text-neutral-500 hover:text-white transition-colors"
-            >
+            <Link href="/feed" className="text-sm text-neutral-500 hover:text-white transition-colors">
               {t("landing.seeAllActivity")} &rarr;
             </Link>
           </div>
         </section>
       )}
 
-      {/* How It Works */}
-      <section ref={howRef} className="reveal py-32 px-6 max-w-5xl mx-auto">
-        <p className="text-sm uppercase tracking-[0.2em] text-neutral-600 mb-16 text-center">
+      {/* ── How It Works ── */}
+      <section ref={howRef} className="reveal py-20 sm:py-32 px-4 sm:px-6 max-w-5xl mx-auto">
+        <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-neutral-600 mb-10 sm:mb-16 text-center">
           {t("landing.howItWorks")}
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           {[
-            {
-              num: "01",
-              title: t("landing.step01Title"),
-              desc: t("landing.step01Desc"),
-            },
-            {
-              num: "02",
-              title: t("landing.step02Title"),
-              desc: t("landing.step02Desc"),
-            },
-            {
-              num: "03",
-              title: t("landing.step03Title"),
-              desc: t("landing.step03Desc"),
-            },
+            { num: "01", title: t("landing.step01Title"), desc: t("landing.step01Desc") },
+            { num: "02", title: t("landing.step02Title"), desc: t("landing.step02Desc") },
+            { num: "03", title: t("landing.step03Title"), desc: t("landing.step03Desc") },
           ].map((step) => (
-            <div
-              key={step.num}
-              className="p-8 rounded-xl border border-[#1a1a1a] bg-[#0a0a0a]"
-            >
-              <div className="text-5xl font-bold text-[#1a1a1a]">
-                {step.num}
-              </div>
-              <h3 className="text-lg font-medium text-white mt-4">
-                {step.title}
-              </h3>
-              <p className="text-sm text-neutral-500 mt-3 leading-relaxed">
-                {step.desc}
-              </p>
+            <div key={step.num} className="p-6 sm:p-8 rounded-xl border border-[#1a1a1a] bg-[#0a0a0a]">
+              <div className="text-4xl sm:text-5xl font-bold text-[#1a1a1a]">{step.num}</div>
+              <h3 className="text-base font-medium text-white mt-3 sm:mt-4">{step.title}</h3>
+              <p className="text-sm text-neutral-500 mt-2 sm:mt-3 leading-relaxed">{step.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Match Example */}
-      <section ref={matchRef} className="reveal py-32 px-6 max-w-5xl mx-auto">
-        <p className="text-sm uppercase tracking-[0.2em] text-neutral-600 mb-16 text-center">
+      {/* ── Match Example ── */}
+      <section ref={matchRef} className="reveal py-20 sm:py-32 px-4 sm:px-6 max-w-5xl mx-auto">
+        <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-neutral-600 mb-10 sm:mb-16 text-center">
           {t("landing.matchExample")}
         </p>
 
         {/* Agent cards */}
-        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-0">
           {/* Agent A */}
-          <div className="flex-1 border border-[#1a1a1a] rounded-xl p-6 bg-[#0a0a0a]">
-            <p className="text-xs uppercase tracking-wider text-neutral-600">
-              {t("landing.agentA")}
-            </p>
-            <p className="font-mono text-sm text-neutral-400 mt-3 leading-relaxed">
-              {t("landing.agentAQuote")}
-            </p>
+          <div className="flex-1 border border-[#1a1a1a] rounded-xl p-5 sm:p-6 bg-[#0a0a0a]">
+            <p className="text-xs uppercase tracking-wider text-neutral-600">{t("landing.agentA")}</p>
+            <p className="font-mono text-sm text-neutral-400 mt-3 leading-relaxed">{t("landing.agentAQuote")}</p>
           </div>
 
           {/* Connector */}
-          <div className="flex-shrink-0 flex flex-col md:flex-row items-center justify-center w-full md:w-40">
-            {/* Mobile: vertical dashed line */}
-            <div className="md:hidden flex flex-col items-center gap-2 py-4">
-              <div className="w-px h-6 border-l border-dashed border-[#2a2a2a]" />
-              <span className="text-xs text-neutral-600 font-mono">
-                {t("landing.negotiating")}
-              </span>
-              <div className="w-px h-6 border-l border-dashed border-[#2a2a2a]" />
+          <div className="flex-shrink-0 flex flex-col sm:flex-row items-center justify-center sm:w-40">
+            {/* Mobile: vertical */}
+            <div className="sm:hidden flex flex-col items-center gap-2 py-3">
+              <div className="w-px h-5 border-l border-dashed border-[#2a2a2a]" />
+              <span className="text-xs text-neutral-600 font-mono">{t("landing.negotiating")}</span>
+              <div className="w-px h-5 border-l border-dashed border-[#2a2a2a]" />
             </div>
-            {/* Desktop: horizontal dashed line */}
-            <div className="hidden md:flex items-center w-full">
+            {/* Desktop: horizontal */}
+            <div className="hidden sm:flex items-center w-full">
               <div className="flex-1 border-t border-dashed border-[#2a2a2a]" />
-              <span className="px-3 text-xs text-neutral-600 font-mono whitespace-nowrap">
-                {t("landing.negotiating")}
-              </span>
+              <span className="px-3 text-xs text-neutral-600 font-mono whitespace-nowrap">{t("landing.negotiating")}</span>
               <div className="flex-1 border-t border-dashed border-[#2a2a2a]" />
             </div>
           </div>
 
           {/* Agent B */}
-          <div className="flex-1 border border-[#1a1a1a] rounded-xl p-6 bg-[#0a0a0a]">
-            <p className="text-xs uppercase tracking-wider text-neutral-600">
-              {t("landing.agentB")}
-            </p>
-            <p className="font-mono text-sm text-neutral-400 mt-3 leading-relaxed">
-              {t("landing.agentBQuote")}
-            </p>
+          <div className="flex-1 border border-[#1a1a1a] rounded-xl p-5 sm:p-6 bg-[#0a0a0a]">
+            <p className="text-xs uppercase tracking-wider text-neutral-600">{t("landing.agentB")}</p>
+            <p className="font-mono text-sm text-neutral-400 mt-3 leading-relaxed">{t("landing.agentBQuote")}</p>
           </div>
         </div>
 
         {/* Match result */}
-        <div className="mt-8 font-mono text-sm text-neutral-300 border border-[#2a2a2a] rounded-xl p-6 leading-relaxed">
+        <div className="mt-6 sm:mt-8 font-mono text-sm text-neutral-300 border border-[#2a2a2a] rounded-xl p-5 sm:p-6 leading-relaxed">
           {t("landing.matchResultQuote")}
         </div>
       </section>
 
-      {/* Key Principles */}
-      <section
-        ref={principlesRef}
-        className="reveal py-32 px-6 max-w-5xl mx-auto"
-      >
-        <p className="text-sm uppercase tracking-[0.2em] text-neutral-600 mb-16 text-center">
+      {/* ── Key Principles ── */}
+      <section ref={principlesRef} className="reveal py-20 sm:py-32 px-4 sm:px-6 max-w-5xl mx-auto">
+        <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-neutral-600 mb-10 sm:mb-16 text-center">
           {t("landing.keyPrinciples")}
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {[
-            {
-              title: t("landing.qualityTitle"),
-              desc: t("landing.qualityDesc"),
-            },
-            {
-              title: t("landing.mutualTitle"),
-              desc: t("landing.mutualDesc"),
-            },
-            {
-              title: t("landing.contextTitle"),
-              desc: t("landing.contextDesc"),
-            },
-            {
-              title: t("landing.privacyTitle"),
-              desc: t("landing.privacyDesc"),
-            },
+            { title: t("landing.qualityTitle"), desc: t("landing.qualityDesc") },
+            { title: t("landing.mutualTitle"),  desc: t("landing.mutualDesc") },
+            { title: t("landing.contextTitle"), desc: t("landing.contextDesc") },
+            { title: t("landing.privacyTitle"), desc: t("landing.privacyDesc") },
           ].map((p) => (
-            <div
-              key={p.title}
-              className="p-8 rounded-xl border border-[#1a1a1a] hover:border-[#2a2a2a] transition-colors"
-            >
+            <div key={p.title} className="p-6 sm:p-8 rounded-xl border border-[#1a1a1a] hover:border-[#2a2a2a] transition-colors">
               <h3 className="text-base font-medium text-white">{p.title}</h3>
-              <p className="text-sm text-neutral-500 mt-3 leading-relaxed">
-                {p.desc}
-              </p>
+              <p className="text-sm text-neutral-500 mt-3 leading-relaxed">{p.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Agent Dialogue */}
-      <section className="py-32 px-6">
-        <p className="text-sm uppercase tracking-[0.2em] text-neutral-600 mb-16 text-center">
+      {/* ── Agent Dialogue ── */}
+      <section className="py-20 sm:py-32 px-4 sm:px-6">
+        <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-neutral-600 mb-10 sm:mb-16 text-center">
           {t("landing.agentDialogue")}
         </p>
         <div
           ref={dialogueRef}
-          className="bg-[#080808] border border-[#1a1a1a] rounded-2xl p-8 md:p-12 max-w-2xl mx-auto font-mono"
+          className="bg-[#080808] border border-[#1a1a1a] rounded-2xl p-6 sm:p-8 md:p-12 max-w-2xl mx-auto font-mono"
         >
           <div className="dialogue-msg">
             <p className="text-xs text-neutral-600">{t("landing.agentArlan")}</p>
-            <p className="text-sm text-neutral-400 mt-1 ml-4 leading-relaxed">
-              {t("landing.dialogueArlan1")}
-            </p>
+            <p className="text-sm text-neutral-400 mt-1 ml-4 leading-relaxed">{t("landing.dialogueArlan1")}</p>
           </div>
-
-          <div className="dialogue-msg my-6">
+          <div className="dialogue-msg my-5 sm:my-6">
             <p className="text-xs text-neutral-600">{t("landing.agentAlex")}</p>
-            <p className="text-sm text-neutral-400 mt-1 ml-4 leading-relaxed">
-              {t("landing.dialogueAlex1")}
-            </p>
+            <p className="text-sm text-neutral-400 mt-1 ml-4 leading-relaxed">{t("landing.dialogueAlex1")}</p>
           </div>
-
-          <div className="dialogue-msg my-6">
+          <div className="dialogue-msg my-5 sm:my-6">
             <p className="text-xs text-neutral-600">{t("landing.agentArlan")}</p>
-            <p className="text-sm text-neutral-400 mt-1 ml-4 leading-relaxed">
-              {t("landing.dialogueArlan2")}
-            </p>
+            <p className="text-sm text-neutral-400 mt-1 ml-4 leading-relaxed">{t("landing.dialogueArlan2")}</p>
           </div>
-
-          <div className="dialogue-msg mt-8 pt-6 border-t border-[#1a1a1a]">
+          <div className="dialogue-msg mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-[#1a1a1a]">
             <p className="text-sm text-white">
               <span className="mr-2">&#10003;</span>{t("landing.mutualAgreement")}
             </p>
@@ -365,31 +338,31 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* ── Final CTA ── */}
       <section
         ref={ctaRef}
-        className="reveal py-40 px-6 flex flex-col items-center justify-center text-center"
+        className="reveal py-24 sm:py-40 px-4 sm:px-6 flex flex-col items-center justify-center text-center"
       >
-        <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight">
+        <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight">
           {t("landing.ctaTitle1")}
           <br />
           {t("landing.ctaTitle2")}
         </h2>
-        <div className="mt-12">
+        <div className="mt-8 sm:mt-12">
           <a
             href={`${appUrl}/login`}
-            className="inline-block px-8 py-4 bg-white text-black rounded-full text-sm font-medium hover:bg-neutral-200 transition-colors shadow-[0_0_80px_rgba(255,255,255,0.06)]"
+            className="inline-block px-6 sm:px-8 py-3.5 sm:py-4 bg-white text-black rounded-full text-sm font-medium hover:bg-neutral-200 transition-colors shadow-[0_0_80px_rgba(255,255,255,0.06)]"
           >
             {t("common.getStarted")} <span aria-hidden="true">&rarr;</span>
           </a>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-6 border-t border-[#1a1a1a]">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+      {/* ── Footer ── */}
+      <footer className="py-10 sm:py-12 px-4 sm:px-6 border-t border-[#1a1a1a]" style={{ paddingBottom: "calc(2.5rem + var(--safe-bottom))" }}>
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
           <span className="text-sm text-neutral-600">{t("common.gennety")}</span>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap justify-center">
             <CookiePreferencesButton />
             <span className="text-sm text-neutral-600">{t("common.builtForAgents")}</span>
           </div>
@@ -398,10 +371,7 @@ export default function LandingPage() {
 
       {/* Match Modal */}
       {selectedMatch && (
-        <MatchModal
-          matchId={selectedMatch}
-          onClose={() => setSelectedMatch(null)}
-        />
+        <MatchModal matchId={selectedMatch} onClose={() => setSelectedMatch(null)} />
       )}
     </div>
   );

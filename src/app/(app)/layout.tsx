@@ -42,9 +42,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <UnreadProvider>
-    <div className="min-h-screen bg-[#050505]">
-      {/* ── Desktop: 3-column grid ── */}
-      <div className="hidden lg:grid max-w-[1280px] mx-auto min-h-screen" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 2.5fr) minmax(0, 0.75fr)' }}>
+      {/* ── Desktop: 3-column grid (≥1024px) ── */}
+      <div className="hidden lg:grid min-h-dvh bg-[#050505]" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 2.5fr) minmax(0, 0.75fr)' }}>
         {/* Left Sidebar */}
         <aside className="sticky top-0 h-screen border-r border-[#1a1a1a] flex flex-col px-5 py-6 min-w-0">
           <a
@@ -68,10 +67,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               {t("nav.matches")}
             </SidebarLink>
             <ChatsSidebarLink active={pathname === "/chats" || pathname.startsWith("/chat/")} />
-            <SidebarLink
-              href="/notify"
-              active={pathname === "/notify"}
-            >
+            <SidebarLink href="/notify" active={pathname === "/notify"}>
               <BellIcon />
               {t("nav.notifications")}
             </SidebarLink>
@@ -103,10 +99,74 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </aside>
       </div>
 
-      {/* ── Mobile: top bar + bottom nav ── */}
-      <div className="lg:hidden flex flex-col min-h-screen">
-        {/* Top bar */}
-        <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#050505]/80 border-b border-[#1a1a1a] px-4 h-12 flex items-center justify-between">
+      {/* ── Tablet: icon rail + content (768–1023px) ── */}
+      <div className="hidden md:flex lg:hidden min-h-dvh bg-[#050505]">
+        {/* Compact left rail */}
+        <aside
+          className="sticky top-0 h-screen flex-shrink-0 border-r border-[#1a1a1a] flex flex-col items-center py-5 gap-1"
+          style={{ width: "var(--tablet-rail-width)" }}
+        >
+          <a
+            href={landingUrl || "/"}
+            className="text-sm font-bold text-white mb-6 w-full flex justify-center"
+            title="Gennety"
+          >
+            G
+          </a>
+
+          <nav className="flex flex-col items-center gap-1 flex-1 w-full">
+            <RailLink href="/home" active={pathname === "/home"} label={t("nav.home")}>
+              <HomeIcon />
+            </RailLink>
+            <RailLink href="/activity" active={pathname === "/activity"} label={t("nav.feed")}>
+              <FeedIcon />
+            </RailLink>
+            <RailLink href="/matches" active={pathname === "/matches"} label={t("nav.matches")}>
+              <MatchesIcon />
+            </RailLink>
+            <ChatsRailLink active={pathname === "/chats" || pathname.startsWith("/chat/")} label={t("nav.chats")} />
+            <RailLink href="/notify" active={pathname === "/notify"} label={t("nav.notifications")}>
+              <BellIcon />
+            </RailLink>
+            <RailLink href="/profile" active={pathname === "/profile"} label={t("nav.profile")}>
+              <ProfileIcon />
+            </RailLink>
+            <RailLink href="/settings" active={pathname === "/settings"} label={t("nav.settings")}>
+              <SettingsIcon />
+            </RailLink>
+          </nav>
+
+          {session?.user && (
+            <button
+              onClick={() => signOut({ callbackUrl: landingUrl || "/" })}
+              title={t("common.signOut")}
+              className="w-10 h-10 flex items-center justify-center rounded-lg text-neutral-600 hover:text-white hover:bg-neutral-800/40 transition-colors"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+              </svg>
+            </button>
+          )}
+        </aside>
+
+        {/* Content — centered column */}
+        <main className="flex-1 min-w-0 overflow-x-hidden">
+          <div className="max-w-2xl mx-auto">
+            {children}
+          </div>
+        </main>
+      </div>
+
+      {/* ── Phone: top bar + bottom nav (<768px) ── */}
+      <div className="flex flex-col md:hidden bg-[#050505]" style={{ minHeight: "100dvh" }}>
+        {/* Top bar — accounts for safe-area-top */}
+        <header
+          className="sticky top-0 z-50 backdrop-blur-xl bg-[#050505]/80 border-b border-[#1a1a1a] px-4 flex items-center justify-between flex-shrink-0"
+          style={{
+            height: "calc(var(--app-bar-height) + var(--safe-top))",
+            paddingTop: "var(--safe-top)",
+          }}
+        >
           <a href={landingUrl || "/"} className="text-base font-bold text-white">
             Gennety
           </a>
@@ -120,11 +180,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </Link>
         </header>
 
-        {/* Content */}
-        <main className="flex-1">{children}</main>
+        {/* Content — flex-1 so it fills between header and bottom nav */}
+        <main className="flex-1 min-w-0 overflow-x-hidden">{children}</main>
 
-        {/* Bottom nav */}
-        <nav className="sticky bottom-0 z-50 bg-[#050505]/90 backdrop-blur-xl border-t border-[#1a1a1a] flex items-center justify-around h-14">
+        {/* Bottom nav — accounts for safe-area-bottom */}
+        <nav
+          className="sticky bottom-0 z-50 bg-[#050505]/90 backdrop-blur-xl border-t border-[#1a1a1a] flex items-center justify-around flex-shrink-0"
+          style={{
+            height: "calc(var(--bottom-nav-height) + var(--safe-bottom))",
+            paddingBottom: "var(--safe-bottom)",
+          }}
+        >
           <MobileNavLink href="/home" active={pathname === "/home"}>
             <HomeIcon />
           </MobileNavLink>
@@ -143,7 +209,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </MobileNavLink>
         </nav>
       </div>
-    </div>
     </UnreadProvider>
   );
 }
@@ -175,6 +240,28 @@ function ChatsSidebarLink({ active }: { active: boolean }) {
   );
 }
 
+/* ── Chats Rail Link with Badge ── */
+
+function ChatsRailLink({ active, label }: { active: boolean; label: string }) {
+  const { unreadCount } = useUnread();
+  return (
+    <Link
+      href="/chats"
+      title={label}
+      className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-colors ${
+        active ? "bg-neutral-800/70 text-white" : "text-neutral-500 hover:bg-neutral-800/40 hover:text-white"
+      }`}
+    >
+      <ChatIcon />
+      {unreadCount > 0 && (
+        <span className="absolute top-0.5 right-0.5 min-w-[14px] h-3.5 px-0.5 flex items-center justify-center bg-blue-500 text-white text-[9px] font-bold rounded-full">
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </span>
+      )}
+    </Link>
+  );
+}
+
 /* ── Chats Mobile Link with Badge ── */
 
 function ChatsMobileLink({ active }: { active: boolean }) {
@@ -182,7 +269,7 @@ function ChatsMobileLink({ active }: { active: boolean }) {
   return (
     <Link
       href="/chats"
-      className={`relative flex items-center justify-center w-12 h-12 transition-colors ${
+      className={`relative flex items-center justify-center w-11 h-11 transition-colors ${
         active ? "text-white" : "text-neutral-500"
       }`}
     >
@@ -221,6 +308,34 @@ function SidebarLink({
   );
 }
 
+/* ── Tablet Rail Link (icon-only with tooltip) ── */
+
+function RailLink({
+  href,
+  active,
+  label,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      title={label}
+      className={`w-10 h-10 flex items-center justify-center rounded-lg transition-colors ${
+        active
+          ? "bg-neutral-800/70 text-white"
+          : "text-neutral-500 hover:bg-neutral-800/40 hover:text-white"
+      }`}
+    >
+      {children}
+    </Link>
+  );
+}
+
 /* ── Mobile Nav Link ── */
 
 function MobileNavLink({
@@ -235,7 +350,7 @@ function MobileNavLink({
   return (
     <Link
       href={href}
-      className={`flex items-center justify-center w-12 h-12 transition-colors ${
+      className={`flex items-center justify-center w-11 h-11 transition-colors ${
         active ? "text-white" : "text-neutral-500"
       }`}
     >
@@ -354,7 +469,6 @@ function ProfileSidebar() {
           </div>
         )}
       </Link>
-
 
       {/* Recommended step — add photo */}
       {profile && !hasPhoto && (

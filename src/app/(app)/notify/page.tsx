@@ -112,17 +112,17 @@ export default function NotifyPage() {
   }
 
   return (
-    <div className="px-6 py-10">
-      <h1 className="text-2xl font-semibold text-white mb-8">
+    <div className="px-4 sm:px-6 py-6 sm:py-10">
+      <h1 className="text-xl sm:text-2xl font-semibold text-white mb-6 sm:mb-8">
         {t("notify.title")}
       </h1>
       {matches.map((match) => (
         <div
           key={match.matchId}
-          className="border border-neutral-800 rounded-xl p-6 mb-5 bg-neutral-900/50"
+          className="border border-neutral-800 rounded-xl p-4 sm:p-6 mb-4 sm:mb-5 bg-neutral-900/50"
         >
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-xl font-semibold text-white">
+          <div className="flex justify-between items-start gap-2 mb-4">
+            <span className="text-lg sm:text-xl font-semibold text-white min-w-0 truncate">
               {match.otherPerson.name ?? "Unknown"}
             </span>
             {match.otherPerson.location && (
@@ -157,7 +157,7 @@ export default function NotifyPage() {
               </div>
             )}
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button
               onClick={() => handleAction(match.matchId, "confirm")}
               disabled={actionLoading === match.matchId}

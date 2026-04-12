@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#050505]" />}>
+    <Suspense fallback={<div className="min-h-dvh bg-[#050505]" />}>
       <LoginContent />
     </Suspense>
   );
@@ -82,7 +82,7 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-[#050505]">
+    <div className="min-h-dvh flex items-start sm:items-center justify-center px-4 py-8 sm:p-6 bg-[#050505]">
       <div className="w-full max-w-sm">
         {/* Header */}
         <div className="mb-10 text-center">

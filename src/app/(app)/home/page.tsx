@@ -80,9 +80,9 @@ export default function HomePage() {
   const userName = session?.user?.name?.split(" ")[0] || "there";
 
   return (
-    <div className="px-6 py-10">
+    <div className="px-4 sm:px-6 py-6 sm:py-10">
       {/* Greeting */}
-      <h1 className="text-2xl font-semibold text-white mb-1">
+      <h1 className="text-xl sm:text-2xl font-semibold text-white mb-1">
         {t("home.welcomeBack", { name: userName })}
       </h1>
       <p className="text-sm text-neutral-500 mb-8">
@@ -100,7 +100,7 @@ export default function HomePage() {
         </div>
 
         {/* Progress Steps */}
-        <div className="flex items-center gap-0 mb-4">
+        <div className="flex items-center gap-0 mb-4 overflow-x-auto no-scrollbar">
           <ProgressStep
             step={1}
             label={t("home.profileCreated")}
@@ -288,7 +288,7 @@ function ProgressStep({
         )}
       </div>
       <span
-        className={`text-[11px] text-center leading-tight ${
+        className={`text-[10px] sm:text-[11px] text-center leading-tight max-w-[60px] sm:max-w-none ${
           done ? "text-green-400/70" : active ? "text-neutral-300" : "text-neutral-600"
         }`}
       >
