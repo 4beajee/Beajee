@@ -121,9 +121,8 @@ export default function LandingPage() {
             )}
           </div>
 
-          {/* Mobile: language + hamburger */}
+          {/* Mobile: hamburger (language lives in bottom-right FAB) */}
           <div className="flex sm:hidden items-center gap-2">
-            <LanguageSwitcher compact />
             <button
               onClick={() => setMobileMenuOpen((v) => !v)}
               className="p-2 text-neutral-400 hover:text-white transition-colors"

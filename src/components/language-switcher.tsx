@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { locales, localeNames, type Locale } from "@/i18n/config";
 
-export function LanguageSwitcher({ compact }: { compact?: boolean }) {
+export function LanguageSwitcher({
+  compact,
+  dropUp,
+}: {
+  compact?: boolean;
+  dropUp?: boolean;
+}) {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -51,7 +57,9 @@ export function LanguageSwitcher({ compact }: { compact?: boolean }) {
       </button>
 
       <div
-        className={`absolute top-full mt-1.5 right-0 z-50 min-w-[160px] rounded-xl border border-[#1a1a1a] bg-[#0a0a0a] shadow-2xl shadow-black/40 overflow-hidden transition-all duration-200 origin-top-right ${
+        className={`absolute ${
+          dropUp ? "bottom-full mb-1.5 origin-bottom-right" : "top-full mt-1.5 origin-top-right"
+        } right-0 z-50 min-w-[160px] rounded-xl border border-[#1a1a1a] bg-[#0a0a0a] shadow-2xl shadow-black/40 overflow-hidden transition-all duration-200 ${
           open
             ? "opacity-100 scale-100 pointer-events-auto"
             : "opacity-0 scale-95 pointer-events-none"

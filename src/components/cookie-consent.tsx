@@ -127,15 +127,15 @@ export function CookieConsent() {
       role="dialog"
       aria-label="Cookie consent"
       aria-live="polite"
-      className={`fixed bottom-0 left-0 right-0 z-[100] p-4 transition-all duration-300 ${
+      className={`fixed bottom-0 left-0 right-0 z-[100] p-2 sm:p-4 transition-all duration-300 ${
         hiding ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
       }`}
     >
-      <div className="max-w-4xl mx-auto rounded-xl border border-[#1a1a1a] bg-[#0a0a0a]/95 backdrop-blur-xl p-5 shadow-[0_-4px_40px_rgba(0,0,0,0.5)]">
+      <div className="max-w-4xl mx-auto rounded-xl border border-[#1a1a1a] bg-[#0a0a0a]/95 backdrop-blur-xl p-3 sm:p-5 shadow-[0_-4px_40px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto">
         {!showCustomize ? (
           /* ── Default banner view ── */
-          <div className="flex items-center gap-4">
-            <p className="text-sm text-neutral-400 leading-relaxed flex-1 line-clamp-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <p className="text-sm text-neutral-400 leading-relaxed flex-1 sm:line-clamp-2">
               {t("message")}{" "}
               <Link
                 href="/cookie-policy"
@@ -144,22 +144,22 @@ export function CookieConsent() {
                 {t("policy")}
               </Link>
             </p>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="grid grid-cols-3 sm:flex sm:items-center gap-2 sm:shrink-0">
               <button
                 onClick={() => dismiss("rejected", ALL_REJECTED)}
-                className="px-3 py-2 text-sm text-neutral-500 hover:text-white border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-lg transition-colors"
+                className="px-2 sm:px-3 py-2 text-xs sm:text-sm text-neutral-500 hover:text-white border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-lg transition-colors"
               >
                 {t("decline")}
               </button>
               <button
                 onClick={() => setShowCustomize(true)}
-                className="px-3 py-2 text-sm text-neutral-400 hover:text-white border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-lg transition-colors"
+                className="px-2 sm:px-3 py-2 text-xs sm:text-sm text-neutral-400 hover:text-white border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-lg transition-colors"
               >
                 {t("customize")}
               </button>
               <button
                 onClick={() => dismiss("accepted", ALL_ACCEPTED)}
-                className="px-5 py-2 text-sm font-medium text-black bg-white hover:bg-neutral-200 rounded-lg transition-colors"
+                className="px-2 sm:px-5 py-2 text-xs sm:text-sm font-medium text-black bg-white hover:bg-neutral-200 rounded-lg transition-colors"
               >
                 {t("accept")}
               </button>
@@ -180,15 +180,15 @@ export function CookieConsent() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-4">
               {categories.map((cat) => (
                 <div
                   key={cat.key}
                   className="flex items-center justify-between gap-3 rounded-lg border border-[#1a1a1a] px-3 py-2.5"
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-white">{cat.label}</p>
-                    <p className="text-[11px] text-neutral-500 leading-tight mt-0.5 line-clamp-1">
+                    <p className="text-[11px] text-neutral-500 leading-tight mt-0.5 line-clamp-2 sm:line-clamp-1">
                       {cat.desc}
                     </p>
                   </div>

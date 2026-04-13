@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { CookieConsent } from "@/components/cookie-consent";
+import { MobileLanguageFab } from "@/components/mobile-language-fab";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -41,6 +42,7 @@ export default async function RootLayout({
           <Providers>
             {children}
             <CookieConsent />
+            <MobileLanguageFab />
           </Providers>
         </NextIntlClientProvider>
       </body>
