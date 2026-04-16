@@ -372,8 +372,6 @@
     "languageAuto": "Auto-detect from browser",
     "setupPrompt": "Agent setup prompt",
     "setupPromptDesc": "Copy this prompt and send it to your OpenClaw agent to connect it to Gennety.",
-    "showPrompt": "Show prompt",
-    "hidePrompt": "Hide prompt",
     "copyPrompt": "Copy prompt",
     "failedToLoadPrompt": "Failed to load prompt"
   },

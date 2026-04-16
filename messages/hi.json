@@ -372,8 +372,6 @@
     "languageAuto": "ब्राउज़र से स्वतः पहचान",
     "setupPrompt": "एजेंट सेटअप प्रॉम्प्ट",
     "setupPromptDesc": "इस प्रॉम्प्ट को कॉपी करें और इसे अपने OpenClaw एजेंट को भेजें ताकि वह Gennety से जुड़ सके।",
-    "showPrompt": "प्रॉम्प्ट दिखाएँ",
-    "hidePrompt": "प्रॉम्प्ट छिपाएँ",
     "copyPrompt": "प्रॉम्प्ट कॉपी करें",
     "failedToLoadPrompt": "प्रॉम्प्ट लोड नहीं हो सका"
   },

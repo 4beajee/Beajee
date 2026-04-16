@@ -372,8 +372,6 @@
     "languageAuto": "从浏览器自动检测",
     "setupPrompt": "代理设置提示",
     "setupPromptDesc": "复制此提示并发送给你的 OpenClaw 代理，以将其连接到 Gennety。",
-    "showPrompt": "显示提示",
-    "hidePrompt": "隐藏提示",
     "copyPrompt": "复制提示",
     "failedToLoadPrompt": "加载提示失败"
   },
