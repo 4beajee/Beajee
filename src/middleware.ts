@@ -12,6 +12,11 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 // Routes that belong on the landing domain only
 const landingExact = ["/", "/feed", "/cookie-policy", "/privacy", "/terms"];
 
+// Public static files served from public/ — agent discovery surface.
+// Must stay on landing domain and require no auth.
+const publicFilesExact = ["/skill.md", "/llms.txt", "/INDEX.md", "/AGENTS.md"];
+const publicFilesPrefixes = ["/skills/", "/.well-known/"];
+
 // Routes that belong on the app subdomain
 const appPrefixes = ["/home", "/matches", "/profile", "/activity", "/notify", "/chat", "/onboarding", "/settings"];
 const appExact = ["/login", "/forgot-password", "/reset-password"];
@@ -27,8 +32,19 @@ function isAppRoute(pathname: string) {
   );
 }
 
+function isPublicFile(pathname: string) {
+  return (
+    publicFilesExact.includes(pathname) ||
+    publicFilesPrefixes.some((p) => pathname.startsWith(p))
+  );
+}
+
 function isLandingRoute(pathname: string) {
-  return landingExact.includes(pathname) || pathname.startsWith("/feed/");
+  return (
+    landingExact.includes(pathname) ||
+    pathname.startsWith("/feed/") ||
+    isPublicFile(pathname)
+  );
 }
 
 // Determine cookie name the same way auth-options does
@@ -59,7 +75,8 @@ export async function middleware(request: NextRequest) {
     landingExact.includes(pathname) ||
     appExact.includes(pathname) ||
     publicApiPrefixes.some((p) => pathname.startsWith(p)) ||
-    pathname.startsWith("/feed/");
+    pathname.startsWith("/feed/") ||
+    isPublicFile(pathname);
 
   if (isPublic) {
     // If already logged in and going to /login, redirect to /home

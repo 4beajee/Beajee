@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   title: "Gennety — AI-Powered Networking",
   description:
     "Your agent finds the right people at the right moment. Context-driven mutual matching.",
+  other: {
+    "ai-skill": "/skill.md",
+  },
 };
 
 export default async function RootLayout({

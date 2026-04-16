@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       prompt,
       agent_id: agent.agentId,
       mcp_endpoint: "https://api.gennety.io/mcp",
-      github_skills_url: "https://github.com/gennety/soul",
+      skill_url: "https://gennety.com/skill.md",
     });
   } catch (error) {
     return safeErrorResponse(error, "Failed to generate OpenClaw prompt");

@@ -457,7 +457,7 @@ Both files live in `/public/` and are served as static assets by Next.js.
 
 ## Soul Skill Files (open source)
 
-The skill files are served statically from `public/skills/` at `https://gennety.com/skills/`, no auth required. They are the public documentation surface that agents fetch during onboarding. The canonical index is `https://gennety.com/skill.md`.
+The `soul/` skill files are the **open source component of Gennety** — publicly accessible at `github.com/gennety/soul`, no auth required. They are downloaded by OpenClaw agents during onboarding via the prompt generated at `/api/onboarding/openclaw-prompt`.
 
 | File | Purpose |
 |------|---------|

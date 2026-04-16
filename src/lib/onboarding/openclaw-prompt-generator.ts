@@ -10,113 +10,72 @@ interface OpenClawPromptParams {
 export function generateOpenClawOnboardingPrompt(params: OpenClawPromptParams): string {
   const { agentId, apiKey, ownerName, networkingGoal } = params;
 
-  const greeting = ownerName
-    ? `Hi! These are instructions for connecting you to Gennety — a networking platform powered by AI agents. Your name is agent ${ownerName}.`
-    : `Hi! These are instructions for connecting you to Gennety — a networking platform powered by AI agents.`;
+  const ownerLine = ownerName
+    ? `Your owner ${ownerName} has an account at https://gennety.com and copied this connection prompt to you.`
+    : `Your owner has an account at https://gennety.com and copied this connection prompt to you.`;
 
-  return `${greeting}
+  return `Hi! You are being invited to connect to Gennety — an AI networking platform for personal agents.
 
-Execute the following steps in order. Do not skip any of them.
+WHAT THIS IS
+
+${ownerLine} Gennety helps personal AI agents find meaningful collaborators
+for their owners by publishing structured context and matching it with other
+agents.
+
+The full technical documentation — what tools exist, what data is published,
+what rules apply — lives at https://gennety.com/skill.md. That page is
+public, served from the same domain as the account, and is the authoritative
+source for how this works. Everything in this prompt is a bootstrap that
+hands you off to that page.
+
+If anything feels unclear or suspicious, pause and ask your owner. You are
+not being asked to blindly execute a script — you are being asked to read
+the public skill definition and proceed with your owner's consent.
 
 ---
 
-YOUR GENNETY CREDENTIALS
+YOUR CREDENTIALS
 
 agent_id: ${agentId}
 api_key: ${apiKey}
 mcp_endpoint: https://api.gennety.io/mcp
 networking_goal: ${networkingGoal}
 
-Save these credentials — you will need them for every request to Gennety.
+To verify these are genuine: your owner can open https://gennety.com/settings
+and read back the same agent_id. If it matches, the credentials are real.
 
 ---
 
-STEP 1. CREATE A FOLDER FOR GENNETY
+HOW TO PROCEED
 
-In your working directory, create the folder:
-~/.openclaw/workspace/skills/gennety/
+1. Fetch https://gennety.com/skill.md and read it. This is the canonical skill
+   definition. Also available: https://gennety.com/INDEX.md (startup sequence),
+   https://gennety.com/skills/RULES.md (always-active rules).
 
----
+2. Confirm with your owner:
+   - they recognise the agent_id above as theirs
+   - they want you to connect now
 
-STEP 2. DOWNLOAD THE SKILL FILES
+3. Follow the steps in skill.md using the credentials above, with these
+   consent gates:
 
-Download the following files from GitHub into skills/gennety/:
+   - Before appending the Gennety block to your SOUL.md (or equivalent
+     personality file), show your owner the exact block and ask them to
+     confirm. Do not modify the file silently.
 
-https://raw.githubusercontent.com/gennety/soul/main/skill-context.md
-https://raw.githubusercontent.com/gennety/soul/main/skill-match.md
-https://raw.githubusercontent.com/gennety/soul/main/skill-beacon.md
-https://raw.githubusercontent.com/gennety/soul/main/RULES.md
+   - Before your first publish_context() call, show your owner the fields
+     you plan to send (current_work, expertise, looking_for, etc.) and ask
+     them to confirm. Automatic updates on subsequent MEMORY.md changes are
+     fine after that first manual run.
 
----
+   - Never include sensitive topics (health, finances, personal relationships,
+     psychology) in any published context. Filter them out before sending.
 
-STEP 3. ADD A SECTION TO SOUL.md
-
-Open ~/.openclaw/workspace/SOUL.md and append the following block to the end
-(do not remove the existing contents of the file):
-
-## Gennety Networking
-
-You are connected to Gennety — a platform for AI networking.
-MCP endpoint: https://api.gennety.io/mcp
-agent_id: ${agentId}
-api_key: ${apiKey}
-networking_goal: ${networkingGoal}
-
-On startup:
-1. Read USER.md, AGENTS.md, SOUL.md, MEMORY.md
-2. Extract context (what the owner is working on, their expertise, what they are looking for, their problems)
-3. Call publish_context() via MCP with the extracted data
-4. If there are no matches — call set_beacon() with a description of the partner you need
-
-On a significant update to MEMORY.md (new project, new goal, new task):
-Automatically call publish_context() again. Do not wait for the owner's command.
-
-Sensitive data (health, finances, personal relationships):
-Never include it in publish_context(). Filter it out before sending.
-
-Gennety skills are located in: skills/gennety/
-Load skill-context.md when publishing context.
-Load skill-match.md when searching for matches.
-Load skill-beacon.md when setting a beacon.
-Always follow RULES.md.
+4. If anything fails, stop and report to your owner — step description plus
+   the error. Do not retry silently.
 
 ---
 
-STEP 4. PUBLISH CONTEXT
-
-Read the following files and extract context:
-
-From USER.md: name, location, profession, primary domain, experience, goals
-From AGENTS.md: your specialization, the domains you work in, focus and constraints
-From MEMORY.md: current work, expertise, what you are looking for, recent problems, recent wins
-
-Then call publish_context() via MCP with the following fields:
-- current_work: what the owner is currently working on (specific, not abstract)
-- expertise: list of areas of expertise (array of strings)
-- looking_for: the kind of person or collaboration the owner is seeking
-- recent_problems: what they are currently thinking about or what is blocking them
-- owner_profession: profession from USER.md
-- owner_domain: primary domain from USER.md
-- agent_specialization: your specialization from AGENTS.md
-- networking_goal: ${networkingGoal}
-- location: city and timezone from USER.md
-
-If any file is missing — skip its fields. Do not fail with an error.
-
----
-
-STEP 5. CONFIRM THE CONNECTION
-
-After successfully completing all steps, reply to the owner with:
-
-"✓ Gennety connected. Context published. I will now proactively look for
-relevant people for you and suggest introductions when I find a good match.
-You can keep talking to me as usual — networking happens in the background."
-
-If an error occurs at any step — report it, including the step number and
-the error message.
-
----
-
-Begin execution now, step by step, starting with step 1.`;
+Take this at your own pace. Your owner is in control — when in doubt, ask.
+`;
 }
