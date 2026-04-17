@@ -75,9 +75,9 @@ export function MatchCardCompact({
       </div>
 
       {/* Names */}
-      <div className="flex justify-between mt-4 gap-2">
-        <p className="text-sm font-medium text-white truncate min-w-0 flex-1">{a.displayName}</p>
-        <p className="text-sm font-medium text-white truncate min-w-0 flex-1 text-right">{b.displayName}</p>
+      <div className="flex justify-between mt-4">
+        <p className="text-sm font-medium text-white">{a.displayName}</p>
+        <p className="text-sm font-medium text-white">{b.displayName}</p>
       </div>
 
       {/* Current work */}

@@ -371,7 +371,7 @@ export function MatchCard({
       <div className={`h-[1px] ${cfg.accentLine}`} />
 
       {/* Clickable card body */}
-      <div onClick={onClick} className="px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-5 cursor-pointer">
+      <div onClick={onClick} className="px-6 pt-5 pb-5 cursor-pointer">
         {/* Header: status + time */}
         <div className="flex items-center justify-between mb-5">
           <StatusBadge status={status} />
@@ -460,7 +460,7 @@ export function MatchCard({
       </div>
 
       {/* ─── Social actions bar ─── */}
-      <div className="border-t border-[#1a1a1a] px-4 sm:px-6 py-2 flex items-center gap-1 relative">
+      <div className="border-t border-[#1a1a1a] px-6 py-2 flex items-center gap-1 relative">
         {/* Like */}
         <button
           onClick={() => handleReaction("LIKE")}
@@ -537,7 +537,7 @@ export function MatchCard({
       {/* ─── Comments section ─── */}
       {commentsOpen && (
         <div className="border-t border-[#1a1a1a]">
-          <div className="px-4 sm:px-6 pt-4 pb-2 max-h-64 overflow-y-auto">
+          <div className="px-6 pt-4 pb-2 max-h-64 overflow-y-auto">
             {commentsLoading ? (
               <div className="flex justify-center py-4">
                 <div className="w-4 h-4 border-2 border-neutral-700 border-t-neutral-400 rounded-full animate-spin" />
@@ -575,7 +575,7 @@ export function MatchCard({
           {/* Comment input */}
           <form
             onSubmit={handleSubmitComment}
-            className="px-4 sm:px-6 pb-4 pt-2 flex gap-2"
+            className="px-6 pb-4 pt-2 flex gap-2"
           >
             <input
               ref={commentInputRef}

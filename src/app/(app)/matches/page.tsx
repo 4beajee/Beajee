@@ -62,12 +62,12 @@ export default function MatchesPage() {
   const displayed = tab === "active" ? activeMatches : dormantMatches;
 
   return (
-    <div className="px-4 sm:px-6 py-6 sm:py-10">
-      <h1 className="text-xl sm:text-2xl font-semibold text-white mb-6">{t("matches.title")}</h1>
+    <div className="px-6 py-10">
+      <h1 className="text-2xl font-semibold text-white mb-6">{t("matches.title")}</h1>
 
       <FreshnessIndicator state={freshnessState} />
 
-      <div className="flex gap-0 mb-6 border-b border-neutral-800 overflow-x-auto no-scrollbar">
+      <div className="flex gap-0 mb-6 border-b border-neutral-800">
         <button
           onClick={() => setTab("active")}
           className={`px-5 py-2.5 text-sm font-medium border-b-2 transition-colors ${
@@ -132,10 +132,10 @@ export default function MatchesPage() {
       {displayed.map((match) => (
         <div
           key={match.matchId}
-          className="border border-neutral-800 rounded-xl p-4 sm:p-6 mb-4 bg-neutral-900/50"
+          className="border border-neutral-800 rounded-xl p-6 mb-4 bg-neutral-900/50"
         >
-          <div className="flex justify-between items-start sm:items-center gap-2 mb-3">
-            <span className="text-base sm:text-lg font-semibold text-white min-w-0 truncate">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-lg font-semibold text-white">
               {match.otherPerson.name ?? "Unknown"}
             </span>
             <StatusBadge status={match.status} />
@@ -166,7 +166,7 @@ export default function MatchesPage() {
               </div>
             )}
 
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <div className="flex gap-3">
             {match.status === "MATCHED" && match.chatId && (
               <Link
                 href={`/chat/${match.matchId}`}

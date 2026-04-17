@@ -80,7 +80,7 @@ export default function ProfilePage() {
 
   if (error || !profile) {
     return (
-      <div className="px-4 sm:px-6 py-6 sm:py-10">
+      <div className="px-6 py-10">
         <p className="text-sm text-neutral-500">
           {error ?? "Could not load profile."}
         </p>
@@ -92,11 +92,11 @@ export default function ProfilePage() {
   const rep = profile.reputation;
 
   return (
-    <div className="px-4 sm:px-6 py-6 sm:py-10">
+    <div className="px-6 py-10">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6 sm:mb-8">
+      <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-white">
+          <h1 className="text-2xl font-semibold text-white">
             {ctx?.ownerName ?? profile.name ?? t("profile.title")}
           </h1>
           {ctx?.ownerProfession && (
@@ -274,7 +274,7 @@ export default function ProfilePage() {
         <h2 className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-4">
           {t("profile.reputation")}
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <StatBlock value={rep.score.toFixed(0)} label={t("profile.score")} />
           <StatBlock
             value={
