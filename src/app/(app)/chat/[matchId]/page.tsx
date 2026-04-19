@@ -260,7 +260,7 @@ export default function ChatPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto py-4 flex flex-col">
+      <div className="flex-1 overflow-y-auto no-scrollbar py-4 flex flex-col">
         {dayGroups.map((group) => (
           <div key={group.key} className="flex flex-col gap-3">
             <div className="sticky top-1 z-10 flex justify-center my-2 pointer-events-none">
@@ -322,15 +322,35 @@ export default function ChatPage() {
             }
           }}
           placeholder={t("chat.typePlaceholder")}
-          className="flex-1 px-4 py-3 text-sm bg-neutral-900 border border-neutral-800 rounded-lg text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600 resize-none leading-5 break-words"
+          className="flex-1 px-4 py-3 text-sm bg-neutral-900 border border-neutral-800 rounded-2xl text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600 resize-none leading-5 break-words"
           style={{ maxHeight: MAX_TEXTAREA_HEIGHT, overflowY: "hidden" }}
         />
         <button
           onClick={handleSend}
           disabled={sending || !newMessage.trim()}
-          className="px-5 py-3 text-sm font-semibold bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          aria-label={t("common.send")}
+          className="relative px-5 py-3 text-sm font-semibold bg-white text-black rounded-2xl hover:bg-neutral-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          {t("common.send")}
+          <span className={sending ? "invisible" : ""}>{t("common.send")}</span>
+          {sending && (
+            <span
+              className="absolute inset-0 flex items-center justify-center gap-1"
+              aria-hidden="true"
+            >
+              <span
+                className="w-1 h-1 bg-black rounded-full animate-dot-blink"
+                style={{ animationDelay: "0ms" }}
+              />
+              <span
+                className="w-1 h-1 bg-black rounded-full animate-dot-blink"
+                style={{ animationDelay: "200ms" }}
+              />
+              <span
+                className="w-1 h-1 bg-black rounded-full animate-dot-blink"
+                style={{ animationDelay: "400ms" }}
+              />
+            </span>
+          )}
         </button>
       </div>
     </div>
