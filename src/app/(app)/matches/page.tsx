@@ -236,17 +236,36 @@ function FreshnessIndicator({ state }: { state: string | null }) {
 function StatusBadge({ status }: { status: string }) {
   const t = useTranslations("status");
 
-  const colors =
+  const styles =
     status === "MATCHED"
-      ? "bg-green-950/50 text-green-400 border-green-800/50"
+      ? {
+          bg: "bg-emerald-400/[0.08]",
+          text: "text-emerald-300/90",
+          border: "border-emerald-300/20",
+          dot: "bg-emerald-400",
+          glow: "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]",
+        }
       : status === "PROPOSED"
-      ? "bg-amber-950/50 text-amber-400 border-amber-800/50"
-      : "bg-neutral-800 text-neutral-400 border-neutral-700";
+      ? {
+          bg: "bg-amber-400/[0.08]",
+          text: "text-amber-300/90",
+          border: "border-amber-300/20",
+          dot: "bg-amber-400",
+          glow: "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]",
+        }
+      : {
+          bg: "bg-white/[0.04]",
+          text: "text-neutral-400",
+          border: "border-white/10",
+          dot: "bg-neutral-500",
+          glow: "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]",
+        };
 
   return (
     <span
-      className={`text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wide border ${colors}`}
+      className={`inline-flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-[5px] rounded-full uppercase tracking-[0.08em] border backdrop-blur-md ${styles.bg} ${styles.text} ${styles.border} ${styles.glow}`}
     >
+      <span className={`w-1 h-1 rounded-full ${styles.dot}`} />
       {t(status.toLowerCase())}
     </span>
   );
