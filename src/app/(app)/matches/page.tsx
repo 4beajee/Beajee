@@ -239,33 +239,25 @@ function StatusBadge({ status }: { status: string }) {
   const styles =
     status === "MATCHED"
       ? {
-          bg: "bg-emerald-400/[0.08]",
-          text: "text-emerald-300/90",
-          border: "border-emerald-300/20",
+          text: "text-emerald-400",
           dot: "bg-emerald-400",
-          glow: "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]",
+          glow: "shadow-[0_0_8px_rgba(52,211,153,0.6)]",
         }
       : status === "PROPOSED"
       ? {
-          bg: "bg-amber-400/[0.08]",
-          text: "text-amber-300/90",
-          border: "border-amber-300/20",
+          text: "text-amber-400",
           dot: "bg-amber-400",
-          glow: "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]",
+          glow: "shadow-[0_0_8px_rgba(251,191,36,0.5)]",
         }
       : {
-          bg: "bg-white/[0.04]",
-          text: "text-neutral-400",
-          border: "border-white/10",
+          text: "text-neutral-500",
           dot: "bg-neutral-500",
-          glow: "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]",
+          glow: "",
         };
 
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-[5px] rounded-full uppercase tracking-[0.08em] border backdrop-blur-md ${styles.bg} ${styles.text} ${styles.border} ${styles.glow}`}
-    >
-      <span className={`w-1 h-1 rounded-full ${styles.dot}`} />
+    <span className={`inline-flex items-center gap-2 text-[11px] font-medium tracking-wide ${styles.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${styles.dot} ${styles.glow}`} />
       {t(status.toLowerCase())}
     </span>
   );
