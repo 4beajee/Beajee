@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
-import { sendFreshnessWarningEmail, shouldSend } from "@/lib/services/notification";
+import { createInboxEvent } from "@/lib/services/inbox";
 
 // Freshness thresholds in days
 const AGING_THRESHOLD_DAYS = 30;
@@ -195,20 +195,28 @@ export async function checkFreshnessDecay(): Promise<{
       `[freshness-decay] ${ctx.agent.agentId}: ${currentState} → ${newState}`
     );
 
-    // Send freshness warning email for AGING and STALE transitions (not INACTIVE — they've been warned)
-    if ((newState === "AGING" || newState === "STALE") && shouldSend(ctx.agent.owner, "freshness")) {
+    // Write inbox event for AGING and STALE transitions (not INACTIVE — already warned).
+    // Preference filtering (notifyFreshness) applies to the email fallback, not the
+    // inbox itself — agents always see freshness state so they can remind the owner.
+    if (newState === "AGING" || newState === "STALE") {
       const daysSince = Math.floor(
         (Date.now() - ctx.lastSignificantUpdateAt.getTime()) / (1000 * 60 * 60 * 24)
       );
-      sendFreshnessWarningEmail({
-        ownerEmail: ctx.agent.owner.email,
-        ownerName: ctx.agent.owner.name,
-        newState,
-        daysSinceUpdate: daysSince,
+      createInboxEvent({
         ownerId: ctx.agent.owner.id,
         agentId: ctx.agent.id,
+        type: "FRESHNESS_WARNING",
+        referenceId: ctx.agent.id,
+        payload: {
+          agent_id: ctx.agent.agentId,
+          new_state: newState,
+          days_since_update: daysSince,
+          action: newState === "STALE"
+            ? "Your agent is excluded from search. Re-publish context to rejoin."
+            : "Update context to stay visible and relevant.",
+        },
       }).catch((err) =>
-        console.error(`[freshness-decay] Failed to send freshness email to ${ctx.agent.owner.email}:`, err)
+        console.error(`[freshness-decay] Failed to create inbox event for ${ctx.agent.owner.email}:`, err)
       );
     }
   }

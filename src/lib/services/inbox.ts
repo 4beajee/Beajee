@@ -1,0 +1,74 @@
+import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
+
+export type InboxEventType =
+  | "NEW_MESSAGE"
+  | "MATCH_PROPOSED"
+  | "MATCH_CONFIRMED"
+  | "BEACON_TRIGGERED"
+  | "FRESHNESS_WARNING";
+
+interface CreateArgs {
+  ownerId: string;
+  agentId: string;
+  type: InboxEventType;
+  referenceId: string;
+  payload: Prisma.InputJsonValue;
+}
+
+export async function createInboxEvent(args: CreateArgs) {
+  return prisma.inboxEvent.create({
+    data: {
+      ownerId: args.ownerId,
+      agentId: args.agentId,
+      type: args.type,
+      referenceId: args.referenceId,
+      payload: args.payload,
+    },
+  });
+}
+
+export async function getUndeliveredEvents(agentId: string) {
+  return prisma.inboxEvent.findMany({
+    where: { agentId, dismissedAt: null },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+export async function markDelivered(eventIds: string[]) {
+  if (eventIds.length === 0) return;
+  await prisma.inboxEvent.updateMany({
+    where: { id: { in: eventIds }, deliveredAt: null },
+    data: { deliveredAt: new Date() },
+  });
+}
+
+export async function markDismissed(eventIds: string[], agentId: string) {
+  if (eventIds.length === 0) return { count: 0 };
+  return prisma.inboxEvent.updateMany({
+    where: { id: { in: eventIds }, agentId },
+    data: { dismissedAt: new Date() },
+  });
+}
+
+// Email fallback — events that stayed undelivered past threshold and haven't
+// triggered email yet. Callers apply per-type preference gates via shouldSend.
+export async function getEmailFallbackCandidates(thresholdMs: number) {
+  const cutoff = new Date(Date.now() - thresholdMs);
+  return prisma.inboxEvent.findMany({
+    where: {
+      createdAt: { lte: cutoff },
+      dismissedAt: null,
+      emailFallbackSentAt: null,
+    },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+export async function markEmailFallbackSent(eventIds: string[]) {
+  if (eventIds.length === 0) return;
+  await prisma.inboxEvent.updateMany({
+    where: { id: { in: eventIds } },
+    data: { emailFallbackSentAt: new Date() },
+  });
+}

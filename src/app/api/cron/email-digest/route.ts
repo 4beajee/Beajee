@@ -1,24 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { sendNewMessagesEmail, shouldSend } from "@/lib/services/notification";
+import {
+  sendNewMessagesEmail,
+  sendMatchProposalEmail,
+  sendMatchConfirmedEmail,
+  sendFreshnessWarningEmail,
+  shouldSend,
+} from "@/lib/services/notification";
+import {
+  getEmailFallbackCandidates,
+  markEmailFallbackSent,
+} from "@/lib/services/inbox";
 
 /**
- * Vercel Cron — runs every 5 minutes.
- * Finds chats with unread messages and sends batched email notifications.
+ * Email fallback for undelivered inbox events.
  *
- * Logic:
- * 1. Find all OPEN chats with messages
- * 2. For each chat, check if either owner has unread messages
- * 3. Only notify if:
- *    - The oldest unread message is >5 min old (delay to allow natural reading)
- *    - The last notification for this chat+owner was >30 min ago
- *    - The owner has notifyNewMessages enabled
- * 4. Send a single email summarising all unread messages
- * 5. Update lastNotifiedA/B timestamp to prevent re-sending
+ * Primary delivery is via the agent (check_in MCP tool + ack_inbox).
+ * If an event stays undelivered for FALLBACK_THRESHOLD_MS, we send email
+ * based on the owner's notification preferences.
  */
 
-const MESSAGE_DELAY_MS = 5 * 60 * 1000; // 5 min — wait before notifying
-const NOTIFICATION_COOLDOWN_MS = 30 * 60 * 1000; // 30 min — min gap between emails per chat
+const FALLBACK_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
+
+type PayloadRecord = Record<string, unknown>;
+
+function asString(payload: PayloadRecord, key: string): string | null {
+  const value = payload[key];
+  return typeof value === "string" ? value : null;
+}
+
+function asNumber(payload: PayloadRecord, key: string): number | null {
+  const value = payload[key];
+  return typeof value === "number" ? value : null;
+}
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -27,154 +41,112 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const now = new Date();
-    const delayThreshold = new Date(now.getTime() - MESSAGE_DELAY_MS);
-    const cooldownThreshold = new Date(now.getTime() - NOTIFICATION_COOLDOWN_MS);
+    const candidates = await getEmailFallbackCandidates(FALLBACK_THRESHOLD_MS);
 
-    // Find all open chats that have at least one message
-    const chats = await prisma.chat.findMany({
-      where: { status: "OPEN" },
-      include: {
-        match: {
-          include: {
-            agentA: { include: { owner: true } },
-            agentB: { include: { owner: true } },
-          },
-        },
-        messages: {
-          orderBy: { createdAt: "desc" },
-          take: 50, // enough to compute unread
-        },
+    if (candidates.length === 0) {
+      return NextResponse.json({ success: true, processed: 0, sent: 0, skipped: 0 });
+    }
+
+    const ownerIds = Array.from(new Set(candidates.map((e) => e.ownerId)));
+    const owners = await prisma.owner.findMany({
+      where: { id: { in: ownerIds } },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        notifyAllEmails: true,
+        notifyMatchProposals: true,
+        notifyNewMessages: true,
+        notifyFreshness: true,
       },
     });
+    const ownerById = new Map(owners.map((o) => [o.id, o]));
 
     let sent = 0;
     let skipped = 0;
+    const processedIds: string[] = [];
 
-    for (const chat of chats) {
-      if (chat.messages.length === 0) continue;
+    for (const event of candidates) {
+      const owner = ownerById.get(event.ownerId);
+      if (!owner) {
+        processedIds.push(event.id);
+        skipped++;
+        continue;
+      }
 
-      const ownerA = chat.match.agentA.owner;
-      const ownerB = chat.match.agentB.owner;
+      const payload = (event.payload ?? {}) as PayloadRecord;
+      let didSend = false;
 
-      // Check for owner A — do they have unread messages from B?
-      const resultA = await checkAndNotify({
-        chat,
-        recipientOwner: ownerA,
-        senderOwner: ownerB,
-        lastRead: chat.lastReadByA,
-        lastNotified: chat.lastNotifiedA,
-        side: "A",
-        now,
-        delayThreshold,
-        cooldownThreshold,
-      });
-      if (resultA === "sent") sent++;
-      else skipped++;
+      try {
+        if (event.type === "MATCH_PROPOSED" && shouldSend(owner, "match")) {
+          await sendMatchProposalEmail({
+            ownerEmail: owner.email,
+            ownerName: owner.name,
+            otherPersonName: asString(payload, "other_owner_name"),
+            framing: asString(payload, "framing") ?? "",
+            matchId: asString(payload, "match_id") ?? event.referenceId,
+            ownerId: owner.id,
+          });
+          didSend = true;
+        } else if (event.type === "MATCH_CONFIRMED" && shouldSend(owner, "match")) {
+          await sendMatchConfirmedEmail({
+            ownerEmail: owner.email,
+            ownerName: owner.name,
+            otherPersonName: asString(payload, "other_owner_name"),
+            overlapSummary: asString(payload, "overlap_summary") ?? "",
+            matchId: asString(payload, "match_id") ?? event.referenceId,
+            ownerId: owner.id,
+          });
+          didSend = true;
+        } else if (event.type === "NEW_MESSAGE" && shouldSend(owner, "message")) {
+          await sendNewMessagesEmail({
+            ownerEmail: owner.email,
+            ownerName: owner.name,
+            senderName: asString(payload, "from_owner_name"),
+            messageCount: 1,
+            lastMessagePreview: asString(payload, "message_preview") ?? "",
+            matchId: asString(payload, "match_id") ?? "",
+            ownerId: owner.id,
+          });
+          didSend = true;
+        } else if (event.type === "FRESHNESS_WARNING" && shouldSend(owner, "freshness")) {
+          const state = asString(payload, "new_state");
+          if (state === "AGING" || state === "STALE") {
+            await sendFreshnessWarningEmail({
+              ownerEmail: owner.email,
+              ownerName: owner.name,
+              newState: state,
+              daysSinceUpdate: asNumber(payload, "days_since_update") ?? 0,
+              ownerId: owner.id,
+              agentId: event.referenceId,
+            });
+            didSend = true;
+          }
+        }
+      } catch (err) {
+        console.error(`[email-digest] Failed to send fallback for event ${event.id}:`, err);
+      }
 
-      // Check for owner B — do they have unread messages from A?
-      const resultB = await checkAndNotify({
-        chat,
-        recipientOwner: ownerB,
-        senderOwner: ownerA,
-        lastRead: chat.lastReadByB,
-        lastNotified: chat.lastNotifiedB,
-        side: "B",
-        now,
-        delayThreshold,
-        cooldownThreshold,
-      });
-      if (resultB === "sent") sent++;
+      // Mark processed either way — sent or skipped by preference. We don't
+      // retry; preference changes take effect on subsequent events.
+      processedIds.push(event.id);
+      if (didSend) sent++;
       else skipped++;
     }
 
-    console.log(`[email-digest] Processed ${chats.length} chats: ${sent} emails sent, ${skipped} skipped`);
+    await markEmailFallbackSent(processedIds);
+
+    console.log(`[email-digest] Processed ${candidates.length} events: ${sent} sent, ${skipped} skipped`);
 
     return NextResponse.json({
       success: true,
-      chatsProcessed: chats.length,
-      emailsSent: sent,
+      processed: candidates.length,
+      sent,
       skipped,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("[email-digest] Cron failed:", message);
     return NextResponse.json({ error: message }, { status: 500 });
-  }
-}
-
-interface CheckParams {
-  chat: {
-    id: string;
-    matchId: string;
-    messages: Array<{ fromOwner: string; content: string; createdAt: Date }>;
-  };
-  recipientOwner: { id: string; email: string; name: string | null; notifyAllEmails: boolean; notifyMatchProposals: boolean; notifyNewMessages: boolean; notifyFreshness: boolean };
-  senderOwner: { id: string; name: string | null };
-  lastRead: Date | null;
-  lastNotified: Date | null;
-  side: "A" | "B";
-  now: Date;
-  delayThreshold: Date;
-  cooldownThreshold: Date;
-}
-
-async function checkAndNotify(params: CheckParams): Promise<"sent" | "skipped"> {
-  const {
-    chat,
-    recipientOwner,
-    senderOwner,
-    lastRead,
-    lastNotified,
-    side,
-    now,
-    delayThreshold,
-    cooldownThreshold,
-  } = params;
-
-  // Check preferences
-  if (!shouldSend(recipientOwner, "message")) return "skipped";
-
-  // Find unread messages from the other person
-  const unreadMessages = chat.messages.filter((m) => {
-    if (m.fromOwner === recipientOwner.id) return false; // sent by recipient
-    if (lastRead && m.createdAt <= lastRead) return false; // already read
-    return true;
-  });
-
-  if (unreadMessages.length === 0) return "skipped";
-
-  // Check delay — oldest unread must be older than 5 min
-  const oldestUnread = unreadMessages[unreadMessages.length - 1]; // messages are desc-ordered
-  if (oldestUnread.createdAt > delayThreshold) return "skipped";
-
-  // Check cooldown — last notification must be >30 min ago
-  if (lastNotified && lastNotified > cooldownThreshold) return "skipped";
-
-  // All checks passed — send the email
-  const lastMessage = unreadMessages[0]; // most recent unread
-
-  try {
-    await sendNewMessagesEmail({
-      ownerEmail: recipientOwner.email,
-      ownerName: recipientOwner.name,
-      senderName: senderOwner.name,
-      messageCount: unreadMessages.length,
-      lastMessagePreview: lastMessage.content,
-      matchId: chat.matchId,
-      ownerId: recipientOwner.id,
-    });
-
-    // Update notification timestamp
-    const updateField = side === "A" ? "lastNotifiedA" : "lastNotifiedB";
-    await prisma.chat.update({
-      where: { id: chat.id },
-      data: { [updateField]: now },
-    });
-
-    return "sent";
-  } catch (err) {
-    console.error(`[email-digest] Failed to notify ${recipientOwner.email}:`, err);
-    return "skipped";
   }
 }

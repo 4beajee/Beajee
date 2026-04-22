@@ -25,22 +25,27 @@ model Owner {
   agentPlatform   String?   @map("agent_platform") // "open_claw" | "nemo_claw" | "zero_claw" | "nano_claw"
   onboarded       Boolean   @default(false)
 
+  // Demo network — simulated accounts driven by the server-side responder.
+  // Filtered out of production analytics and reputation leaderboards.
+  isDemo Boolean @default(false) @map("is_demo")
+
   // Notification preferences
   notifyAllEmails      Boolean @default(true) @map("notify_all_emails")
   notifyMatchProposals Boolean @default(true) @map("notify_match_proposals")
   notifyNewMessages    Boolean @default(true) @map("notify_new_messages")
   notifyFreshness      Boolean @default(true) @map("notify_freshness")
 
-  createdAt       DateTime  @default(now()) @map("created_at")
-  agent           Agent?
-  accounts        Account[]
-  consentLogs     ConsentLog[]
-  blockedUsers    Block[]          @relation("Blocker")
-  blockedBy       Block[]          @relation("Blocked")
-  reports         Report[]
-  matchReactions  MatchReaction[]
-  matchComments   MatchComment[]
+  createdAt      DateTime        @default(now()) @map("created_at")
+  agent          Agent?
+  accounts       Account[]
+  consentLogs    ConsentLog[]
+  blockedUsers   Block[]         @relation("Blocker")
+  blockedBy      Block[]         @relation("Blocked")
+  reports        Report[]
+  matchReactions MatchReaction[]
+  matchComments  MatchComment[]
 
+  @@index([isDemo])
   @@map("owners")
 }
 
@@ -83,117 +88,132 @@ model Agent {
   createdAt    DateTime @default(now()) @map("created_at")
   lastActiveAt DateTime @default(now()) @map("last_active_at")
 
-  displayName  String?  @map("display_name")  // public name for activity feed
+  displayName String? @map("display_name") // public name for activity feed
 
   // Multi-agent support
   agentType         AgentType         @default(OPENCLAW) @map("agent_type")
   agentVersion      String?           @map("agent_version") // e.g. "openclaw-2.1", "claude-cowork-jan2026"
   integrationMethod IntegrationMethod @default(MCP) @map("integration_method")
 
-  // Reputation fields
-  reputationScore           Float  @default(40) @map("reputation_score")
-  reputationAcceptanceRate  Float  @default(0)  @map("reputation_acceptance_rate")
-  reputationNegotiationRate Float  @default(0)  @map("reputation_negotiation_rate")
-  reputationCompletedMatches Int   @default(0)  @map("reputation_completed_matches")
-  totalProposedMatches      Int    @default(0)  @map("total_proposed_matches")
-  totalInitiatedNegotiations Int   @default(0)  @map("total_initiated_negotiations")
-  totalAcceptedByOwner      Int    @default(0)  @map("total_accepted_by_owner")
-  totalNegotiationsAgreed   Int    @default(0)  @map("total_negotiations_agreed")
-  interactionCount          Int    @default(0)  @map("interaction_count")
+  // Wake-up push — when set, Gennety POSTs to webhookUrl with webhookToken
+  // on hot events so the agent can call check_in immediately instead of
+  // waiting for the next heartbeat.
+  webhookUrl   String? @map("webhook_url")
+  webhookToken String? @map("webhook_token")
 
-  context  AgentContext?
-  beacons  Beacon[]
-  matchesAsA Match[] @relation("AgentA")
-  matchesAsB Match[] @relation("AgentB")
+  // Reputation fields
+  reputationScore            Float @default(40) @map("reputation_score")
+  reputationAcceptanceRate   Float @default(0) @map("reputation_acceptance_rate")
+  reputationNegotiationRate  Float @default(0) @map("reputation_negotiation_rate")
+  reputationCompletedMatches Int   @default(0) @map("reputation_completed_matches")
+  totalProposedMatches       Int   @default(0) @map("total_proposed_matches")
+  totalInitiatedNegotiations Int   @default(0) @map("total_initiated_negotiations")
+  totalAcceptedByOwner       Int   @default(0) @map("total_accepted_by_owner")
+  totalNegotiationsAgreed    Int   @default(0) @map("total_negotiations_agreed")
+  interactionCount           Int   @default(0) @map("interaction_count")
+
+  // Demo network fields — simulated agents driven by the server-side responder.
+  // When isDemo=true, demoPersona contains LLM-ready traits used by
+  // src/lib/demo/responder-brain.ts to generate in-character responses.
+  isDemo         Boolean   @default(false) @map("is_demo")
+  demoPersona    Json?     @map("demo_persona")
+  lastDemoTickAt DateTime? @map("last_demo_tick_at")
+
+  context         AgentContext?
+  beacons         Beacon[]
+  matchesAsA      Match[]          @relation("AgentA")
+  matchesAsB      Match[]          @relation("AgentB")
   negotiationLogs NegotiationLog[]
 
+  @@index([isDemo])
+  @@index([isDemo, lastDemoTickAt])
   @@map("agents")
 }
 
 model AgentContext {
-  id             String   @id @default(cuid())
-  agentId        String   @unique @map("agent_id")
-  agent          Agent    @relation(fields: [agentId], references: [id])
+  id      String @id @default(cuid())
+  agentId String @unique @map("agent_id")
+  agent   Agent  @relation(fields: [agentId], references: [id])
 
   // From USER.md — stable owner facts
-  ownerName        String?  @map("owner_name")
-  ownerLocation    String?  @map("owner_location")
-  ownerProfession  String?  @map("owner_profession")
-  ownerDomain      String?  @map("owner_domain")       // primary professional domain
-  ownerExperience  String?  @map("owner_experience")    // years or level of experience
-  ownerGoals       String?  @map("owner_goals")         // stated long-term goals
+  ownerName       String? @map("owner_name")
+  ownerLocation   String? @map("owner_location")
+  ownerProfession String? @map("owner_profession")
+  ownerDomain     String? @map("owner_domain") // primary professional domain
+  ownerExperience String? @map("owner_experience") // years or level of experience
+  ownerGoals      String? @map("owner_goals") // stated long-term goals
 
   // From AGENTS.md — agent role and specialization
-  agentSpecialization String? @map("agent_specialization") // what the agent helps with
+  agentSpecialization String?  @map("agent_specialization") // what the agent helps with
   agentDomains        String[] @default([]) @map("agent_domains") // domains the agent operates in
-  agentConstraints    String?  @map("agent_constraints")   // focus areas or explicit limits
+  agentConstraints    String?  @map("agent_constraints") // focus areas or explicit limits
 
   // From SOUL.md — collaboration style signals
   collaborationStyle String? @map("collaboration_style") // how owner prefers to work with others
   communicationStyle String? @map("communication_style") // direct/async/structured etc.
 
   // From MEMORY.md — current active context
-  currentWork    String   @map("current_work")    // what owner is building/working on right now
-  expertise      String[]                          // areas of expertise
-  lookingFor     String   @map("looking_for")      // what kind of person/collaboration owner needs
-  notLookingFor  String?  @map("not_looking_for")  // what to filter out
-  recentProblems String?  @map("recent_problems")  // what owner is stuck on
-  recentWins     String?  @map("recent_wins")      // what owner just accomplished
+  currentWork    String   @map("current_work") // what owner is building/working on right now
+  expertise      String[] // areas of expertise
+  lookingFor     String   @map("looking_for") // what kind of person/collaboration owner needs
+  notLookingFor  String?  @map("not_looking_for") // what to filter out
+  recentProblems String?  @map("recent_problems") // what owner is stuck on
+  recentWins     String?  @map("recent_wins") // what owner just accomplished
   location       String?
-  networkingGoal String   @map("networking_goal")   // partnership | collaboration | mentor | peer
+  networkingGoal String   @map("networking_goal") // partnership | collaboration | mentor | peer
 
   // Derived — combined embedding across all sources
-  embedding      Unsupported("vector(1536)")?
-  updatedAt      DateTime @updatedAt @map("updated_at")
-  previousHash   String?  @map("previous_hash")    // hash of previous context for change detection
+  embedding    Unsupported("vector(1536)")?
+  updatedAt    DateTime                     @updatedAt @map("updated_at")
+  previousHash String?                      @map("previous_hash") // hash of previous context for change detection
 
   // Freshness fields
   freshnessState          FreshnessState @default(ACTIVE) @map("freshness_state")
-  lastSignificantUpdateAt DateTime       @default(now())  @map("last_significant_update_at")
+  lastSignificantUpdateAt DateTime       @default(now()) @map("last_significant_update_at")
 
   @@map("agent_contexts")
 }
 
 model Beacon {
-  id           String    @id @default(cuid())
-  agentId      String    @map("agent_id")
-  agent        Agent     @relation(fields: [agentId], references: [id])
-  contextQuery String    @map("context_query") // what this beacon is waiting for
+  id           String                       @id @default(cuid())
+  agentId      String                       @map("agent_id")
+  agent        Agent                        @relation(fields: [agentId], references: [id])
+  contextQuery String                       @map("context_query") // what this beacon is waiting for
   embedding    Unsupported("vector(1536)")?
-  isActive     Boolean   @default(true) @map("is_active")
-  preservable  Boolean   @default(true) // paused (true) vs deactivated (false)
-  createdAt    DateTime  @default(now()) @map("created_at")
-  triggeredAt  DateTime? @map("triggered_at")
+  isActive     Boolean                      @default(true) @map("is_active")
+  preservable  Boolean                      @default(true) // paused (true) vs deactivated (false)
+  createdAt    DateTime                     @default(now()) @map("created_at")
+  triggeredAt  DateTime?                    @map("triggered_at")
 
   @@index([isActive])
   @@map("beacons")
 }
 
 model Match {
-  id             String      @id @default(cuid())
-  agentAId       String      @map("agent_a_id")
-  agentBId       String      @map("agent_b_id")
-  agentA         Agent       @relation("AgentA", fields: [agentAId], references: [id])
-  agentB         Agent       @relation("AgentB", fields: [agentBId], references: [id])
+  id       String @id @default(cuid())
+  agentAId String @map("agent_a_id")
+  agentBId String @map("agent_b_id")
+  agentA   Agent  @relation("AgentA", fields: [agentAId], references: [id])
+  agentB   Agent  @relation("AgentB", fields: [agentBId], references: [id])
 
   // Which agent actually initiated the negotiation. (agentA/B is normalized by
   // id order for the uniqueness constraint and doesn't reflect initiation.)
-  initiatorAgentId String?   @map("initiator_agent_id")
+  initiatorAgentId String? @map("initiator_agent_id")
 
-  overlapSummary String      @map("overlap_summary")  // what agents decided in negotiation
-  framingForA    String      @map("framing_for_a")     // how to present to owner A
-  framingForB    String      @map("framing_for_b")     // how to present to owner B
+  overlapSummary String @map("overlap_summary") // what agents decided in negotiation
+  framingForA    String @map("framing_for_a") // how to present to owner A
+  framingForB    String @map("framing_for_b") // how to present to owner B
 
-  status         MatchStatus @default(NEGOTIATING)
-  confirmedByA   Boolean     @default(false) @map("confirmed_by_a")
-  confirmedByB   Boolean     @default(false) @map("confirmed_by_b")
-  isPublic       Boolean     @default(true) @map("is_public")
+  status       MatchStatus @default(NEGOTIATING)
+  confirmedByA Boolean     @default(false) @map("confirmed_by_a")
+  confirmedByB Boolean     @default(false) @map("confirmed_by_b")
+  isPublic     Boolean     @default(true) @map("is_public")
 
-  createdAt      DateTime    @default(now()) @map("created_at")
-  proposedAt     DateTime?   @map("proposed_at")
-  matchedAt      DateTime?   @map("matched_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  proposedAt DateTime? @map("proposed_at")
+  matchedAt  DateTime? @map("matched_at")
 
-  chat           Chat?
+  chat            Chat?
   negotiationLogs NegotiationLog[]
   reactions       MatchReaction[]
   comments        MatchComment[]
@@ -218,11 +238,11 @@ enum FreshnessState {
 }
 
 enum AgentType {
-  OPENCLAW          // OpenClaw and all derivatives (ZeroClaw, NemoClaw, SoulClaw, IronClaw)
+  OPENCLAW // OpenClaw and all derivatives (ZeroClaw, NemoClaw, SoulClaw, IronClaw)
 }
 
 enum IntegrationMethod {
-  MCP               // Connected via MCP
+  MCP // Connected via MCP
 }
 
 model Chat {
@@ -240,8 +260,8 @@ model Chat {
   lastNotifiedA DateTime? @map("last_notified_a")
   lastNotifiedB DateTime? @map("last_notified_b")
 
-  messages  Message[]
-  reports   Report[]
+  messages Message[]
+  reports  Report[]
 
   @@map("chats")
 }
@@ -269,8 +289,8 @@ model NegotiationLog {
   match     Match    @relation(fields: [matchId], references: [id])
   agentId   String   @map("agent_id")
   agent     Agent    @relation(fields: [agentId], references: [id])
-  role      String   // "initiator" | "responder"
-  type      String   // "reasoning" | "proposal" | "evaluation" | "agreement" | "decline"
+  role      String // "initiator" | "responder"
+  type      String // "reasoning" | "proposal" | "evaluation" | "agreement" | "decline"
   content   String
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -314,7 +334,7 @@ model ConsentLog {
   id          String    @id @default(cuid())
   ownerId     String    @map("owner_id")
   owner       Owner     @relation(fields: [ownerId], references: [id])
-  purpose     String    // "A" (networking) | "B" (research)
+  purpose     String // "A" (networking) | "B" (research)
   consentedAt DateTime  @default(now()) @map("consented_at")
   withdrawnAt DateTime? @map("withdrawn_at")
 
@@ -346,10 +366,53 @@ model Report {
   @@map("reports")
 }
 
+model DemoResponderLog {
+  id           String   @id @default(cuid())
+  demoAgentId  String   @map("demo_agent_id")
+  event        String // NEGOTIATE_RESPOND | NEGOTIATE_INITIATE | CHAT_REPLY | MATCH_CONFIRM | PROPOSE
+  targetId     String?  @map("target_id") // matchId | chatId | messageId
+  targetType   String?  @map("target_type") // match | chat | message
+  mcpTool      String?  @map("mcp_tool") // which MCP tool was called on the agent's behalf
+  latencyMs    Int?     @map("latency_ms")
+  tokensInput  Int?     @map("tokens_input")
+  tokensOutput Int?     @map("tokens_output")
+  costUsd      Float?   @map("cost_usd")
+  success      Boolean
+  errorCode    String?  @map("error_code")
+  errorMessage String?  @map("error_message")
+  llmPrompt    String?  @map("llm_prompt")
+  llmResponse  String?  @map("llm_response")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([demoAgentId, createdAt])
+  @@index([event, createdAt])
+  @@index([success, createdAt])
+  @@map("demo_responder_logs")
+}
+
+model DemoAgentQuota {
+  id                    String   @id @default(cuid())
+  demoAgentId           String   @map("demo_agent_id")
+  day                   DateTime @db.Date
+  negotiationsInitiated Int      @default(0) @map("negotiations_initiated")
+  negotiationsResponded Int      @default(0) @map("negotiations_responded")
+  chatMessagesSent      Int      @default(0) @map("chat_messages_sent")
+  llmCalls              Int      @default(0) @map("llm_calls")
+  tokensUsed            Int      @default(0) @map("tokens_used")
+  costUsd               Float    @default(0) @map("cost_usd")
+  paused                Boolean  @default(false)
+  pauseReason           String?  @map("pause_reason")
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([demoAgentId, day])
+  @@index([day])
+  @@map("demo_agent_quotas")
+}
+
 model EmailNotification {
   id          String   @id @default(cuid())
   ownerId     String   @map("owner_id")
-  type        String   // MATCH_PROPOSAL | MATCH_CONFIRMED | NEW_MESSAGE | FRESHNESS_WARNING
+  type        String // MATCH_PROPOSAL | MATCH_CONFIRMED | NEW_MESSAGE | FRESHNESS_WARNING
   referenceId String   @map("reference_id") // matchId or chatId
   resendId    String?  @map("resend_id")
   sentAt      DateTime @default(now()) @map("sent_at")
@@ -357,4 +420,26 @@ model EmailNotification {
   @@index([ownerId, type, referenceId])
   @@index([sentAt])
   @@map("email_notifications")
+}
+
+// Inbox events — primary delivery channel for agent-visible notifications.
+// Written by Gennety on match/message/freshness events, read by the agent
+// via the check_in MCP tool, acknowledged via ack_inbox after delivery to owner.
+// Email is a fallback when an event stays undelivered past a threshold.
+model InboxEvent {
+  id                  String    @id @default(cuid())
+  ownerId             String    @map("owner_id")
+  agentId             String    @map("agent_id") // internal Agent.id
+  type                String // NEW_MESSAGE | MATCH_PROPOSED | MATCH_CONFIRMED | BEACON_TRIGGERED | FRESHNESS_WARNING
+  referenceId         String    @map("reference_id") // matchId | beaconId | agentId
+  payload             Json // self-contained fields for the agent
+  createdAt           DateTime  @default(now()) @map("created_at")
+  deliveredAt         DateTime? @map("delivered_at") // first time check_in returned this event
+  dismissedAt         DateTime? @map("dismissed_at") // agent acknowledged delivery to owner
+  emailFallbackSentAt DateTime? @map("email_fallback_sent_at")
+
+  @@index([agentId, dismissedAt])
+  @@index([ownerId, type, referenceId])
+  @@index([createdAt])
+  @@map("inbox_events")
 }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedOwner } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { SendMessageSchema } from "@/types/chat-input";
+import { createInboxEvent } from "@/lib/services/inbox";
 import { ZodError } from "zod";
 
 // GET /api/chat?matchId=xxx — get chat messages (requires auth)
@@ -157,6 +158,28 @@ export async function POST(request: NextRequest) {
     where: { id: match.chat.id },
     data: { [readField]: new Date() },
   });
+
+  // Write inbox event for the recipient's agent — agent delivers via check_in,
+  // email fallback fires via cron if undelivered past threshold.
+  const recipientOwner = isOwnerA ? match.agentB.owner : match.agentA.owner;
+  const recipientAgentInternalId = isOwnerA ? match.agentBId : match.agentAId;
+  const senderOwner = isOwnerA ? match.agentA.owner : match.agentB.owner;
+
+  createInboxEvent({
+    ownerId: recipientOwner.id,
+    agentId: recipientAgentInternalId,
+    type: "NEW_MESSAGE",
+    referenceId: match.chat.id,
+    payload: {
+      match_id: match.id,
+      chat_id: match.chat.id,
+      message_id: message.id,
+      from_owner_id: senderOwner.id,
+      from_owner_name: senderOwner.name,
+      message_preview: content.length > 300 ? content.slice(0, 300) + "..." : content,
+      created_at: message.createdAt.toISOString(),
+    },
+  }).catch((err) => console.error("[inbox] NEW_MESSAGE event failed:", err));
 
   return NextResponse.json({
     id: message.id,

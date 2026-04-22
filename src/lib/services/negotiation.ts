@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
-import { sendMatchProposalEmail, sendMatchConfirmedEmail, shouldSend } from "@/lib/services/notification";
 import { createChatWithOpeningMessages } from "@/lib/services/chat";
 import { recordEvent } from "@/lib/services/reputation";
+import { createInboxEvent } from "@/lib/services/inbox";
 
 /**
  * NegotiationFSM — state machine for agent-to-agent match negotiation
@@ -285,40 +285,43 @@ export async function proposeMatch(matchId: string) {
     recordEvent(match.agentBId, "MATCH_PROPOSED"),
   ]);
 
-  // Send email notifications to both owners (non-blocking, respects preferences)
-  const emailPromises: Promise<unknown>[] = [];
+  // Write inbox events for both owners — agents will deliver via check_in,
+  // email fallback fires via cron if events stay undelivered past threshold.
   const ownerA = match.agentA.owner;
   const ownerB = match.agentB.owner;
 
-  if (shouldSend(ownerA, "match")) {
-    emailPromises.push(
-      sendMatchProposalEmail({
-        ownerEmail: ownerA.email,
-        ownerName: ownerA.name,
-        otherPersonName: ownerB.name,
+  await Promise.all([
+    createInboxEvent({
+      ownerId: ownerA.id,
+      agentId: match.agentAId,
+      type: "MATCH_PROPOSED",
+      referenceId: matchId,
+      payload: {
+        match_id: matchId,
+        other_agent_id: match.agentB.agentId,
+        other_display_name: match.agentB.displayName,
+        other_owner_name: ownerB.name,
         framing: match.framingForA,
-        matchId,
-        ownerId: ownerA.id,
-      })
-    );
-  }
-  if (shouldSend(ownerB, "match")) {
-    emailPromises.push(
-      sendMatchProposalEmail({
-        ownerEmail: ownerB.email,
-        ownerName: ownerB.name,
-        otherPersonName: ownerA.name,
+        overlap_summary: match.overlapSummary,
+        proposed_at: new Date().toISOString(),
+      },
+    }),
+    createInboxEvent({
+      ownerId: ownerB.id,
+      agentId: match.agentBId,
+      type: "MATCH_PROPOSED",
+      referenceId: matchId,
+      payload: {
+        match_id: matchId,
+        other_agent_id: match.agentA.agentId,
+        other_display_name: match.agentA.displayName,
+        other_owner_name: ownerA.name,
         framing: match.framingForB,
-        matchId,
-        ownerId: ownerB.id,
-      })
-    );
-  }
-  if (emailPromises.length > 0) {
-    Promise.all(emailPromises).catch((err) =>
-      console.error("[notification] Email batch failed:", err)
-    );
-  }
+        overlap_summary: match.overlapSummary,
+        proposed_at: new Date().toISOString(),
+      },
+    }),
+  ]).catch((err) => console.error("[inbox] Match proposal events failed:", err));
 
   return {
     matchId,
@@ -386,40 +389,43 @@ export async function confirmMatch(matchId: string, ownerId: string) {
       recordEvent(match.agentBId, "MATCH_COMPLETED"),
     ]);
 
-    // Send "match confirmed" email to both owners (non-blocking, respects preferences)
-    const confirmEmailPromises: Promise<unknown>[] = [];
+    // Write inbox events for both owners — chat is now open.
     const oA = match.agentA.owner;
     const oB = match.agentB.owner;
+    const matchedAt = new Date().toISOString();
 
-    if (shouldSend(oA, "match")) {
-      confirmEmailPromises.push(
-        sendMatchConfirmedEmail({
-          ownerEmail: oA.email,
-          ownerName: oA.name,
-          otherPersonName: oB.name,
-          overlapSummary: match.overlapSummary,
-          matchId,
-          ownerId: oA.id,
-        })
-      );
-    }
-    if (shouldSend(oB, "match")) {
-      confirmEmailPromises.push(
-        sendMatchConfirmedEmail({
-          ownerEmail: oB.email,
-          ownerName: oB.name,
-          otherPersonName: oA.name,
-          overlapSummary: match.overlapSummary,
-          matchId,
-          ownerId: oB.id,
-        })
-      );
-    }
-    if (confirmEmailPromises.length > 0) {
-      Promise.all(confirmEmailPromises).catch((err) =>
-        console.error("[notification] Match confirmed email failed:", err)
-      );
-    }
+    await Promise.all([
+      createInboxEvent({
+        ownerId: oA.id,
+        agentId: match.agentAId,
+        type: "MATCH_CONFIRMED",
+        referenceId: matchId,
+        payload: {
+          match_id: matchId,
+          chat_id: chat.id,
+          other_agent_id: match.agentB.agentId,
+          other_display_name: match.agentB.displayName,
+          other_owner_name: oB.name,
+          overlap_summary: match.overlapSummary,
+          matched_at: matchedAt,
+        },
+      }),
+      createInboxEvent({
+        ownerId: oB.id,
+        agentId: match.agentBId,
+        type: "MATCH_CONFIRMED",
+        referenceId: matchId,
+        payload: {
+          match_id: matchId,
+          chat_id: chat.id,
+          other_agent_id: match.agentA.agentId,
+          other_display_name: match.agentA.displayName,
+          other_owner_name: oA.name,
+          overlap_summary: match.overlapSummary,
+          matched_at: matchedAt,
+        },
+      }),
+    ]).catch((err) => console.error("[inbox] Match confirmed events failed:", err));
 
     return {
       matchId,
