@@ -14,6 +14,8 @@ import { blockUserTool } from "@/lib/mcp/tools/block-user";
 import { archiveChatTool } from "@/lib/mcp/tools/archive-chat";
 import { getReputationTool } from "@/lib/mcp/tools/get-reputation";
 import { checkInTool } from "@/lib/mcp/tools/check-in";
+import { ackInboxTool } from "@/lib/mcp/tools/ack-inbox";
+import { sendChatMessageTool } from "@/lib/mcp/tools/send-chat-message";
 import { authenticateAgent } from "@/lib/mcp/auth";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -33,6 +35,8 @@ const tools = [
   archiveChatTool,
   getReputationTool,
   checkInTool,
+  ackInboxTool,
+  sendChatMessageTool,
 ];
 
 // JSON-RPC 2.0 handler for MCP protocol

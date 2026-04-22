@@ -1,13 +1,19 @@
 import { prisma } from "@/lib/db";
 import { HEARTBEAT_INTERVAL_MS } from "@/lib/config/liveness";
 import { computeFreshnessState } from "@/lib/services/freshness";
+import { getUndeliveredEvents, markDelivered } from "@/lib/services/inbox";
+
+// Short heartbeat while there's unacked work so owner sees events promptly.
+const BUSY_HEARTBEAT_MS = 30 * 1000;
 
 export const checkInTool = {
   name: "check_in" as const,
   description:
-    "Heartbeat endpoint — call every 15 minutes to confirm your agent is alive. " +
-    "Returns triggered beacons, incoming negotiations, pending match proposals, " +
-    "and context freshness status. Also keeps your agent visible in search results.",
+    "Heartbeat endpoint — call on the cadence specified by next_check_in_ms (short when inbox has unacked events, otherwise ~15 min). " +
+    "Returns the inbox of events to relay to the owner (new messages, match proposals, match confirmations, freshness warnings), " +
+    "plus triggered beacons, incoming negotiations, pending match proposals, and context freshness status. " +
+    "After delivering inbox events to the owner, call ack_inbox with the event_ids so they stop being returned. " +
+    "Keeps your agent visible in search results.",
   inputSchema: {
     type: "object" as const,
     properties: {
@@ -47,6 +53,15 @@ export const checkInTool = {
       where: { id: agent.id },
       data,
     });
+
+    // Fetch undelivered+undismissed inbox events and mark as delivered.
+    const inboxEvents = await getUndeliveredEvents(agent.id);
+    const firstTimeDelivery = inboxEvents.filter((e) => e.deliveredAt === null).map((e) => e.id);
+    if (firstTimeDelivery.length > 0) {
+      markDelivered(firstTimeDelivery).catch((err) =>
+        console.error("[check_in] Failed to mark inbox events delivered:", err)
+      );
+    }
 
     // Fetch triggered beacons (beacons with triggeredAt set, still active)
     const triggeredBeacons = await prisma.beacon.findMany({
@@ -162,6 +177,15 @@ export const checkInTool = {
       );
     }
 
+    if (inboxEvents.length > 0) {
+      recommendedActions.push(
+        `${inboxEvents.length} inbox event${inboxEvents.length > 1 ? "s" : ""} awaiting delivery — relay to owner, then call ack_inbox`
+      );
+    }
+
+    // Dynamic heartbeat — short while there's unacked work so the owner sees events promptly.
+    const nextCheckInMs = inboxEvents.length > 0 ? BUSY_HEARTBEAT_MS : HEARTBEAT_INTERVAL_MS;
+
     return {
       content: [
         {
@@ -170,9 +194,16 @@ export const checkInTool = {
             {
               status: "alive",
               resurrected: !agent.isActive,
-              next_check_in_ms: HEARTBEAT_INTERVAL_MS,
+              next_check_in_ms: nextCheckInMs,
               context_status: contextStatus,
               days_since_update: daysSinceUpdate,
+              inbox: inboxEvents.map((e) => ({
+                event_id: e.id,
+                type: e.type,
+                created_at: e.createdAt,
+                first_delivered_at: e.deliveredAt,
+                payload: e.payload,
+              })),
               triggered_beacons: triggeredBeacons.map((b) => ({
                 beacon_id: b.id,
                 context_query: b.contextQuery,
