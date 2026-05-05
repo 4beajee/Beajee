@@ -914,7 +914,7 @@ function InstantWakeSection({
   const [baseUrl, setBaseUrl] = useState(() => normalizeWakeBaseUrl(settings.webhookUrl));
   const [token, setToken] = useState("");
   const [showToken, setShowToken] = useState(false);
-  const [manualOpen, setManualOpen] = useState(Boolean(settings.webhookUrl || settings.webhookTokenSet));
+  const [manualOpen, setManualOpen] = useState(settings.wakeWebhookEnabled);
   const [testing, setTesting] = useState(false);
   const [testMessage, setTestMessage] = useState<string | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
@@ -929,14 +929,15 @@ function InstantWakeSection({
   }, [settings.webhookUrl]);
 
   useEffect(() => {
-    if (settings.webhookUrl || settings.webhookTokenSet) {
+    if (settings.wakeWebhookEnabled) {
       setManualOpen(true);
     }
-  }, [settings.webhookUrl, settings.webhookTokenSet]);
+  }, [settings.wakeWebhookEnabled]);
 
   const desiredUrl = buildWakeWebhookUrl(baseUrl);
   const dirty = desiredUrl !== settings.webhookUrl || token.length > 0;
   const status = getInstantWakeStatus(settings);
+  const legacyWebhookConfigured = Boolean(settings.webhookUrl && settings.webhookTokenSet);
 
   const handleToggle = async () => {
     const next = !settings.wakeWebhookEnabled;
@@ -1097,24 +1098,6 @@ function InstantWakeSection({
               </p>
             )}
 
-            {settings.webhookUrl && (
-              <p className="mt-2 text-[11px] text-neutral-500 font-mono break-all">
-                Legacy webhook: {settings.webhookUrl}
-              </p>
-            )}
-
-            {settings.wakeWebhookLastPingAt && (
-              <p className="mt-2 text-[11px] text-neutral-600">
-                Last checked: {formatWakeTimestamp(settings.wakeWebhookLastPingAt)}
-              </p>
-            )}
-
-            {testMessage && <p className="mt-2 text-xs text-green-400">{testMessage}</p>}
-            {testError && <p className="mt-2 text-xs text-red-400">{testError}</p>}
-
-            {settings.wakeWebhookLastPingOk === false && settings.wakeWebhookLastPingError && !testError && (
-              <p className="mt-2 text-[11px] text-red-300">{settings.wakeWebhookLastPingError}</p>
-            )}
           </div>
           <div className="flex gap-2 shrink-0">
             <button
@@ -1124,14 +1107,6 @@ function InstantWakeSection({
               className={SECONDARY_BUTTON_SM}
             >
               {refreshing ? "Refreshing..." : "Refresh status"}
-            </button>
-            <button
-              type="button"
-              onClick={handleTest}
-              disabled={testing || !settings.webhookUrl || !settings.webhookTokenSet}
-              className={SECONDARY_BUTTON_SM}
-            >
-              {testing ? "Testing..." : "Test legacy webhook"}
             </button>
           </div>
         </div>
@@ -1223,6 +1198,25 @@ function InstantWakeSection({
             <span className="font-mono text-neutral-400">{desiredUrl || `https://…${WAKE_PATH}`}</span>
           </p>
 
+          {settings.webhookUrl && (
+            <p className="text-[11px] text-neutral-500 font-mono break-all">
+              Saved legacy webhook: {settings.webhookUrl}
+            </p>
+          )}
+
+          {settings.wakeWebhookLastPingAt && (
+            <p className="text-[11px] text-neutral-600">
+              Last legacy check: {formatWakeTimestamp(settings.wakeWebhookLastPingAt)}
+            </p>
+          )}
+
+          {testMessage && <p className="text-xs text-green-400">{testMessage}</p>}
+          {testError && <p className="text-xs text-red-400">{testError}</p>}
+
+          {settings.wakeWebhookLastPingOk === false && settings.wakeWebhookLastPingError && !testError && (
+            <p className="text-[11px] text-red-300">{settings.wakeWebhookLastPingError}</p>
+          )}
+
           <label className="block">
             <span className="text-xs text-neutral-500 block mb-1">
               Bearer token {settings.webhookTokenSet && !token && (
@@ -1253,6 +1247,14 @@ function InstantWakeSection({
               <SaveStatus saving={saving} saved={saved} err={err} />
             </div>
             <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleTest}
+                disabled={testing || !settings.wakeWebhookEnabled || !legacyWebhookConfigured}
+                className={SECONDARY_BUTTON_SM}
+              >
+                {testing ? "Testing..." : "Test legacy webhook"}
+              </button>
               {(settings.webhookUrl || settings.webhookTokenSet) && (
                 <button
                   onClick={handleClear}

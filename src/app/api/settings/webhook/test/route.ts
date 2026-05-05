@@ -33,6 +33,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
+    if (!agent.wakeWebhookEnabled) {
+      return NextResponse.json(
+        { error: "Legacy webhook is turned off. Enable it before testing." },
+        { status: 400 }
+      );
+    }
+
     if (!agent.webhookUrl || !agent.webhookToken) {
       return NextResponse.json(
         { error: "Save both the base URL and bearer token first" },
