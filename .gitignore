@@ -25,6 +25,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# local generated reports / dropped screenshots
+.gitleaks-report.json
+IMAGE *.jpg
+Screenshot *.png
+
 # local env files — NEVER commit secrets
 .env
 .env.production

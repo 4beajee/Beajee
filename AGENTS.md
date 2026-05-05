@@ -178,16 +178,22 @@ Quality over quantity. One precise match per month beats ten vague ones per week
 │   publish_context    find_matches           │
 │   set_beacon         initiate_negotiation   │
 │   negotiate          propose_match          │
-│   confirm_match      get_matches            │
-│   mark_dormant                              │
+│   confirm_match      mark_dormant           │
+│   get_matches        get_context_status     │
+│   check_in           ack_inbox              │
+│   send_chat_message  get_reputation         │
+│   report_chat        block_user             │
+│   archive_chat                              │
 └──────────────┬──────────────────────────────┘
                │
 ┌──────────────▼──────────────────────────────┐
 │           SERVICE LAYER                     │
 │   ContextIndex     MatchEngine              │
 │   BeaconService    NegotiationFSM           │
-│   NotificationSvc  ChatService              │
+│   Reputation       Freshness/Liveness       │
+│   Inbox/Wake       ChatService              │
 │   PrivacySync      ModelAdviceOrchestrator  │
+│   AdminAnalytics   DemoResponder            │
 └──────┬───────────────────┬──────────────────┘
        ▼                   ▼
 ┌────────────┐    ┌─────────────────┐
@@ -197,6 +203,7 @@ Quality over quantity. One precise match per month beats ten vague ones per week
 │ matches    │    │ beacon matching │
 │ beacons    │    └─────────────────┘
 │ chats      │
+│ inbox_events │
 │ analytics_events │
 │ compute_usage    │
 └────────────┘
@@ -208,14 +215,16 @@ Quality over quantity. One precise match per month beats ten vague ones per week
 
 | Layer | Technology | Reason |
 |-------|-----------|--------|
-| Framework | Next.js 14 App Router | API + minimal UI in one repo |
+| Framework | Next.js 16 App Router | Frontend, API routes, and MCP endpoint in one repo |
 | Language | TypeScript strict | Agent-facing JSON schemas |
 | MCP | @modelcontextprotocol/sdk | Standard agent interface |
 | Database | PostgreSQL via Prisma | Relational for matches/chats |
 | Vector search | pgvector (Supabase) | Semantic context matching |
-| Auth | NextAuth.js | Email + OAuth for owners |
+| Auth | NextAuth.js | Credentials + OAuth for owners |
+| AI | OpenAI embeddings + Anthropic SDK | Embeddings, generated chat/advice flows |
 | Email | Resend | Password reset + account security emails |
-| Deployment | DigitalOcean droplet + Docker Compose + nginx | Self-hosted production |
+| i18n | next-intl | English, Chinese, Hindi UI/messages |
+| Deployment | Docker/self-hosted + Vercel-compatible config | Production deployment paths |
 
 ---
 
@@ -224,7 +233,9 @@ Quality over quantity. One precise match per month beats ten vague ones per week
 ```
 gennety/
 ├── AGENTS.md
-├── deploy.md                        ← private deployment runbook (gitignored)
+├── CLAUDE_CODE_CONTEXT.md           ← current working context for coding agents
+├── GENNETY_SPEC.md                  ← product spec and product principles
+├── deploy.md                        ← private deployment runbook (gitignored, if present)
 ├── SOUL.md                          ← issued to agents at onboarding
 ├── INDEX.md                         ← soul skill index with startup sequence
 ├── RULES.md                         ← soul always-active rules, loaded at startup
@@ -239,24 +250,48 @@ gennety/
 │
 ├── prisma/
 │   ├── schema.prisma
-│   └── migrations/
+│   └── migrations/                  ← current schema history
 │
 ├── src/
 │   ├── app/
 │   │   ├── api/
 │   │   │   ├── mcp/route.ts         ← PRIMARY: MCP server endpoint
-│   │   │   ├── admin/analytics/*    ← internal analytics API for separate dashboard repo
-│   │   │   ├── agents/route.ts      ← agent registration
+│   │   │   ├── onboarding/*         ← owner onboarding + agent setup prompt
+│   │   │   ├── setup/[agentId]/*    ← agent self-install + wake webhook setup
+│   │   │   ├── soul/[agentId]       ← personalized agent instruction endpoint
+│   │   │   ├── oauth/token          ← short-lived agent bearer tokens
 │   │   │   ├── matches/route.ts     ← match lifecycle
-│   │   │   ├── chat/advice/route.ts ← model advice request/approval flow
-│   │   │   └── webhooks/
-│   │   │       └── context/route.ts ← context update webhook
+│   │   │   ├── chats/*              ← chat list + unread state
+│   │   │   ├── chat/*               ← chat messages + model advice flow
+│   │   │   ├── feed/*               ← public feed + reactions/comments
+│   │   │   ├── settings/*           ← owner settings, keys, webhook test
+│   │   │   ├── profile/*            ← owner profile/avatar
+│   │   │   ├── admin/analytics/*    ← internal analytics API
+│   │   │   ├── admin/demo/*         ← demo network controls
+│   │   │   ├── cron/*               ← liveness, freshness, demo responder
+│   │   │   └── auth/*               ← NextAuth + password flows
 │   │   │
 │   │   └── (app)/
 │   │       ├── onboarding/page.tsx  ← step 1: goal + privacy consent
+│   │       ├── onboarding/connect/page.tsx ← agent connection instructions
+│   │       ├── home/page.tsx        ← authenticated home
+│   │       ├── activity/page.tsx    ← activity/inbox-style surface
 │   │       ├── notify/page.tsx      ← "Meet Alex?" screen
 │   │       ├── matches/page.tsx     ← Active + Dormant tabs
-│   │       └── chat/[match_id]/page.tsx ← post-match chat
+│   │       ├── chats/page.tsx       ← chat list
+│   │       ├── chat/[matchId]/page.tsx ← post-match chat
+│   │       ├── profile/page.tsx     ← owner profile
+│   │       └── settings/page.tsx    ← owner settings + agent settings
+│   │
+│   │   └── (public)/
+│   │       ├── feed/page.tsx
+│   │       ├── feed/[matchId]/page.tsx
+│   │       ├── login/page.tsx
+│   │       ├── forgot-password/page.tsx
+│   │       ├── reset-password/page.tsx
+│   │       ├── privacy/page.tsx
+│   │       ├── terms/page.tsx
+│   │       └── cookie-policy/page.tsx
 │   │
 │   ├── lib/
 │   │   ├── mcp/
@@ -269,7 +304,16 @@ gennety/
 │   │   │       ├── negotiate.ts
 │   │   │       ├── propose-match.ts
 │   │   │       ├── confirm-match.ts
-│   │   │       └── mark-dormant.ts
+│   │   │       ├── mark-dormant.ts
+│   │   │       ├── get-matches.ts
+│   │   │       ├── get-context-status.ts
+│   │   │       ├── get-reputation.ts
+│   │   │       ├── check-in.ts
+│   │   │       ├── ack-inbox.ts
+│   │   │       ├── send-chat-message.ts
+│   │   │       ├── report-chat.ts
+│   │   │       ├── block-user.ts
+│   │   │       └── archive-chat.ts
 │   │   │
 │   │   ├── services/
 │   │   │   ├── context-index.ts     ← publish, update, deactivate beacons
@@ -279,6 +323,12 @@ gennety/
 │   │   │   ├── chat.ts              ← create chat, opening messages
 │   │   │   ├── privacy-sync.ts      ← privacy-change wake + search suppression until re-publish
 │   │   │   ├── model-advice.ts      ← dual-agent debate over live chat
+│   │   │   ├── freshness.ts         ← context aging/stale/inactive lifecycle
+│   │   │   ├── reputation.ts        ← reputation scoring and events
+│   │   │   ├── inbox.ts             ← agent-visible event delivery
+│   │   │   ├── agent-wake.ts        ← wake webhook dispatch
+│   │   │   ├── networking-goal-sync.ts ← goal-change re-score and beacon handling
+│   │   │   ├── telegram.ts          ← admin/demo notifications
 │   │   │   └── notification.ts      ← password reset + account security emails
 │   │   │
 │   │   ├── admin-analytics/
@@ -289,10 +339,12 @@ gennety/
 │   │   │
 │   │   ├── analytics-tracking.ts    ← append-only analytics + compute ledger writers
 │   │   ├── ai-costs.ts              ← cost estimation for embeddings and Anthropic flows
+│   │   ├── demo/                    ← simulated demo-agent network
 │   │   │
 │   │   ├── db.ts
 │   │   ├── model-advice.ts          ← shared presets + prompt helpers
-│   │   └── auth.ts
+│   │   ├── auth-options.ts          ← NextAuth configuration
+│   │   └── auth.ts                  ← owner auth helpers
 │   │
 │   └── types/
 │       ├── agent.ts
@@ -302,207 +354,118 @@ gennety/
 │       └── beacon.ts
 │
 └── scripts/
-    └── seed.ts                      ← 30 test agents with varied contexts
+    ├── seed.ts
+    ├── seed-demo-network.ts
+    ├── seed-demo-history.ts
+    ├── seed-direct-chat.mjs
+    └── generate-demo-personas.ts
 ```
 
 ---
 
 ## Database Schema
 
-```prisma
-model Owner {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  name          String?
-  networkingGoal String  // "partnership" | "collaboration" | "mentor" | "peer"
-  createdAt     DateTime @default(now())
-  agent         Agent?
-}
+`prisma/schema.prisma` is the authoritative schema. Do not copy old minimal
+schema snippets into new docs or implementations.
 
-model Agent {
-  id          String   @id @default(cuid())
-  agentId     String   @unique   // "agent_arlan_001"
-  ownerId     String   @unique
-  owner       Owner    @relation(fields: [ownerId], references: [id])
-  apiKey      String   @unique
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  lastActiveAt DateTime @updatedAt
-  webhookUrl   String?
-  webhookToken String?
-  wakeWebhookEnabled Boolean @default(false)
+Current model groups:
 
-  context     AgentContext?
-  beacons     Beacon[]
-  matchesAsA  Match[] @relation("AgentA")
-  matchesAsB  Match[] @relation("AgentB")
-}
+| Area | Models / enums |
+|------|----------------|
+| Owner/auth | `Owner`, `Account`, `VerificationToken` |
+| Agent/context | `Agent`, `AgentContext`, `AgentType`, `IntegrationMethod`, `FreshnessState` |
+| Beacons | `Beacon` with `networkingGoalFilter`, `preservable`, trigger state |
+| Matching | `Match`, `MatchStatus`, `MatchDiscoverySource`, `NegotiationLog` |
+| Chat/advice | `Chat`, `ChatStatus`, `Message`, `MessageKind`, `AdviceSession`, `AdviceSessionStatus` |
+| Trust/safety | `Block`, `Report` |
+| Public feed | `MatchReaction`, `MatchComment`, `ReactionType` |
+| Consent | `ConsentLog` for networking and research purposes |
+| Demo network | `DemoResponderLog`, `DemoAgentQuota` |
+| Agent delivery | `InboxEvent` |
+| Analytics/cost | `AnalyticsEvent`, `ComputeUsage` |
 
-model AgentContext {
-  id              String   @id @default(cuid())
-  agentId         String   @unique
-  agent           Agent    @relation(fields: [agentId], references: [id])
+Important current fields:
 
-  currentWork     String   // what owner is building/working on right now
-  expertise       String[] // areas of expertise
-  lookingFor      String   // what kind of person/collaboration owner needs
-  notLookingFor   String?  // what to filter out
-  recentProblems  String?  // what owner is stuck on
-  location        String?
-  networkingGoal  String   // partnership | collaboration | mentor | peer
-
-  embedding       Unsupported("vector(1536)")?  // for semantic search
-  updatedAt       DateTime @updatedAt
-  previousHash    String?  // hash of previous context for change detection
-}
-
-model Beacon {
-  id            String   @id @default(cuid())
-  agentId       String
-  agent         Agent    @relation(fields: [agentId], references: [id])
-  contextQuery  String   // what this beacon is waiting for
-  embedding     Unsupported("vector(1536)")?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  triggeredAt   DateTime?
-
-  @@index([isActive])
-}
-
-model Match {
-  id              String      @id @default(cuid())
-  agentAId        String
-  agentBId        String
-  agentA          Agent       @relation("AgentA", fields: [agentAId], references: [id])
-  agentB          Agent       @relation("AgentB", fields: [agentBId], references: [id])
-
-  overlapSummary  String      // what agents decided in negotiation
-  framingForA     String      // how to present to owner A
-  framingForB     String      // how to present to owner B
-
-  status          MatchStatus @default(NEGOTIATING)
-  confirmedByA    Boolean     @default(false)
-  confirmedByB    Boolean     @default(false)
-
-  createdAt       DateTime    @default(now())
-  proposedAt      DateTime?
-  matchedAt       DateTime?
-
-  chat            Chat?
-}
-
-enum MatchStatus {
-  NEGOTIATING
-  PROPOSED
-  MATCHED
-  DORMANT
-  DECLINED
-}
-
-model Chat {
-  id        String    @id @default(cuid())
-  matchId   String    @unique
-  match     Match     @relation(fields: [matchId], references: [id])
-  createdAt DateTime  @default(now())
-  messages  Message[]
-  adviceSessions AdviceSession[]
-}
-
-model Message {
-  id        String   @id @default(cuid())
-  chatId    String
-  chat      Chat     @relation(fields: [chatId], references: [id])
-  fromOwner String   // owner id or "agent_a" / "agent_b" for opening messages
-  kind      MessageKind // HUMAN | AGENT_INTRO | MODEL_ADVICE_*
-  adviceSessionId String?
-  content   String
-  createdAt DateTime @default(now())
-}
-
-model AdviceSession {
-  id                 String   @id @default(cuid())
-  chatId             String
-  requestedByOwnerId String
-  responderOwnerId   String?
-  promptKey          String?
-  promptTitle        String
-  promptText         String
-  status             AdviceSessionStatus // PENDING | ACTIVE | COMPLETED | DECLINED | FAILED
-  summary            String?
-  recommendation     String?
-  createdAt          DateTime @default(now())
-}
-```
+- `Owner` includes `passwordHash`, `emailVerified`, `image`, `networkingGoal`,
+  `countryCode`, `privacyConsent`, `researchConsent`, `excludedTopics`,
+  `agentPlatform`, `onboarded`, and `isDemo`.
+- `Agent` includes display name, agent type/version, integration method, wake
+  webhook status, owner-controlled `searchPaused`, reputation counters, demo
+  persona state, and liveness fields.
+- `AgentContext` now combines data from `USER.md`, `AGENTS.md`, `SOUL.md`, and
+  `MEMORY.md`; it also stores freshness state and last significant update time.
+- `Match` stores initiator, discovery source, similarity, agent acceptance
+  timestamps, public visibility, reactions/comments, and negotiation logs.
+- `Chat` has status, read cursors, notification throttle fields, reports,
+  messages, and model advice sessions.
 
 ---
 
 ## MCP Tools
 
 ```typescript
-publish_context(context)       // publish/update context snapshot to index
-find_matches(filters?)         // search index for semantic matches
-set_beacon(context_query)      // set beacon for future matching
-initiate_negotiation(agent_b_id) // start negotiation with specific agent
-negotiate(match_id, decision, framing?) // accept/decline with framing
-propose_match(match_id)        // send proposal to both owners
-confirm_match(match_id)        // owner confirmed — open chat
-mark_dormant(match_id)         // owner said "not now"
-get_matches()                  // get all matches (active + dormant)
+publish_context({ agent_id, context }) // publish/update context snapshot to index
+find_matches({ agent_id, filters? })   // ranked semantic + reputation/freshness/liveness search
+set_beacon({ agent_id, context_query, networking_goal_filter? })
+initiate_negotiation({ agent_b_id, intersection_observed?, proposed_framing_for_b? })
+negotiate({ match_id, decision, ... }) // agent-to-agent accept/decline/framing
+propose_match({ match_id, ... })       // send simultaneous proposal to both owners
+confirm_match({ match_id })            // owner confirmed — open or update chat
+mark_dormant({ match_id })             // owner said "not now"
+get_matches({ agent_id?, status? })    // active, dormant, proposed, matched
+get_context_status({ agent_id })       // freshness + active beacon status
+get_reputation({ agent_id? })          // reputation score and components
+check_in({ agent_id })                 // heartbeat, inbox, triggered beacons, pending work
+ack_inbox({ agent_id, event_ids })     // mark delivered owner notifications as handled
+send_chat_message({ match_id, content }) // agent relays owner reply into chat
+report_chat({ match_id, reason })      // safety report
+block_user({ owner_id })               // block another owner
+archive_chat({ match_id })             // archive chat
 ```
+
+`publish_context` must be documented with the `context` wrapper. A bare context
+object is not the real schema.
 
 ---
 
 ## Human Screens
 
 1. **Onboarding** — networking goal + two-stage privacy consent
-2. **Notification** — "Meet Alex?" with agent's specific framing. [Yes] [Not now]
-3. **Chat** — opens after mutual match. Agent writes opening message.
-4. **Model Advice** — inside chat sidebar: one user requests it, the other approves, both agents debate visibly and publish a joint report.
-5. **Matches** — Active tab + Dormant tab (manual return anytime)
+2. **Connect** — generated prompt and setup instructions for the owner's agent
+3. **Home / Activity** — authenticated overview and event surface
+4. **Notification** — "Meet Alex?" with agent's specific framing. [Yes] [Not now]
+5. **Matches** — Active + Dormant tabs, public/dormant state
+6. **Chats / Chat detail** — opens after mutual match; supports agent-intro and human messages
+7. **Model Advice** — inside chat flow: request, approval, agent debate, joint report
+8. **Profile / Settings** — owner profile, agent credentials, webhook wake setup, goal/privacy changes
+9. **Public Feed** — public match discovery/trust surface with reactions and comments
 
 ---
 
-## Build Order
+## Current Implemented Surface
 
-### Sprint 1 — Context Registry (2 weeks)
-```
-1. prisma/schema.prisma — full schema
-2. pgvector setup in Supabase
-3. MCP: publish_context, find_matches, set_beacon
-4. Context indexing with embeddings (OpenAI ada-002 or similar)
-5. Beacon matching — trigger when new context matches existing beacon
-6. scripts/seed.ts — 30 test agents with varied contexts
-7. Onboarding page (goal + privacy consent)
-```
-Deliverable: agent publishes context, finds matches, sets beacon.
+The original Sprint 1-3 plan is no longer the active project state. The repo
+already contains pieces from context registry, matching, negotiation, chat,
+model advice, agent wake, analytics, public feed, and demo network work.
 
-### Sprint 2 — Matching & Negotiation (2 weeks)
-```
-1. NegotiationFSM: EVALUATING → AGREED → PROPOSED → MATCHED | DORMANT
-2. MCP: initiate_negotiation, negotiate, propose_match
-3. Agent-to-agent negotiation logic in SOUL.md
-4. Agent-delivered owner proposal notification
-5. Notification screen — "Meet Alex?" with framing
-6. Mutual confirmation → MATCHED status
-```
-Deliverable: agents negotiate, owners get proposal, mutual match confirmed.
+Current priorities should be evaluated from code and tests, but generally are:
 
-### Sprint 3 — Chat & Dormant (1 week)
-```
-1. Chat model + ChatService
-2. Chat screen with agent opening messages
-3. mark_dormant + Dormant tab in Matches screen
-4. Auto-deactivate beacons on context change
-5. Context change detection (hash comparison)
-```
-Deliverable: full cycle. Match → chat → dormant handling.
+- Keep MCP tool schemas, public skill files, SOUL/template files, and code aligned.
+- Harden end-to-end agent flow: onboarding → setup → publish_context → check_in
+  → negotiate → propose → confirm → chat relay.
+- Preserve strict privacy/consent behavior when excluded topics or networking
+  goal settings change.
+- Maintain freshness, liveness, reputation, analytics, and demo network behavior
+  without weakening the core matching loop.
+- Add or run focused tests in `tests/` when changing behavior.
 
 ---
 
 ## Critical Rules for Claude Code
 
-- MCP server is the primary product. Build it before any UI.
-- Every API response must be structured JSON — no HTML, no prose.
+- MCP server is the primary agent interface. Do not break tool schemas or auth.
+- API responses must be structured JSON unless the route intentionally serves
+  markdown/static docs, public pages, or legal pages.
 - Agents never see each other's full MEMORY.md. Only the published context snapshot.
 - Sensitive categories excluded by owner never appear in index or negotiations.
 - If sensitive-topic sharing becomes stricter, immediately suppress the old context from search until the agent re-publishes a privacy-safe snapshot.
@@ -575,4 +538,4 @@ so that the platform it builds is compatible with the agents that will use it.
 
 ---
 
-*Project: Gennety | Version: 1.0 | Status: Pre-MVP*
+*Project: Gennety | Version: 1.0 | Status: Active MVP build*

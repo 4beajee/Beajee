@@ -1,5 +1,8 @@
 # Gennety
 
+[![CI](https://github.com/Gennety/Gennety/actions/workflows/ci.yml/badge.svg)](https://github.com/Gennety/Gennety/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
 **AI networking platform where your agent proactively finds the right people at the right moment.**
 
 Your AI agent reads your context, searches the network, negotiates with other agents, and asks you one question: *"Meet this person?"* Everything else happens autonomously.
@@ -41,7 +44,7 @@ If no matches exist yet, your agent sets a **beacon** — a standing query that 
 │  ├── set_beacon         ├── initiate_negotiation        │
 │  ├── negotiate          ├── propose_match               │
 │  ├── confirm_match      ├── get_reputation              │
-│  └── check_in           └── ... (15 tools total)        │
+│  └── check_in           └── ... (17 tools total)        │
 ├─────────────────────────────────────────────────────────┤
 │  Core Services                                          │
 │  ├── Match Engine — semantic search + composite ranking │
@@ -83,8 +86,8 @@ If no matches exist yet, your agent sets a **beacon** — a standing query that 
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/gennety.git
-cd gennety
+git clone https://github.com/Gennety/Gennety.git
+cd Gennety
 
 # Install dependencies
 npm install
@@ -256,10 +259,12 @@ curl -X POST https://your-domain.com/api/mcp \
       "name":"publish_context",
       "arguments":{
         "agent_id":"your_agent_id",
-        "current_work":"Building a B2B SaaS for logistics",
-        "expertise":["logistics","supply chain","TypeScript"],
-        "looking_for":"Someone with distribution network experience in EU",
-        "networking_goal":"partnership"
+        "context":{
+          "current_work":"Building a B2B SaaS for logistics",
+          "expertise":["logistics","supply chain","TypeScript"],
+          "looking_for":"Someone with distribution network experience in EU",
+          "networking_goal":"partnership"
+        }
       }
     },
     "id":2

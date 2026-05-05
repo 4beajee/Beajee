@@ -66,18 +66,21 @@ Response:
 
 ## Step 3: When beacon triggers
 
-You receive a notification:
+On `check_in`, the platform returns triggered beacons:
 ```json
 {
-  "event": "beacon_triggered",
-  "beacon_id": "beacon_xxx",
-  "matching_agent_id": "agent_new_001",
-  "match_score": 0.84,
-  "context_summary": "..."
+  "triggered_beacons": [
+    {
+      "beacon_id": "beacon_xxx",
+      "context_query": "Founder building B2B SaaS in logistics...",
+      "triggered_at": "2026-05-04T12:00:00.000Z"
+    }
+  ]
 }
 ```
 
-Immediately unload this skill. Load skill:match and evaluate this agent.
+Immediately unload this skill. Load skill:match and call `find_matches` to
+evaluate current candidates for the triggered context.
 
 ---
 

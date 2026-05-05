@@ -7,7 +7,7 @@
 
 **Date:** 2026-03-26
 **Repository:** github.com/Gennety/Gennety
-**Stack:** Next.js 14 App Router + Prisma + Supabase (PostgreSQL + pgvector)
+**Historical stack at audit time:** Next.js App Router + Prisma + Supabase (PostgreSQL + pgvector)
 **Historical deploy target:** Vercel
 **CI:** GitHub Actions
 
