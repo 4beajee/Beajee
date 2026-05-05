@@ -26,6 +26,7 @@ const publicApiPrefixes = [
   "/api/auth",
   "/api/feed",
   "/api/mcp",
+  "/api/setup",
   "/api/soul",
   "/api/track",
   "/api/oauth",
