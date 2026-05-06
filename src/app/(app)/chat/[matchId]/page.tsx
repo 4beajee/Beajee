@@ -1287,7 +1287,7 @@ function ModelAdviceChatNote({
         type="button"
         onClick={onDismiss}
         aria-label={dismissLabel}
-        className="absolute right-1 top-1 flex h-9 w-9 items-center justify-center rounded-full text-neutral-500/70 transition-colors hover:text-white"
+        className="absolute right-0 top-0 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-neutral-500/70 transition-colors hover:text-white"
       >
         <CloseIcon className="w-3.5 h-3.5" />
       </button>
