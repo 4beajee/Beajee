@@ -23,15 +23,15 @@ export const mattePillBaseClass =
 export const subtleButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl bg-neutral-950/58 px-4 py-2.5 text-sm font-medium text-neutral-300 ring-1 ring-inset ring-white/[0.10] transition hover:bg-neutral-900/80 hover:text-white hover:ring-white/[0.16] disabled:opacity-50";
 export const subtleButtonSmallClass =
-  "inline-flex min-h-9 items-center justify-center rounded-xl bg-neutral-950/58 px-3 py-2 text-[13px] font-medium text-neutral-300 ring-1 ring-inset ring-white/[0.10] transition hover:bg-neutral-900/80 hover:text-white hover:ring-white/[0.16] disabled:opacity-50";
+  "inline-flex min-h-8 items-center justify-center rounded-lg bg-neutral-950/58 px-2.5 py-1.5 text-xs font-medium text-neutral-300 ring-1 ring-inset ring-white/[0.10] transition hover:bg-neutral-900/80 hover:text-white hover:ring-white/[0.16] disabled:opacity-50";
 export const primaryButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50";
 export const primaryButtonSmallClass =
-  "inline-flex min-h-9 items-center justify-center rounded-xl bg-white px-3 py-2 text-[13px] font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50";
+  "inline-flex min-h-8 items-center justify-center rounded-lg bg-white px-2.5 py-1.5 text-xs font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50";
 export const dangerButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl bg-red-500/90 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-500 disabled:opacity-50";
 export const dangerButtonSmallClass =
-  "inline-flex min-h-9 items-center justify-center rounded-xl bg-red-500/90 px-3 py-2 text-[13px] font-medium text-white transition hover:bg-red-500 disabled:opacity-50";
+  "inline-flex min-h-8 items-center justify-center rounded-lg bg-red-500/90 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-red-500 disabled:opacity-50";
 export const dangerSubtleButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl bg-red-500/[0.12] px-4 py-2.5 text-sm font-medium text-red-200 transition hover:bg-red-500/[0.18] hover:text-red-100 disabled:opacity-50";
 export const inputClass =

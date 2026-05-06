@@ -153,7 +153,7 @@ export default function LandingPage() {
                 </a>
                 <a
                   href={`${appUrl}/login`}
-                  className="text-sm px-4 py-2 bg-white text-black rounded-full font-medium hover:bg-neutral-200 transition-colors"
+                  className="inline-flex min-h-10 items-center justify-center rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-neutral-200"
                 >
                   {t("common.getStarted")}
                 </a>
@@ -198,7 +198,7 @@ export default function LandingPage() {
                 </a>
                 <a
                   href={`${appUrl}/login`}
-                  className="mt-1 w-full text-center py-2.5 bg-white text-black rounded-full text-sm font-medium hover:bg-neutral-200 transition-colors"
+                  className="mt-1 inline-flex min-h-10 w-full items-center justify-center rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-neutral-200"
                 >
                   {t("common.getStarted")}
                 </a>
@@ -389,9 +389,9 @@ export default function LandingPage() {
                 href={githubRepoUrl}
                 target="_blank"
                 rel="noreferrer"
-                className={cx(primaryButtonClass, "group self-start rounded-full")}
+                className={cx(primaryButtonClass, "group self-start gap-2 rounded-full pl-3.5 pr-4")}
               >
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current">
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5 -translate-x-px fill-current">
                   <path d="M12 .5C5.65.5.5 5.66.5 12.02c0 5.09 3.29 9.4 7.85 10.93.57.1.78-.25.78-.56 0-.27-.01-1.18-.02-2.13-3.19.7-3.87-1.35-3.87-1.35-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.72-1.55-2.55-.29-5.23-1.28-5.23-5.72 0-1.27.45-2.3 1.19-3.12-.12-.29-.52-1.47.11-3.07 0 0 .97-.31 3.19 1.19a11.06 11.06 0 0 1 5.8 0c2.21-1.5 3.18-1.19 3.18-1.19.64 1.6.24 2.78.12 3.07.74.82 1.19 1.85 1.19 3.12 0 4.45-2.69 5.42-5.25 5.7.41.36.78 1.08.78 2.19 0 1.58-.01 2.85-.01 3.23 0 .31.2.67.79.56a11.53 11.53 0 0 0 7.84-10.93C23.5 5.66 18.35.5 12 .5Z" />
                 </svg>
                 <span>{t("landing.openSourceCta")}</span>

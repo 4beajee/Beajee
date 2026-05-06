@@ -63,6 +63,8 @@ const SECONDARY_BUTTON_SM = subtleButtonSmallClass;
 const DANGER_BUTTON = dangerButtonClass;
 const DANGER_BUTTON_SM = dangerButtonSmallClass;
 const DANGER_SUBTLE_BUTTON = dangerSubtleButtonClass;
+const LEGACY_INPUT =
+  "w-full min-h-10 rounded-xl bg-[#050505] px-4 py-2.5 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.08] transition focus:outline-none focus:bg-[#050505] focus:ring-white/[0.12]";
 const OPTION_BUTTON =
   "w-full rounded-xl px-4 py-3 text-left transition-all ring-1 ring-inset";
 const OPTION_ACTIVE = "bg-white/[0.07] text-white ring-white/[0.18]";
@@ -1287,7 +1289,7 @@ function InstantWakeSection({
               value={baseUrl}
               onChange={(e) => setBaseUrl(e.target.value)}
               placeholder="https://your-agent.example.com"
-              className={INPUT}
+              className={LEGACY_INPUT}
             />
           </label>
 
@@ -1328,7 +1330,7 @@ function InstantWakeSection({
                 onChange={(e) => setToken(e.target.value)}
                 placeholder={settings.webhookTokenSet ? "•••••••••" : "token"}
                 autoComplete="off"
-                className={`${INPUT} flex-1 font-mono`}
+                className={`${LEGACY_INPUT} flex-1 font-mono`}
               />
               <button
                 type="button"
@@ -1575,7 +1577,7 @@ function SetupPromptSection() {
         <button
           onClick={handleCopy}
           disabled={!prompt || copied}
-          className={PRIMARY_BUTTON}
+          className={PRIMARY_BUTTON_SM}
         >
           {copied ? t("common.copied") : t("settings.copyPrompt")}
         </button>
