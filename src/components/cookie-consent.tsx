@@ -7,6 +7,7 @@ import {
   useCookieConsent,
   type ConsentCategories,
 } from "@/hooks/useCookieConsent";
+import { cx, primaryButtonSmallClass, subtleButtonSmallClass } from "@/components/ui/app-chrome";
 
 const ALL_ACCEPTED: ConsentCategories = {
   necessary: true,
@@ -147,19 +148,19 @@ export function CookieConsent() {
             <div className="grid grid-cols-3 sm:flex sm:items-center gap-2 sm:shrink-0">
               <button
                 onClick={() => dismiss("rejected", ALL_REJECTED)}
-                className="px-2.5 sm:px-3 py-1.5 sm:py-1.5 text-[11px] sm:text-xs text-neutral-500 hover:text-white border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-lg transition-colors"
+                className={cx(subtleButtonSmallClass, "border-0 bg-transparent text-neutral-400 ring-white/[0.10]")}
               >
                 {t("decline")}
               </button>
               <button
                 onClick={() => setShowCustomize(true)}
-                className="px-2.5 sm:px-3 py-1.5 sm:py-1.5 text-[11px] sm:text-xs text-neutral-400 hover:text-white border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-lg transition-colors"
+                className={cx(subtleButtonSmallClass, "border-0 bg-transparent ring-white/[0.10]")}
               >
                 {t("customize")}
               </button>
               <button
                 onClick={() => dismiss("accepted", ALL_ACCEPTED)}
-                className="px-3 sm:px-4 py-1.5 sm:py-1.5 text-[11px] sm:text-xs font-medium text-black bg-white hover:bg-neutral-200 rounded-lg transition-colors"
+                className={primaryButtonSmallClass}
               >
                 {t("accept")}
               </button>
@@ -174,7 +175,7 @@ export function CookieConsent() {
               </h2>
               <button
                 onClick={() => setShowCustomize(false)}
-                className="px-3 py-1.5 text-xs text-neutral-500 hover:text-white border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-lg transition-colors"
+                className={cx(subtleButtonSmallClass, "border-0 bg-transparent text-neutral-400 ring-white/[0.10]")}
               >
                 {t("cancel")}
               </button>
@@ -187,8 +188,8 @@ export function CookieConsent() {
                   className="flex items-center justify-between gap-3 rounded-lg border border-[#1a1a1a] px-3 py-2.5"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-white">{cat.label}</p>
-                    <p className="text-[11px] text-neutral-500 leading-tight mt-0.5 line-clamp-2 sm:line-clamp-1">
+                    <p className="text-[13px] font-medium text-white">{cat.label}</p>
+                    <p className="mt-0.5 line-clamp-2 text-xs leading-tight text-neutral-400 sm:line-clamp-1">
                       {cat.desc}
                     </p>
                   </div>
@@ -216,7 +217,7 @@ export function CookieConsent() {
                   const action = allTrue ? "accepted" : allFalse ? "rejected" : "partial";
                   dismiss(action, consents);
                 }}
-                className="px-5 py-2 text-sm font-medium text-black bg-white hover:bg-neutral-200 rounded-lg transition-colors"
+                className={primaryButtonSmallClass}
               >
                 {t("savePreferences")}
               </button>

@@ -24,9 +24,9 @@ export const KeyPrinciplesSection = forwardRef<HTMLElement, KeyPrinciplesSection
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-50px" }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="py-[74px] sm:py-[122px] px-4 sm:px-6 max-w-5xl mx-auto w-full"
+        className="mx-auto w-full max-w-5xl px-4 py-16 sm:px-6 sm:py-24"
       >
-        <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-neutral-600 mb-10 sm:mb-16 text-center">
+        <p className="mb-10 text-center text-[13px] font-semibold uppercase text-neutral-400">
           {title}
         </p>
 
@@ -38,14 +38,14 @@ export const KeyPrinciplesSection = forwardRef<HTMLElement, KeyPrinciplesSection
               layout
               onClick={() => setActivePrinciple((current) => (current === index ? null : index))}
               aria-expanded={activePrinciple === index}
-              className={`h-full rounded-2xl border p-6 sm:p-7 text-left transition-[border-color,transform,background-color,box-shadow] duration-300 hover:-translate-y-1 ${activePrinciple === index ? "active-step-sheen border-white/20 bg-white/10 shadow-[0_0_24px_rgba(255,255,255,0.06)]" : "border-[#1a1a1a] bg-[#0a0a0a] hover:border-[#2a2a2a]"}`}
+              className={`h-full rounded-xl border p-5 text-left transition-[border-color,transform,background-color,box-shadow] duration-300 hover:-translate-y-1 sm:p-6 ${activePrinciple === index ? "active-step-sheen border-white/20 bg-white/10 shadow-[0_0_24px_rgba(255,255,255,0.06)]" : "border-white/[0.08] bg-[#0a0a0a] hover:border-white/[0.14]"}`}
             >
               <div className="flex items-start justify-between gap-4">
-                <h3 className={`text-lg sm:text-xl font-medium leading-snug ${activePrinciple === index ? "active-step-text-sheen" : "text-white"}`}>
+                <h3 className={`text-base font-semibold leading-snug sm:text-lg ${activePrinciple === index ? "active-step-text-sheen" : "text-white"}`}>
                   {principle.title}
                 </h3>
                 <span
-                  className={`mt-0.5 text-xs transition-transform duration-300 ${activePrinciple === index ? "rotate-45 text-white/80" : "text-neutral-600"}`}
+                  className={`mt-0.5 text-xs transition-transform duration-300 ${activePrinciple === index ? "rotate-45 text-white/80" : "text-neutral-500"}`}
                   aria-hidden="true"
                 >
                   +

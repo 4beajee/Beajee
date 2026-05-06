@@ -27,7 +27,7 @@ function SpotlightCard({ step }: { step: Step }) {
   return (
     <div
       onMouseMove={handleMouseMove}
-      className="group relative p-6 sm:p-8 rounded-xl border border-[#1a1a1a] bg-[#0a0a0a] overflow-hidden h-full"
+      className="group relative h-full overflow-hidden rounded-xl border border-white/[0.08] bg-[#0a0a0a] p-5 sm:p-6"
     >
       <motion.div
         className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition duration-300 group-hover:opacity-100"
@@ -42,9 +42,9 @@ function SpotlightCard({ step }: { step: Step }) {
         }}
       />
       <div className="relative z-10 flex flex-col h-full">
-        <div className="text-4xl sm:text-5xl font-bold text-[#1a1a1a] transition-colors duration-300 group-hover:text-[#444]">{step.num}</div>
+        <div className="text-3xl font-semibold text-[#242424] transition-colors duration-300 group-hover:text-[#4a4a4a]">{step.num}</div>
         <h3 className="text-base font-medium text-white mt-3 sm:mt-4">{step.title}</h3>
-        <p className="text-sm text-neutral-500 mt-2 sm:mt-3 leading-relaxed flex-1">{step.desc}</p>
+        <p className="mt-2 flex-1 text-sm leading-6 text-neutral-400 sm:mt-3">{step.desc}</p>
       </div>
     </div>
   );
@@ -53,8 +53,8 @@ function SpotlightCard({ step }: { step: Step }) {
 export const HowItWorksSection = forwardRef<HTMLElement, HowItWorksSectionProps>(
   ({ title, steps }, ref) => {
     return (
-      <section ref={ref} className="py-[74px] sm:py-[122px] px-4 sm:px-6 max-w-5xl mx-auto">
-        <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-neutral-600 mb-10 sm:mb-16 text-center">
+      <section ref={ref} className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
+        <p className="mb-10 text-center text-[13px] font-semibold uppercase text-neutral-400">
           {title}
         </p>
 

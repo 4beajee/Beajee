@@ -14,6 +14,7 @@ import { TopBanner } from "@/components/top-banner";
 import { HowItWorksSection } from "@/components/how-it-works-section";
 import { MatchExampleSection } from "@/components/match-example-section";
 import { KeyPrinciplesSection } from "@/components/key-principles-section";
+import { cx, primaryButtonClass } from "@/components/ui/app-chrome";
 
 const githubRepoUrl = "https://github.com/Gennety/Gennety";
 
@@ -209,24 +210,24 @@ export default function LandingPage() {
 
       {/* ── Hero ── */}
       <section
-        className="min-h-[85dvh] sm:min-h-[90vh] flex flex-col items-center justify-center px-4 sm:px-6 relative py-12"
+        className="relative flex min-h-[74dvh] flex-col items-center justify-center px-4 py-10 sm:px-6"
         style={{ background: "radial-gradient(ellipse at center, rgba(255,255,255,0.02) 0%, transparent 70%)" }}
       >
         <TopBanner />
 
-        <div className="max-w-2xl text-center w-full mt-8">
-          <h1 className="hero-title text-[2.25rem] leading-[1.15] sm:text-5xl md:text-7xl font-bold tracking-tight text-white">
+        <div className="mt-7 w-full max-w-2xl text-center">
+          <h1 className="hero-title text-[2.5rem] font-semibold leading-[1.12] text-white sm:text-5xl md:text-6xl">
             {t("landing.heroTitle1")}
             <br />
             {t("landing.heroTitle2")}
           </h1>
-          <p className="hero-subtitle text-base sm:text-lg md:text-xl text-neutral-500 max-w-xl mx-auto mt-5 sm:mt-6 leading-relaxed">
+          <p className="hero-subtitle mx-auto mt-5 max-w-xl text-base leading-7 text-neutral-400">
             {t("landing.heroSubtitle")}
           </p>
-          <div className="hero-cta mt-8 sm:mt-10">
+          <div className="hero-cta mt-7">
             <a
               href={`${appUrl}/login`}
-              className="inline-block px-6 sm:px-8 py-3.5 sm:py-4 bg-white text-black rounded-full text-sm font-medium hover:bg-neutral-200 transition-colors"
+              className={cx(primaryButtonClass, "rounded-full px-6")}
             >
               {t("common.getStarted")} <span aria-hidden="true">&rarr;</span>
             </a>
@@ -241,11 +242,11 @@ export default function LandingPage() {
       {/* ── Live Activity ── */}
 
       {feedMatches.length > 0 && (
-        <section ref={activityRef} className="reveal py-[74px] sm:py-[122px] px-4 sm:px-6 max-w-5xl mx-auto">
-          <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-neutral-600 mb-8 sm:mb-12 text-center">
+        <section ref={activityRef} className="reveal mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
+          <p className="mb-8 text-center text-[13px] font-semibold uppercase text-neutral-400 sm:mb-10">
             {t("landing.liveActivity")}
           </p>
-          <p className="text-center text-neutral-500 text-sm mb-8 sm:mb-10">
+          <p className="mb-8 text-center text-sm text-neutral-400 sm:mb-10">
             {t("landing.happeningNow")}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -304,24 +305,24 @@ export default function LandingPage() {
       />
 
       {/* ── Agent Dialogue ── */}
-      <section className="py-[74px] sm:py-[122px] px-4 sm:px-6 max-w-5xl mx-auto">
-        <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-neutral-600 mb-10 sm:mb-16 text-center">
+      <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
+        <p className="mb-10 text-center text-[13px] font-semibold uppercase text-neutral-400">
           {t("landing.agentDialogue")}
         </p>
         <div
           ref={dialogueRef}
-          className="bg-[#080808] border border-[#1a1a1a] rounded-2xl p-6 sm:p-8 md:p-12 max-w-2xl mx-auto font-mono"
+          className="mx-auto max-w-2xl rounded-xl border border-white/[0.08] bg-[#080808] p-5 font-mono sm:p-7"
         >
           <div className="dialogue-msg">
-            <p className="text-xs text-neutral-600">{t("landing.agentArlan")}</p>
+            <p className="text-xs text-neutral-500">{t("landing.agentArlan")}</p>
             <p className="text-sm text-neutral-400 mt-1 ml-4 leading-relaxed">{t("landing.dialogueArlan1")}</p>
           </div>
           <div className="dialogue-msg my-5 sm:my-6">
-            <p className="text-xs text-neutral-600">{t("landing.agentAlex")}</p>
+            <p className="text-xs text-neutral-500">{t("landing.agentAlex")}</p>
             <p className="text-sm text-neutral-400 mt-1 ml-4 leading-relaxed">{t("landing.dialogueAlex1")}</p>
           </div>
           <div className="dialogue-msg my-5 sm:my-6">
-            <p className="text-xs text-neutral-600">{t("landing.agentArlan")}</p>
+            <p className="text-xs text-neutral-500">{t("landing.agentArlan")}</p>
             <p className="text-sm text-neutral-400 mt-1 ml-4 leading-relaxed">{t("landing.dialogueArlan2")}</p>
           </div>
           <div className="dialogue-msg mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-[#1a1a1a]">
@@ -338,17 +339,17 @@ export default function LandingPage() {
       {/* ── Final CTA ── */}
       <section
         ref={ctaRef}
-        className="reveal py-20 sm:py-32 px-4 sm:px-6 flex flex-col items-center justify-center text-center"
+        className="reveal flex flex-col items-center justify-center px-4 py-16 text-center sm:px-6 sm:py-24"
       >
-        <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight">
+        <h2 className="text-3xl font-semibold leading-tight text-white sm:text-4xl">
           {t("landing.ctaTitle1")}
           <br />
           {t("landing.ctaTitle2")}
         </h2>
-        <div className="mt-8 sm:mt-12">
+        <div className="mt-8">
           <a
             href={`${appUrl}/login`}
-            className="inline-block px-6 sm:px-8 py-3.5 sm:py-4 bg-white text-black rounded-full text-sm font-medium hover:bg-neutral-200 transition-colors shadow-[0_0_80px_rgba(255,255,255,0.06)]"
+            className={cx(primaryButtonClass, "rounded-full px-6 shadow-[0_0_80px_rgba(255,255,255,0.06)]")}
           >
             {t("common.getStarted")} <span aria-hidden="true">&rarr;</span>
           </a>
@@ -357,10 +358,10 @@ export default function LandingPage() {
 
       <section className="px-4 sm:px-6 pb-20 sm:pb-24">
         <div className="max-w-5xl mx-auto">
-          <div className="rounded-[1.5rem] border border-[#1f1f1f] bg-[linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))] p-5 sm:p-6 md:p-7">
+          <div className="rounded-xl border border-white/[0.08] bg-[linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))] p-5 sm:p-6">
             <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
               <div className="max-w-2xl">
-                <h3 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+                <h3 className="text-xl font-semibold text-white">
                   {t("landing.openSourceTitle")}
                 </h3>
                 <p className="mt-2.5 max-w-xl text-sm leading-relaxed text-neutral-400">
@@ -375,7 +376,7 @@ export default function LandingPage() {
                   ].map((item) => (
                     <div
                       key={item.label}
-                      className="inline-flex items-center gap-2 rounded-full border border-[#262626] bg-[#0a0a0a] px-2.5 py-1.5 text-[11px] text-neutral-300"
+                      className="inline-flex items-center gap-2 rounded-full border border-[#262626] bg-[#0a0a0a] px-3 py-1.5 text-xs text-neutral-300"
                     >
                       <span className="font-semibold text-white">{item.value}</span>
                       <span className="text-neutral-500">{item.label}</span>
@@ -388,7 +389,7 @@ export default function LandingPage() {
                 href={githubRepoUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="group inline-flex items-center justify-center gap-2.5 self-start rounded-full border border-[#2a2a2a] bg-white px-4 py-2.5 text-xs font-medium text-black transition-transform duration-300 hover:-translate-y-0.5 hover:bg-neutral-200"
+                className={cx(primaryButtonClass, "group self-start rounded-full")}
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current">
                   <path d="M12 .5C5.65.5.5 5.66.5 12.02c0 5.09 3.29 9.4 7.85 10.93.57.1.78-.25.78-.56 0-.27-.01-1.18-.02-2.13-3.19.7-3.87-1.35-3.87-1.35-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.72-1.55-2.55-.29-5.23-1.28-5.23-5.72 0-1.27.45-2.3 1.19-3.12-.12-.29-.52-1.47.11-3.07 0 0 .97-.31 3.19 1.19a11.06 11.06 0 0 1 5.8 0c2.21-1.5 3.18-1.19 3.18-1.19.64 1.6.24 2.78.12 3.07.74.82 1.19 1.85 1.19 3.12 0 4.45-2.69 5.42-5.25 5.7.41.36.78 1.08.78 2.19 0 1.58-.01 2.85-.01 3.23 0 .31.2.67.79.56a11.53 11.53 0 0 0 7.84-10.93C23.5 5.66 18.35.5 12 .5Z" />
@@ -404,18 +405,18 @@ export default function LandingPage() {
       {/* ── Footer ── */}
       <footer className="py-10 sm:py-12 px-4 sm:px-6 border-t border-[#1a1a1a]" style={{ paddingBottom: "calc(2.5rem + var(--safe-bottom))" }}>
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
-          <span className="text-sm text-neutral-600">{t("common.gennety")}</span>
+          <span className="text-sm text-neutral-500">{t("common.gennety")}</span>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             <a
               href={githubRepoUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-neutral-600 transition-colors hover:text-white"
+              className="text-sm text-neutral-500 transition-colors hover:text-white"
             >
               {t("landing.githubLinkLabel")}
             </a>
             <CookiePreferencesButton />
-            <span className="text-sm text-neutral-600">{t("common.builtForAgents")}</span>
+            <span className="text-sm text-neutral-500">{t("common.builtForAgents")}</span>
           </div>
         </div>
       </footer>

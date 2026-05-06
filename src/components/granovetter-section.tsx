@@ -6,14 +6,14 @@ export function GranovetterSection() {
   const t = useTranslations("landing");
 
   return (
-    <section className="py-[74px] sm:py-[122px] px-4 sm:px-6 max-w-5xl mx-auto">
+    <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <div className="space-y-6 animate-detail-in">
-          <h2 className="text-4xl sm:text-5xl font-semibold tracking-tight text-white leading-tight">
+          <h2 className="text-3xl font-semibold leading-tight text-white sm:text-4xl">
             {t("granovetterTitle")}
           </h2>
 
-          <p className="text-lg sm:text-xl text-neutral-400 leading-relaxed max-w-lg">
+          <p className="max-w-lg text-base leading-7 text-neutral-400">
             {t("granovetterQuote")}
           </p>
         </div>
@@ -48,13 +48,13 @@ export function GranovetterSection() {
 
           {/* Labels - Positioned ABOVE the graphics */}
           <div className="absolute left-[2%] sm:left-[5%] top-1/2 -translate-y-20 z-10 text-center">
-            <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">
+            <span className="font-mono text-xs uppercase text-neutral-500">
               {t("yourCircle")}
             </span>
           </div>
 
           <div className="absolute right-[2%] sm:right-[5%] top-1/2 -translate-y-20 z-10 text-center">
-            <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest leading-relaxed">
+            <span className="font-mono text-xs uppercase leading-relaxed text-neutral-500">
               {t("weakTies")}
               <br />
               <span className="text-white/40">{t("opportunities")}</span>

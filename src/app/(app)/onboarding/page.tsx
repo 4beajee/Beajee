@@ -6,6 +6,16 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { getCountryOptions, matchesCountryQuery } from "@/lib/countries";
+import {
+  codePanelClass,
+  cx,
+  inputClass,
+  panelClass,
+  primaryButtonClass,
+  primaryButtonSmallClass,
+  subtleButtonClass,
+  subtleButtonSmallClass,
+} from "@/components/ui/app-chrome";
 
 type Step = "use_openclaw" | "install" | "thesis" | "goal" | "country" | "consent" | "sensitive" | "research" | "complete";
 type Goal = "partnership" | "collaboration" | "mentor" | "peer";
@@ -14,6 +24,17 @@ type OpenClawStatus = "using" | "installed_later" | null;
 
 const AGENT_PLATFORM = "open_claw";
 const FILE_NAME = "SOUL.md";
+const ONBOARDING_TITLE = "text-xl font-semibold text-white mb-3 text-center";
+const ONBOARDING_TITLE_TIGHT = "text-xl font-semibold text-white mb-2 text-center";
+const ONBOARDING_DESC = "text-sm leading-6 text-neutral-400";
+const ONBOARDING_PRIMARY = `${primaryButtonClass} w-full`;
+const ONBOARDING_SECONDARY = `${subtleButtonClass} w-full`;
+const ONBOARDING_BACK =
+  "mt-4 inline-flex min-h-9 w-full items-center justify-center rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-400 transition-colors hover:bg-white/[0.035] hover:text-white";
+const ONBOARDING_OPTION =
+  "w-full rounded-xl px-4 py-3 text-left text-sm transition-all ring-1 ring-inset";
+const ONBOARDING_OPTION_IDLE =
+  "bg-neutral-950/38 text-neutral-300 ring-white/[0.07] hover:bg-neutral-900/70 hover:text-white hover:ring-white/[0.13]";
 
 const INSTALL_COMMANDS: Record<OS, string> = {
   unix: "curl -fsSL https://openclaw.ai/install.sh | bash",
@@ -332,13 +353,13 @@ export default function OnboardingPage() {
       : 8;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center px-5 py-7 sm:px-6">
       <div className={`w-full ${step === "install" || step === "thesis" ? "max-w-4xl" : "max-w-lg"}`}>
         {/* Header */}
         <div className="mb-10 text-center">
           <Link
             href="/"
-            className="text-3xl font-bold tracking-tight text-white hover:text-neutral-300 transition-colors"
+            className="text-2xl font-semibold text-white transition-colors hover:text-neutral-300"
           >
             {t("common.gennety")}
           </Link>
@@ -346,7 +367,7 @@ export default function OnboardingPage() {
             {t("onboarding.tagline")}
           </p>
           {session?.user?.email && (
-            <p className="mt-1 text-xs text-neutral-600">
+            <p className="mt-1 text-xs text-neutral-500">
               {t("onboarding.signedInAs", { email: session.user.email })}
             </p>
           )}
@@ -369,10 +390,10 @@ export default function OnboardingPage() {
         {/* Step 1a: Do you use OpenClaw? */}
         {step === "use_openclaw" && (
           <div>
-            <h2 className="text-lg font-medium text-neutral-200 mb-3 text-center">
+            <h2 className={ONBOARDING_TITLE}>
               {t("onboarding.useOpenClawTitle")}
             </h2>
-            <p className="text-sm text-neutral-500 mb-8 text-center">
+            <p className={cx(ONBOARDING_DESC, "mb-8 text-center")}>
               {t("onboarding.useOpenClawDesc")}
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -381,13 +402,13 @@ export default function OnboardingPage() {
                   setOpenClawStatus("using");
                   setStep("thesis");
                 }}
-                className="py-4 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition-colors"
+                className={ONBOARDING_PRIMARY}
               >
                 {t("onboarding.yesUsing")}
               </button>
               <button
                 onClick={() => setStep("install")}
-                className="py-4 rounded-lg border border-neutral-700 text-neutral-300 font-medium text-sm hover:border-neutral-500 hover:text-white transition-colors"
+                className={ONBOARDING_SECONDARY}
               >
                 {t("onboarding.noNotYet")}
               </button>
@@ -398,12 +419,12 @@ export default function OnboardingPage() {
         {/* Step 1b: Install OpenClaw */}
         {step === "install" && (
           <div>
-            <div className="rounded-[28px] border border-neutral-800 bg-neutral-950/70 p-5 md:p-8">
+            <div className={cx(panelClass, "p-5 md:p-7")}>
               <div className="mx-auto max-w-2xl text-center">
-                <h2 className="text-2xl font-medium text-white">
+                <h2 className="text-2xl font-semibold text-white">
                   Install OpenClaw with a coding agent
                 </h2>
-                <p className="mt-3 whitespace-nowrap text-sm leading-6 text-neutral-400">
+                <p className="mt-3 text-sm leading-6 text-neutral-400">
                   Copy this prompt into Cursor, Codex, Claude Code, or another coding agent and let it install OpenClaw for you.
                 </p>
               </div>
@@ -416,23 +437,23 @@ export default function OnboardingPage() {
                 ))}
               </div>
 
-              <div className="mt-8 rounded-2xl border border-neutral-800 bg-black/25 p-4 md:p-5">
+              <div className="mt-8 rounded-xl border border-white/[0.08] bg-black/25 p-4 md:p-5">
                 <div className="flex justify-end">
                   <button
                     onClick={() => handleCopy(CODING_AGENT_INSTALL_PROMPT, "installPrompt")}
-                    className="shrink-0 rounded-xl border border-neutral-700 bg-neutral-100 px-4 py-2.5 text-sm font-medium text-black transition-colors hover:bg-white"
+                    className={cx(primaryButtonSmallClass, "shrink-0")}
                   >
                     {copied === "installPrompt" ? "Copied!" : "Copy"}
                   </button>
                 </div>
 
                 <div
-                  className={`relative mt-4 rounded-2xl border border-neutral-800 bg-neutral-950 ${
+                  className={`relative mt-4 rounded-xl border border-white/[0.08] bg-neutral-950 ${
                     isInstallPromptExpanded ? "" : "max-h-[200px] overflow-hidden"
                   } ${
                     isInstallPromptExpanded
                       ? ""
-                      : "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-[60px] after:rounded-b-2xl after:bg-gradient-to-b after:from-transparent after:to-neutral-950 after:content-['']"
+                      : "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-[60px] after:rounded-b-xl after:bg-gradient-to-b after:from-transparent after:to-neutral-950 after:content-['']"
                   }`}
                 >
                   <pre className="whitespace-pre-wrap p-4 font-mono text-xs leading-6 text-neutral-200">
@@ -443,7 +464,7 @@ export default function OnboardingPage() {
                 <div className="mt-3 flex justify-end">
                   <button
                     onClick={() => setIsInstallPromptExpanded((current) => !current)}
-                    className="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white"
+                    className="inline-flex min-h-9 items-center gap-2 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-400 transition-colors hover:bg-white/[0.035] hover:text-white"
                   >
                     <span>{isInstallPromptExpanded ? "Show less" : "Show more"}</span>
                     <svg
@@ -469,30 +490,30 @@ export default function OnboardingPage() {
                   setOpenClawStatus("installed_later");
                   setStep("thesis");
                 }}
-                className="mt-6 w-full rounded-xl bg-white py-3 text-sm font-medium text-black transition-colors hover:bg-neutral-200"
+                className={cx(ONBOARDING_PRIMARY, "mt-6")}
               >
                 {t("onboarding.installedContinue")}
               </button>
 
               <button
                 onClick={() => setShowInstallManual((current) => !current)}
-                className="mt-4 w-full rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm font-medium text-neutral-200 transition-colors hover:border-neutral-500 hover:text-white"
+                className={cx(ONBOARDING_SECONDARY, "mt-4")}
               >
                 Set up manually
               </button>
 
               {showInstallManual && (
-                <div className="mt-5 rounded-2xl border border-neutral-800 bg-neutral-950/90 p-4 md:p-5">
+                <div className="mt-5 rounded-xl border border-white/[0.08] bg-neutral-950/90 p-4 md:p-5">
                   <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                     <div>
-                      <h3 className="text-lg font-medium text-white">
+                      <h3 className="text-lg font-semibold text-white">
                         Manual setup
                       </h3>
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
                         Run the command below in your terminal. It installs OpenClaw and launches the setup wizard.
                       </p>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-neutral-500">
+                    <div className="flex items-center gap-4 text-[13px] text-neutral-400">
                       <a
                         href="https://openclaw.com"
                         target="_blank"
@@ -515,23 +536,23 @@ export default function OnboardingPage() {
 
                   <div className="mt-6 grid gap-8 md:grid-cols-[1fr_320px]">
                     <div>
-                      <div className="inline-flex p-0.5 rounded-lg border border-neutral-800 bg-neutral-950 mb-3 text-xs">
+                      <div className="mb-3 inline-flex rounded-xl border border-white/[0.08] bg-neutral-950 p-0.5 text-[13px]">
                         <button
                           onClick={() => setInstallOs("unix")}
-                          className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+                          className={`rounded-lg px-3 py-2 font-medium transition-colors ${
                             installOs === "unix"
                               ? "bg-neutral-800 text-white"
-                              : "text-neutral-500 hover:text-neutral-300"
+                              : "text-neutral-400 hover:text-neutral-200"
                           }`}
                         >
                           {t("onboarding.installOsUnix")}
                         </button>
                         <button
                           onClick={() => setInstallOs("windows")}
-                          className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+                          className={`rounded-lg px-3 py-2 font-medium transition-colors ${
                             installOs === "windows"
                               ? "bg-neutral-800 text-white"
-                              : "text-neutral-500 hover:text-neutral-300"
+                              : "text-neutral-400 hover:text-neutral-200"
                           }`}
                         >
                           {t("onboarding.installOsWindows")}
@@ -539,12 +560,12 @@ export default function OnboardingPage() {
                       </div>
 
                       <div className="relative mb-4">
-                        <pre className="p-4 pr-14 rounded-lg border border-neutral-700 bg-neutral-900 font-mono text-xs text-neutral-200 leading-relaxed whitespace-pre-wrap break-all select-all">
+                        <pre className={cx(codePanelClass, "p-4 pr-14 font-mono text-xs leading-relaxed text-neutral-200 whitespace-pre-wrap break-all select-all")}>
                           {INSTALL_COMMANDS[installOs]}
                         </pre>
                         <button
                           onClick={() => handleCopy(INSTALL_COMMANDS[installOs], "command")}
-                          className="absolute top-2 right-2 p-1.5 rounded-md bg-neutral-800 hover:bg-neutral-700 transition-colors"
+                          className={cx(subtleButtonSmallClass, "absolute right-2 top-2 h-9 w-9 p-0")}
                           aria-label={t("onboarding.copyCommand")}
                         >
                           {copied === "command" ? (
@@ -560,22 +581,22 @@ export default function OnboardingPage() {
                       </div>
                     </div>
 
-                    <aside className="md:border-l md:border-neutral-800 md:pl-6 border-t border-neutral-800 pt-6 md:border-t-0 md:pt-0">
-                      <h3 className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-4">
+                    <aside className="border-t border-white/[0.08] pt-6 md:border-l md:border-t-0 md:border-white/[0.08] md:pl-6 md:pt-0">
+                      <h3 className="mb-4 text-xs font-semibold uppercase text-neutral-400">
                         {t("onboarding.installChecklistTitle")}
                       </h3>
-                      <ol className="space-y-4 text-xs leading-relaxed">
+                      <ol className="space-y-4 text-[13px] leading-relaxed">
                         {[1, 2, 3, 4, 5, 6, 7].map((n) => (
                           <li key={n} className="flex gap-3">
                             <div className="w-5 h-5 rounded-full bg-neutral-900 border border-neutral-700 flex items-center justify-center shrink-0 mt-0.5">
-                              <span className="text-[10px] font-semibold text-neutral-400">{n}</span>
+                              <span className="text-xs font-semibold text-neutral-400">{n}</span>
                             </div>
                             <div className="min-w-0">
                               <p className="text-neutral-200 font-medium">
                                 {t(`onboarding.installStep${n}Title`)}
                               </p>
                               {n === 4 ? (
-                                <div className="text-neutral-500 mt-1 space-y-0.5">
+                                <div className="mt-1 space-y-0.5 text-neutral-400">
                                   <div>
                                     <span className="text-neutral-400">{t("onboarding.installStep4Anthropic")}</span>{" "}
                                     <a
@@ -600,7 +621,7 @@ export default function OnboardingPage() {
                                   </div>
                                 </div>
                               ) : (
-                                <p className="text-neutral-500 mt-1">
+                                <p className="mt-1 text-neutral-400">
                                   {t(`onboarding.installStep${n}Desc`)}
                                 </p>
                               )}
@@ -615,7 +636,7 @@ export default function OnboardingPage() {
 
               <button
                 onClick={() => setStep("use_openclaw")}
-                className="mt-5 w-full text-xs text-neutral-600 hover:text-neutral-400"
+                className={cx(ONBOARDING_BACK, "mt-5")}
               >
                 {t("common.back")}
               </button>
@@ -627,7 +648,7 @@ export default function OnboardingPage() {
         {step === "thesis" && (
           <div className="px-2 py-6 sm:px-6 sm:py-10">
             <div className="mx-auto max-w-3xl text-center">
-              <p className="animate-detail-in text-[11px] font-semibold uppercase tracking-[0.35em] text-neutral-500">
+              <p className="animate-detail-in text-xs font-semibold uppercase text-neutral-400">
                 {t("onboarding.granovetterEyebrow")}
               </p>
 
@@ -639,7 +660,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => setIsGranovetterExpanded((current) => !current)}
-                  className="animate-detail-in animate-detail-in-d2 mt-5 inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-neutral-400 transition-colors hover:text-white sm:absolute sm:left-full sm:top-1 sm:ml-5 sm:mt-0"
+                  className="animate-detail-in animate-detail-in-d2 mt-5 inline-flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-400 transition-colors hover:bg-white/[0.035] hover:text-white sm:absolute sm:left-full sm:top-1 sm:ml-5 sm:mt-0"
                 >
                   <span>{isGranovetterExpanded ? t("onboarding.granovetterReadLess") : t("onboarding.granovetterReadMore")}</span>
                   <svg
@@ -674,9 +695,9 @@ export default function OnboardingPage() {
                         {t("onboarding.granovetterIntro")}
                       </p>
 
-                      <div className="mt-6 space-y-6 text-[13px] leading-6 text-neutral-300 sm:text-[14px] sm:leading-6">
+                      <div className="mt-6 space-y-6 text-sm leading-6 text-neutral-300">
                         <div>
-                          <h3 className="text-sm font-semibold tracking-[0.01em] text-white sm:text-[15px]">
+                          <h3 className="text-sm font-semibold text-white sm:text-[15px]">
                             {t("onboarding.granovetterSection1Title")}
                           </h3>
                           <p className="mt-2 text-pretty">
@@ -685,7 +706,7 @@ export default function OnboardingPage() {
                         </div>
 
                         <div>
-                          <h3 className="text-sm font-semibold tracking-[0.01em] text-white sm:text-[15px]">
+                          <h3 className="text-sm font-semibold text-white sm:text-[15px]">
                             {t("onboarding.granovetterSection2Title")}
                           </h3>
                           <p className="mt-2 whitespace-pre-line text-pretty">
@@ -701,14 +722,14 @@ export default function OnboardingPage() {
               <div className="animate-detail-in animate-detail-in-d3 mt-10 flex flex-col items-center gap-4">
                 <button
                   onClick={() => setStep("goal")}
-                  className="w-full rounded-xl bg-white py-3 text-sm font-medium text-black transition-colors hover:bg-neutral-200 sm:w-auto sm:min-w-48 sm:px-8"
+                  className={cx(ONBOARDING_PRIMARY, "sm:w-auto sm:min-w-48 sm:px-8")}
                 >
                   {t("common.continue")}
                 </button>
 
                 <button
                   onClick={() => setStep(openClawStatus === "installed_later" ? "install" : "use_openclaw")}
-                  className="text-xs text-neutral-600 transition-colors hover:text-neutral-400"
+                  className="inline-flex min-h-9 items-center justify-center rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-400 transition-colors hover:bg-white/[0.035] hover:text-white"
                 >
                   {t("common.back")}
                 </button>
@@ -720,7 +741,7 @@ export default function OnboardingPage() {
         {/* Step 3: Goal Selection */}
         {step === "goal" && (
           <div>
-            <h2 className="text-lg font-medium text-neutral-200 mb-6 text-center">
+            <h2 className={cx(ONBOARDING_TITLE, "mb-6")}>
               {t("onboarding.goalTitle")}
             </h2>
             <div className="space-y-3">
@@ -728,12 +749,12 @@ export default function OnboardingPage() {
                 <button
                   key={goal.value}
                   onClick={() => handleGoalSelect(goal.value)}
-                  className="w-full text-left p-4 rounded-lg border border-neutral-800 hover:border-neutral-600 hover:bg-neutral-900 transition-all group"
+                  className={cx(ONBOARDING_OPTION, ONBOARDING_OPTION_IDLE, "group")}
                 >
                   <span className="text-white font-medium group-hover:text-white">
                     {goal.label}
                   </span>
-                  <span className="block mt-1 text-sm text-neutral-500">
+                  <span className="mt-1 block text-[13px] leading-5 text-neutral-400">
                     {goal.description}
                   </span>
                 </button>
@@ -742,7 +763,7 @@ export default function OnboardingPage() {
 
             <button
               onClick={() => setStep("thesis")}
-              className="mt-4 w-full text-xs text-neutral-600 hover:text-neutral-400"
+              className={ONBOARDING_BACK}
             >
               {t("common.back")}
             </button>
@@ -752,17 +773,17 @@ export default function OnboardingPage() {
         {/* Step 4: Country */}
         {step === "country" && (
           <div>
-            <h2 className="text-lg font-medium text-neutral-200 mb-2 text-center">
+            <h2 className={ONBOARDING_TITLE_TIGHT}>
               {t("onboarding.countryTitle")}
             </h2>
-            <p className="mb-6 text-sm text-center text-neutral-500">
+            <p className={cx(ONBOARDING_DESC, "mb-6 text-center")}>
               {t("onboarding.countryDesc")}
             </p>
 
-            <div className="rounded-[24px] border border-neutral-800 bg-neutral-950/70 p-4">
+            <div className={cx(panelClass, "p-4")}>
               <div className="relative">
                 <svg
-                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-600"
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500"
                   viewBox="0 0 20 20"
                   fill="none"
                   aria-hidden="true"
@@ -781,7 +802,7 @@ export default function OnboardingPage() {
                   onChange={(event) => setCountryQuery(event.target.value)}
                   autoFocus
                   placeholder={t("onboarding.countrySearchPlaceholder")}
-                  className="w-full rounded-2xl border border-neutral-800 bg-black/30 py-3 pl-11 pr-4 text-sm text-white outline-none transition-colors placeholder:text-neutral-600 focus:border-neutral-600"
+                  className={cx(inputClass, "pl-11")}
                 />
               </div>
 
@@ -795,7 +816,7 @@ export default function OnboardingPage() {
                         <button
                           key={country.code}
                           onClick={() => setSelectedCountryCode(country.code)}
-                          className={`rounded-2xl border px-3 py-3 text-left transition-all ${
+                          className={`rounded-xl border px-3 py-3 text-left transition-all ${
                             isSelected
                               ? "border-white bg-white text-black shadow-[0_12px_30px_rgba(255,255,255,0.08)]"
                               : "border-neutral-800 bg-black/20 text-neutral-200 hover:border-neutral-600 hover:bg-neutral-900"
@@ -807,11 +828,7 @@ export default function OnboardingPage() {
                               <span className="block truncate text-sm font-medium">
                                 {country.name}
                               </span>
-                              <span
-                                className={`block text-[10px] uppercase tracking-[0.22em] ${
-                                  isSelected ? "text-neutral-600" : "text-neutral-600"
-                                }`}
-                              >
+                              <span className="block text-xs uppercase text-neutral-500">
                                 {country.code}
                               </span>
                             </span>
@@ -821,15 +838,15 @@ export default function OnboardingPage() {
                     })}
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-neutral-800 px-4 py-10 text-center text-sm text-neutral-500">
+                  <div className="rounded-xl border border-dashed border-white/[0.08] px-4 py-10 text-center text-sm text-neutral-400">
                     {t("onboarding.countryNoResults", { query: countryQuery.trim() })}
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-neutral-800 bg-black/20 px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-neutral-600">
+            <div className="mt-4 rounded-xl border border-white/[0.08] bg-black/20 px-4 py-3">
+              <p className="text-xs font-semibold uppercase text-neutral-400">
                 {t("onboarding.countrySelected")}
               </p>
               {selectedCountry ? (
@@ -838,7 +855,7 @@ export default function OnboardingPage() {
                   <span>{selectedCountry.name}</span>
                 </p>
               ) : (
-                <p className="mt-2 text-sm text-neutral-500">
+                <p className="mt-2 text-sm text-neutral-400">
                   {t("onboarding.countrySelectedEmpty")}
                 </p>
               )}
@@ -847,14 +864,14 @@ export default function OnboardingPage() {
             <button
               onClick={() => setStep("consent")}
               disabled={!selectedCountryCode}
-              className="mt-6 w-full rounded-lg bg-white py-3 text-sm font-medium text-black transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
+              className={cx(ONBOARDING_PRIMARY, "mt-6 disabled:cursor-not-allowed")}
             >
               {t("common.continue")}
             </button>
 
             <button
               onClick={() => setStep("goal")}
-              className="mt-4 w-full text-xs text-neutral-600 hover:text-neutral-400"
+              className={ONBOARDING_BACK}
             >
               {t("common.back")}
             </button>
@@ -864,14 +881,14 @@ export default function OnboardingPage() {
         {/* Step 5: Consent */}
         {step === "consent" && (
           <div>
-            <h2 className="text-lg font-medium text-neutral-200 mb-4 text-center">
+            <h2 className={cx(ONBOARDING_TITLE, "mb-4")}>
               {t("onboarding.consentTitle")}
             </h2>
-            <div className="p-5 rounded-lg border border-neutral-800 mb-6">
+            <div className="mb-6 rounded-xl border border-white/[0.08] p-5">
               <p className="text-sm text-neutral-300 leading-relaxed">
                 {t("onboarding.consentQuestion")}
               </p>
-              <p className="text-xs text-neutral-500 mt-3">
+              <p className="mt-3 text-[13px] leading-5 text-neutral-400">
                 {t("onboarding.consentDesc")}
               </p>
             </div>
@@ -879,13 +896,13 @@ export default function OnboardingPage() {
             <div className="flex gap-3">
               <button
                 onClick={handleConsentYes}
-                className="flex-1 py-3 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition-colors"
+                className={cx(ONBOARDING_PRIMARY, "flex-1")}
               >
                 {t("onboarding.yesConsent")}
               </button>
               <button
                 onClick={handleConsentNo}
-                className="flex-1 py-3 rounded-lg border border-neutral-700 text-neutral-400 font-medium text-sm hover:border-neutral-500 transition-colors"
+                className={cx(ONBOARDING_SECONDARY, "flex-1")}
               >
                 {t("onboarding.noConsent")}
               </button>
@@ -900,7 +917,7 @@ export default function OnboardingPage() {
                 setStep("country");
                 setError(null);
               }}
-              className="mt-4 w-full text-xs text-neutral-600 hover:text-neutral-400"
+              className={ONBOARDING_BACK}
             >
               {t("common.back")}
             </button>
@@ -910,10 +927,10 @@ export default function OnboardingPage() {
         {/* Step 6: Sensitive Topics */}
         {step === "sensitive" && (
           <div>
-            <h2 className="text-lg font-medium text-neutral-200 mb-2 text-center">
+            <h2 className={ONBOARDING_TITLE_TIGHT}>
               {t("onboarding.sensitiveTitle")}
             </h2>
-            <p className="text-sm text-neutral-500 mb-6 text-center"
+            <p className={cx(ONBOARDING_DESC, "mb-6 text-center")}
               dangerouslySetInnerHTML={{ __html: t("onboarding.sensitiveDesc") }}
             />
 
@@ -924,16 +941,16 @@ export default function OnboardingPage() {
                   <button
                     key={topic}
                     onClick={() => toggleExcluded(topic)}
-                    className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all text-sm ${
+                    className={`flex w-full items-center justify-between rounded-xl border p-4 text-sm transition-all ${
                       excluded
                         ? "border-red-900/50 bg-red-950/30 text-red-300"
-                        : "border-neutral-800 text-neutral-300 hover:border-neutral-600"
+                        : "border-white/[0.08] text-neutral-300 hover:border-white/[0.14] hover:bg-white/[0.03]"
                     }`}
                   >
                     <span>{topic}</span>
                     <span
                       className={`text-xs font-medium ${
-                        excluded ? "text-red-400" : "text-neutral-600"
+                        excluded ? "text-red-400" : "text-neutral-400"
                       }`}
                     >
                       {excluded ? t("status.excluded") : t("status.shared")}
@@ -945,14 +962,14 @@ export default function OnboardingPage() {
 
             <button
               onClick={() => setStep("research")}
-              className="w-full py-3 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition-colors"
+              className={ONBOARDING_PRIMARY}
             >
               {t("common.continue")}
             </button>
 
             <button
               onClick={() => setStep("consent")}
-              className="mt-4 w-full text-xs text-neutral-600 hover:text-neutral-400"
+              className={ONBOARDING_BACK}
             >
               {t("common.back")}
             </button>
@@ -962,18 +979,18 @@ export default function OnboardingPage() {
         {/* Step 7: Research Consent (Purpose B — optional) */}
         {step === "research" && (
           <div>
-            <h2 className="text-lg font-medium text-neutral-200 mb-2 text-center">
+            <h2 className={ONBOARDING_TITLE_TIGHT}>
               {t("onboarding.researchTitle")}
             </h2>
-            <p className="text-sm text-neutral-500 mb-6 text-center">
+            <p className={cx(ONBOARDING_DESC, "mb-6 text-center")}>
               {t("onboarding.researchOptional")}
             </p>
 
-            <div className="p-5 rounded-lg border border-neutral-800 mb-6">
+            <div className="mb-6 rounded-xl border border-white/[0.08] p-5">
               <p className="text-sm text-neutral-300 leading-relaxed">
                 {t("onboarding.researchQuestion")}
               </p>
-              <p className="text-xs text-neutral-500 mt-3">
+              <p className="mt-3 text-[13px] leading-5 text-neutral-400">
                 {t("onboarding.researchDesc")}
               </p>
             </div>
@@ -981,20 +998,20 @@ export default function OnboardingPage() {
             <div className="flex gap-3 mb-6">
               <button
                 onClick={() => setResearchConsent(true)}
-                className={`flex-1 py-3 rounded-lg border text-sm font-medium transition-all ${
+                className={`min-h-10 flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
                   researchConsent
                     ? "border-white bg-white text-black"
-                    : "border-neutral-700 text-neutral-400 hover:border-neutral-500"
+                    : "border-white/[0.10] text-neutral-400 hover:border-white/[0.16] hover:text-white"
                 }`}
               >
                 {t("onboarding.yesConsent")}
               </button>
               <button
                 onClick={() => setResearchConsent(false)}
-                className={`flex-1 py-3 rounded-lg border text-sm font-medium transition-all ${
+                className={`min-h-10 flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
                   !researchConsent
                     ? "border-white bg-white text-black"
-                    : "border-neutral-700 text-neutral-400 hover:border-neutral-500"
+                    : "border-white/[0.10] text-neutral-400 hover:border-white/[0.16] hover:text-white"
                 }`}
               >
                 {t("onboarding.noThanks")}
@@ -1004,7 +1021,7 @@ export default function OnboardingPage() {
             <button
               onClick={handleComplete}
               disabled={loading}
-              className="w-full py-3 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition-colors disabled:opacity-50"
+              className={ONBOARDING_PRIMARY}
             >
               {loading ? t("onboarding.settingUp") : t("onboarding.createAgent")}
             </button>
@@ -1015,7 +1032,7 @@ export default function OnboardingPage() {
 
             <button
               onClick={() => setStep("sensitive")}
-              className="mt-4 w-full text-xs text-neutral-600 hover:text-neutral-400"
+              className={ONBOARDING_BACK}
             >
               {t("common.back")}
             </button>
@@ -1032,22 +1049,22 @@ export default function OnboardingPage() {
             </div>
 
             <div className="text-center mb-8">
-              <h2 className="text-lg font-medium text-white">
+              <h2 className="text-xl font-semibold text-white">
                 {t("onboarding.agentReady")}
               </h2>
-              <p className="mt-2 text-sm text-neutral-500">
+              <p className="mt-2 text-sm leading-6 text-neutral-400">
                 {t("onboarding.copyPromptDesc")}
               </p>
             </div>
 
             {/* Setup prompt */}
             <div className="relative mb-4">
-              <div className="p-4 rounded-lg border border-neutral-700 bg-neutral-900 font-mono text-xs text-neutral-300 leading-relaxed break-all select-all">
+              <div className={cx(codePanelClass, "p-4 font-mono text-xs leading-relaxed text-neutral-300 break-all select-all")}>
                 {result.setupPrompt}
               </div>
               <button
                 onClick={() => handleCopy(result.setupPrompt, "prompt")}
-                className="absolute top-2 right-2 p-1.5 rounded-md bg-neutral-800 hover:bg-neutral-700 transition-colors"
+                className={cx(subtleButtonSmallClass, "absolute right-2 top-2 h-9 w-9 p-0")}
               >
                 {copied === "prompt" ? (
                   <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1063,7 +1080,7 @@ export default function OnboardingPage() {
 
             <button
               onClick={() => handleCopy(result.setupPrompt, "prompt")}
-              className="w-full py-3.5 rounded-lg bg-white text-black font-semibold text-sm hover:bg-neutral-200 transition-colors mb-6"
+              className={cx(ONBOARDING_PRIMARY, "mb-6")}
             >
               {copied === "prompt" ? t("common.copied") : t("onboarding.copySetupPrompt")}
             </button>
@@ -1089,14 +1106,14 @@ export default function OnboardingPage() {
               ].map((item) => (
                 <div
                   key={item.num}
-                  className="flex gap-4 p-3 rounded-lg border border-neutral-800/50 text-left"
+                  className="flex gap-4 rounded-xl border border-white/[0.08] p-3 text-left"
                 >
                   <div className="w-6 h-6 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="text-[10px] font-semibold text-neutral-400">{item.num}</span>
+                    <span className="text-xs font-semibold text-neutral-400">{item.num}</span>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-neutral-300">{item.title}</p>
-                    <p className="text-xs text-neutral-600 mt-0.5">{item.desc}</p>
+                    <p className="text-sm font-medium text-neutral-200">{item.title}</p>
+                    <p className="mt-1 text-[13px] leading-5 text-neutral-400">{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -1106,7 +1123,7 @@ export default function OnboardingPage() {
             <div className="border-t border-neutral-800 pt-4">
               <button
                 onClick={() => setShowManual(!showManual)}
-                className="w-full flex items-center justify-between text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
+                className="flex min-h-9 w-full items-center justify-between rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-400 transition-colors hover:bg-white/[0.035] hover:text-white"
               >
                 <span>{t("onboarding.preferManual")}</span>
                 <svg
@@ -1123,39 +1140,39 @@ export default function OnboardingPage() {
                 <div className="mt-3 space-y-2">
                   <button
                     onClick={handleDownloadFile}
-                    className="w-full py-2.5 rounded-lg border border-neutral-800 text-neutral-400 text-xs font-medium hover:border-neutral-600 hover:text-neutral-300 transition-colors"
+                    className={subtleButtonClass}
                   >
                     {t("onboarding.downloadFile", { fileName })}
                   </button>
-                  <div className="p-3 rounded-lg bg-neutral-900/50 space-y-2">
+                  <div className="space-y-2 rounded-xl bg-neutral-900/50 p-3 ring-1 ring-inset ring-white/[0.06]">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-neutral-600">{t("onboarding.agentId")}</span>
+                      <span className="text-xs text-neutral-500">{t("onboarding.agentId")}</span>
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="text-[10px] text-neutral-400 font-mono truncate">{result.agent.agentId}</span>
+                        <span className="truncate font-mono text-xs text-neutral-400">{result.agent.agentId}</span>
                         <button
                           onClick={() => handleCopy(result.agent.agentId, "agentId")}
-                          className="text-neutral-700 hover:text-neutral-400 transition-colors shrink-0"
+                          className="shrink-0 text-neutral-500 transition-colors hover:text-white"
                         >
                           {copied === "agentId" ? (
                             <svg className="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                           ) : (
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                           )}
                         </button>
                       </div>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-neutral-600">{t("onboarding.apiKey")}</span>
+                      <span className="text-xs text-neutral-500">{t("onboarding.apiKey")}</span>
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="text-[10px] text-neutral-400 font-mono truncate">{result.agent.apiKey}</span>
+                        <span className="truncate font-mono text-xs text-neutral-400">{result.agent.apiKey}</span>
                         <button
                           onClick={() => handleCopy(result.agent.apiKey, "apiKey")}
-                          className="text-neutral-700 hover:text-neutral-400 transition-colors shrink-0"
+                          className="shrink-0 text-neutral-500 transition-colors hover:text-white"
                         >
                           {copied === "apiKey" ? (
                             <svg className="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                           ) : (
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                           )}
                         </button>
                       </div>
@@ -1173,7 +1190,7 @@ export default function OnboardingPage() {
             <div className="mt-6 text-center">
               <Link
                 href="/home"
-                className="inline-block py-2.5 px-6 rounded-lg border border-neutral-700 text-neutral-300 font-medium text-sm hover:border-neutral-500 hover:text-white transition-colors"
+                className={subtleButtonClass}
               >
                 {t("onboarding.goToDashboard")}
               </Link>

@@ -5,7 +5,27 @@ import { useSession, signOut } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { locales, localeNames, type Locale } from "@/i18n/config";
-import { LiveStatusDot, cx, getMattePillClass, pageFrameClass } from "@/components/ui/app-chrome";
+import {
+  LiveStatusDot,
+  PageHeader,
+  codePanelClass,
+  cx,
+  dangerButtonClass,
+  dangerButtonSmallClass,
+  dangerSubtleButtonClass,
+  getMattePillClass,
+  inputClass,
+  pageFrameClass,
+  panelSoftClass,
+  primaryButtonClass,
+  primaryButtonSmallClass,
+  sectionDescriptionClass,
+  sectionHeaderClass,
+  sectionShellClass,
+  sectionTitleClass,
+  subtleButtonClass,
+  subtleButtonSmallClass,
+} from "@/components/ui/app-chrome";
 
 /* ── Constants ── */
 
@@ -31,31 +51,23 @@ const PLATFORM_LABELS: Record<string, string> = {
 };
 
 const WAKE_PATH = "/hooks/wake";
-const SECTION_SHELL = "border-b border-neutral-900/80 py-6";
-const SECTION_TITLE = "text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-600";
-const SUBTLE_SURFACE = "rounded-2xl bg-neutral-950/45 ring-1 ring-inset ring-white/[0.05]";
-const CODE_SURFACE = "rounded-2xl bg-neutral-950/70 ring-1 ring-inset ring-white/[0.06]";
-const INPUT =
-  "w-full rounded-xl bg-neutral-950/65 px-3 py-2.5 text-sm text-white placeholder:text-neutral-600 ring-1 ring-inset ring-white/[0.08] transition focus:outline-none focus:ring-white/[0.16]";
-const PRIMARY_BUTTON =
-  "inline-flex items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50";
-const PRIMARY_BUTTON_SM =
-  "inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 text-xs font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50";
-const SECONDARY_BUTTON =
-  "inline-flex items-center justify-center rounded-xl bg-neutral-950/55 px-4 py-2 text-sm font-medium text-neutral-300 ring-1 ring-inset ring-white/[0.08] transition hover:bg-neutral-900/70 hover:text-white disabled:opacity-50";
-const SECONDARY_BUTTON_SM =
-  "inline-flex items-center justify-center rounded-xl bg-neutral-950/55 px-3 py-1.5 text-xs font-medium text-neutral-300 ring-1 ring-inset ring-white/[0.08] transition hover:bg-neutral-900/70 hover:text-white disabled:opacity-50";
-const DANGER_BUTTON =
-  "inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:opacity-50";
-const DANGER_BUTTON_SM =
-  "inline-flex items-center justify-center rounded-xl bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-500 disabled:opacity-50";
-const DANGER_SUBTLE_BUTTON =
-  "inline-flex items-center justify-center rounded-xl bg-red-950/25 px-4 py-2 text-sm font-medium text-red-200 ring-1 ring-inset ring-red-500/[0.18] transition hover:bg-red-950/40 disabled:opacity-50";
+const SECTION_SHELL = sectionShellClass;
+const SECTION_TITLE = sectionTitleClass;
+const SUBTLE_SURFACE = panelSoftClass;
+const CODE_SURFACE = codePanelClass;
+const INPUT = inputClass;
+const PRIMARY_BUTTON = primaryButtonClass;
+const PRIMARY_BUTTON_SM = primaryButtonSmallClass;
+const SECONDARY_BUTTON = subtleButtonClass;
+const SECONDARY_BUTTON_SM = subtleButtonSmallClass;
+const DANGER_BUTTON = dangerButtonClass;
+const DANGER_BUTTON_SM = dangerButtonSmallClass;
+const DANGER_SUBTLE_BUTTON = dangerSubtleButtonClass;
 const OPTION_BUTTON =
-  "w-full rounded-2xl px-4 py-3 text-left transition-all ring-1 ring-inset";
-const OPTION_ACTIVE = "bg-white/[0.06] text-white ring-white/[0.16]";
+  "w-full rounded-xl px-4 py-3 text-left transition-all ring-1 ring-inset";
+const OPTION_ACTIVE = "bg-white/[0.07] text-white ring-white/[0.18]";
 const OPTION_IDLE =
-  "bg-neutral-950/35 text-neutral-400 ring-white/[0.05] hover:bg-neutral-900/60 hover:text-neutral-200";
+  "bg-neutral-950/38 text-neutral-400 ring-white/[0.07] hover:bg-neutral-900/70 hover:text-neutral-200 hover:ring-white/[0.13]";
 
 /* ── Types ── */
 
@@ -144,14 +156,14 @@ export default function SettingsPage() {
   if (error || !settings) {
     return (
       <div className="px-6 py-10">
-        <p className="text-sm text-neutral-500">{error ?? "Could not load settings."}</p>
+        <p className="text-sm text-neutral-400">{error ?? "Could not load settings."}</p>
       </div>
     );
   }
 
   return (
     <div className={pageFrameClass}>
-      <h1 className="text-2xl font-semibold text-white mb-8">{t("settings.title")}</h1>
+      <PageHeader title={t("settings.title")} />
 
       {/* P0 Sections */}
       <AgentStatusSection
@@ -214,7 +226,9 @@ export default function SettingsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className={SECTION_SHELL}>
-      <h2 className={`${SECTION_TITLE} mb-4`}>{title}</h2>
+      <div className={sectionHeaderClass}>
+        <h2 className={SECTION_TITLE}>{title}</h2>
+      </div>
       {children}
     </section>
   );
@@ -255,9 +269,9 @@ function useSave() {
 
 function SaveStatus({ saving, saved, err }: { saving: boolean; saved: boolean; err: string | null }) {
   const t = useTranslations();
-  if (saving) return <span className="text-xs text-neutral-500">{t("common.saving")}</span>;
-  if (saved) return <span className="text-xs text-green-400">{t("common.saved")}</span>;
-  if (err) return <span className="text-xs text-red-400">{err}</span>;
+  if (saving) return <span className="text-[13px] text-neutral-400">{t("common.saving")}</span>;
+  if (saved) return <span className="text-[13px] text-green-400">{t("common.saved")}</span>;
+  if (err) return <span className="text-[13px] text-red-400">{err}</span>;
   return null;
 }
 
@@ -324,7 +338,7 @@ function AgentStatusSection({ active, onUpdate }: { active: boolean; onUpdate: (
             {active && <AgentSearchingIcon />}
             {active ? t("settings.activeSearching") : t("settings.paused")}
           </StatusPill>
-          <p className="mt-3 text-xs text-neutral-500">
+          <p className="mt-3 text-[13px] leading-5 text-neutral-400">
             {active
               ? t("settings.agentActiveDesc")
               : t("settings.agentPausedDesc")}
@@ -401,7 +415,7 @@ function ChangePasswordSection() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <SaveStatus saving={saving} saved={saved} err={err} />
-            {localErr && <span className="text-xs text-red-400">{localErr}</span>}
+            {localErr && <span className="text-[13px] text-red-400">{localErr}</span>}
           </div>
           <button
             onClick={handleSubmit}
@@ -450,14 +464,14 @@ function ExcludedTopicsSection({
 
   return (
     <Section title={t("settings.sensitiveTopics")}>
-      <p className="text-xs text-neutral-500 mb-3">
+      <p className={cx(sectionDescriptionClass, "mb-4")}>
         {t.rich("settings.sensitiveTopicsDesc", {
           strong: (chunks) => <strong className="text-neutral-400">{chunks}</strong>,
         })}
       </p>
       {privacySync?.pending && (
         <div
-          className={`mb-4 rounded-2xl p-4 ring-1 ring-inset ${
+          className={`mb-4 rounded-xl p-4 ring-1 ring-inset ${
             privacySync.searchPaused
               ? "bg-amber-950/18 ring-amber-500/[0.14]"
               : "bg-sky-950/18 ring-sky-500/[0.14]"
@@ -506,7 +520,7 @@ function ExcludedTopicsSection({
               ))}
             </ul>
           )}
-          <p className="mt-3 text-[11px] text-neutral-500">
+          <p className="mt-3 text-xs text-neutral-500">
             Changed at {new Date(privacySync.changedAt).toLocaleString()}
           </p>
         </div>
@@ -525,7 +539,7 @@ function ExcludedTopicsSection({
               }`}
             >
               <span>{t(cat.labelKey)}</span>
-              <span className={`text-xs font-medium ${excluded ? "text-red-400" : "text-neutral-600"}`}>
+              <span className={`text-xs font-medium ${excluded ? "text-red-400" : "text-neutral-400"}`}>
                 {excluded ? "Excluded" : "Shared"}
               </span>
             </button>
@@ -581,12 +595,12 @@ function ResearchConsentSection({
 
   return (
     <Section title={t("settings.researchConsent")}>
-      <p className="text-xs text-neutral-500 mb-3">
+      <p className={cx(sectionDescriptionClass, "mb-4")}>
         {t("settings.researchDesc")}
       </p>
 
       {showConfirm ? (
-        <div className="mb-3 rounded-2xl bg-amber-950/18 p-4 ring-1 ring-inset ring-amber-500/[0.14]">
+        <div className="mb-3 rounded-xl bg-amber-950/18 p-4 ring-1 ring-inset ring-amber-500/[0.14]">
           <p className="text-sm text-amber-300 mb-3">
             {t("settings.withdrawConfirm")}
           </p>
@@ -594,7 +608,7 @@ function ResearchConsentSection({
             <button
               onClick={confirmWithdraw}
               disabled={saving}
-              className="inline-flex items-center justify-center rounded-xl bg-amber-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-amber-500 disabled:opacity-50"
+              className="inline-flex min-h-9 items-center justify-center rounded-xl bg-amber-600 px-3 py-2 text-[13px] font-medium text-white transition hover:bg-amber-500 disabled:opacity-50"
             >
               {saving ? t("settings.withdrawing") : t("settings.yesWithdraw")}
             </button>
@@ -664,7 +678,7 @@ function NetworkingGoalSection({
             }`}
           >
             <span className="text-sm font-medium">{t(g.labelKey)}</span>
-            <span className="block mt-0.5 text-xs text-neutral-500">{t(g.descKey)}</span>
+            <span className="mt-1 block text-[13px] leading-5 text-neutral-400">{t(g.descKey)}</span>
           </button>
         ))}
       </div>
@@ -698,7 +712,7 @@ function RegenerateKeySection({ agentId }: { agentId: string }) {
 
   return (
     <Section title={t("settings.apiKeyTitle")}>
-      <p className="text-xs text-neutral-500 mb-3">
+      <p className={cx(sectionDescriptionClass, "mb-4")}>
         {t("settings.agentIdLabel")} <span className="font-mono text-neutral-400">{agentId}</span>
       </p>
 
@@ -713,7 +727,7 @@ function RegenerateKeySection({ agentId }: { agentId: string }) {
             </code>
             <button
               onClick={() => handleCopy(newKey)}
-              className={`${SECONDARY_BUTTON_SM} shrink-0 px-2.5`}
+              className={cx(SECONDARY_BUTTON_SM, "h-10 w-10 shrink-0 p-0")}
             >
               {copied ? (
                 <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -728,7 +742,7 @@ function RegenerateKeySection({ agentId }: { agentId: string }) {
           </div>
         </div>
       ) : showConfirm ? (
-        <div className="mb-3 rounded-2xl bg-red-950/18 p-4 ring-1 ring-inset ring-red-500/[0.14]">
+        <div className="mb-3 rounded-xl bg-red-950/18 p-4 ring-1 ring-inset ring-red-500/[0.14]">
           <p className="text-sm text-red-300 mb-3">
             {t("settings.regenerateWarning")}
           </p>
@@ -769,29 +783,37 @@ function AdvancedSection({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <section className={SECTION_SHELL}>
+    <section className={cx(SECTION_SHELL, open && "border-white/[0.16]")}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="group -m-2 flex w-[calc(100%+1rem)] items-center justify-between gap-4 rounded-xl p-2 text-left transition-colors hover:bg-neutral-800/20"
+        className={cx(
+          "group flex w-full items-center justify-between gap-4 rounded-xl px-3 py-3 text-left ring-1 ring-inset transition-colors",
+          open
+            ? "bg-white/[0.055] ring-white/[0.13]"
+            : "ring-transparent hover:bg-white/[0.035] hover:ring-white/[0.09]"
+        )}
       >
         <div>
-          <h2 className={SECTION_TITLE}>Advanced</h2>
-          <p className="text-xs text-neutral-600 mt-2">
+          <h2 className={cx(SECTION_TITLE, open && "text-white")}>Advanced</h2>
+          <p className={cx(sectionDescriptionClass, open && "text-neutral-300")}>
             Technical connectivity and diagnostics for your agent.
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[11px] text-neutral-600 transition-colors group-hover:text-neutral-400">
+          <span className={cx("text-xs transition-colors group-hover:text-neutral-200", open ? "text-neutral-200" : "text-neutral-400")}>
             {open ? "Hide" : "Show"}
           </span>
-          <span className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 transition-colors group-hover:bg-neutral-800/40 group-hover:text-neutral-200">
+          <span className={cx(
+            "flex h-8 w-8 items-center justify-center rounded-full transition-colors group-hover:bg-white/[0.08] group-hover:text-white",
+            open ? "bg-white/[0.08] text-white" : "text-neutral-400"
+          )}>
             <ChevronIcon open={open} className="h-4 w-4" />
           </span>
         </div>
       </button>
 
-      {open && <div className="mt-4 pt-4 border-t border-neutral-800">{children}</div>}
+      {open && <div className="mt-4 border-t border-white/[0.10] pt-5">{children}</div>}
     </section>
   );
 }
@@ -1115,8 +1137,8 @@ function InstantWakeSection({
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-sm font-medium text-white">Realtime wake-up for your agent</h3>
-          <p className="text-xs text-neutral-500 mt-1 leading-relaxed max-w-xl">
+          <h3 className="text-[15px] font-semibold text-white">Realtime wake-up for your agent</h3>
+          <p className={sectionDescriptionClass}>
             OpenClaw keeps an outbound connection to Gennety, so hot events can
             wake it without exposing a public URL.
           </p>
@@ -1129,15 +1151,15 @@ function InstantWakeSection({
             <div className="flex items-center gap-2">
               <StatusPill className={status.tone}>{status.label}</StatusPill>
             </div>
-            <p className="mt-2 text-xs text-neutral-400">{status.detail}</p>
+            <p className="mt-2 text-[13px] leading-5 text-neutral-400">{status.detail}</p>
 
             {settings.wakeStreamLastConnectedAt && (
-              <p className="mt-2 text-[11px] text-neutral-600">
+              <p className="mt-2 text-xs text-neutral-500">
                 Last stream connect: {formatWakeTimestamp(settings.wakeStreamLastConnectedAt)}
               </p>
             )}
 
-            <div className="mt-3 grid gap-1 text-[11px] text-neutral-600 sm:grid-cols-3">
+            <div className="mt-3 grid gap-1 text-xs text-neutral-500 sm:grid-cols-3">
               <p>
                 Mode:{" "}
                 <span className="text-neutral-400">
@@ -1190,18 +1212,18 @@ function InstantWakeSection({
 
       <div className="border-t border-neutral-800 pt-5">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-600">
+          <p className="text-[13px] font-semibold uppercase text-neutral-300">
             Recommended setup
           </p>
-          <p className="text-xs text-neutral-500 mt-1 leading-relaxed max-w-xl">
+          <p className={sectionDescriptionClass}>
             Let your OpenClaw open the realtime stream itself. No public agent
             URL, DNS setup, or Tailscale Funnel is required.
           </p>
         </div>
 
         <div className="mt-3">
-          <p className="text-sm font-medium text-white">OpenClaw Prompt</p>
-          <p className="text-xs text-neutral-500 mt-1 leading-relaxed max-w-xl">
+          <p className="text-sm font-semibold text-white">OpenClaw Prompt</p>
+          <p className={sectionDescriptionClass}>
             Copy this prompt and send it to your OpenClaw. It will configure
             the outbound wake stream and keep scheduled polling as fallback.
           </p>
@@ -1229,7 +1251,7 @@ function InstantWakeSection({
         <button
           type="button"
           onClick={() => setManualOpen((v) => !v)}
-          className="group inline-flex items-center gap-2 text-xs text-neutral-400 transition-colors hover:text-neutral-200"
+          className="group inline-flex min-h-9 items-center gap-2 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-400 transition-colors hover:bg-white/[0.035] hover:text-white"
         >
           <span>{manualOpen ? "Hide legacy webhook configuration" : "Legacy incoming webhook"}</span>
           <ChevronIcon open={manualOpen} className="h-3.5 w-3.5" />
@@ -1238,16 +1260,16 @@ function InstantWakeSection({
 
       {manualOpen && (
         <div className="space-y-3">
-          <p className="text-xs text-neutral-500 leading-relaxed">
+          <p className="text-[13px] leading-5 text-neutral-400">
             Optional power-user path if you already expose a public agent endpoint.
             The default realtime channel above does not need this. Gennety will use{" "}
             <code className="text-neutral-400 font-mono">{WAKE_PATH}</code> automatically.
           </p>
 
-          <div className="flex items-center justify-between gap-3 rounded-xl bg-neutral-950/35 px-3 py-3 ring-1 ring-inset ring-white/[0.05]">
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-neutral-950/40 px-3 py-3 ring-1 ring-inset ring-white/[0.08]">
             <div>
-              <p className="text-xs font-medium text-neutral-200">Enable legacy inbound webhook</p>
-              <p className="mt-1 text-[11px] text-neutral-600">
+              <p className="text-[13px] font-medium text-neutral-200">Enable legacy inbound webhook</p>
+              <p className="mt-1 text-xs text-neutral-500">
                 Uses a public HTTPS endpoint only when no realtime stream is connected.
               </p>
             </div>
@@ -1259,7 +1281,7 @@ function InstantWakeSection({
           </div>
 
           <label className="block">
-            <span className="text-xs text-neutral-500 block mb-1">Agent base URL (HTTPS)</span>
+            <span className="mb-1 block text-[13px] text-neutral-400">Agent base URL (HTTPS)</span>
             <input
               type="url"
               value={baseUrl}
@@ -1269,19 +1291,19 @@ function InstantWakeSection({
             />
           </label>
 
-          <p className="text-[11px] text-neutral-600">
+          <p className="text-xs text-neutral-500">
             Wake endpoint preview:{" "}
             <span className="font-mono text-neutral-400">{desiredUrl || `https://…${WAKE_PATH}`}</span>
           </p>
 
           {settings.webhookUrl && (
-            <p className="text-[11px] text-neutral-500 font-mono break-all">
+            <p className="font-mono text-xs text-neutral-500 break-all">
               Saved legacy webhook: {settings.webhookUrl}
             </p>
           )}
 
           {settings.wakeWebhookLastPingAt && (
-            <p className="text-[11px] text-neutral-600">
+            <p className="text-xs text-neutral-500">
               Last legacy check: {formatWakeTimestamp(settings.wakeWebhookLastPingAt)}
             </p>
           )}
@@ -1290,13 +1312,13 @@ function InstantWakeSection({
           {testError && <p className="text-xs text-red-400">{testError}</p>}
 
           {settings.wakeWebhookLastPingOk === false && settings.wakeWebhookLastPingError && !testError && (
-            <p className="text-[11px] text-red-300">{settings.wakeWebhookLastPingError}</p>
+            <p className="text-xs text-red-300">{settings.wakeWebhookLastPingError}</p>
           )}
 
           <label className="block">
-            <span className="text-xs text-neutral-500 block mb-1">
+            <span className="mb-1 block text-[13px] text-neutral-400">
               Bearer token {settings.webhookTokenSet && !token && (
-                <span className="text-neutral-600">(currently set — leave empty to keep)</span>
+                <span className="text-neutral-500">(currently set - leave empty to keep)</span>
               )}
             </span>
             <div className="flex gap-2">
@@ -1390,7 +1412,7 @@ function LanguageSection() {
 
   return (
     <Section title={t("settings.language")}>
-      <p className="text-xs text-neutral-500 mb-3">
+      <p className={cx(sectionDescriptionClass, "mb-4")}>
         {t("settings.languageDesc")}
       </p>
       <div className="space-y-1.5">
@@ -1473,7 +1495,7 @@ function DownloadSoulSection({ agentId, platform }: { agentId: string; platform:
     <Section title={t("settings.agentInstructions")}>
       <Surface className="flex flex-wrap items-center justify-between gap-3 px-4 py-4">
         <div>
-          <p className="text-xs text-neutral-500">{t("settings.platform")}</p>
+          <p className="text-[13px] text-neutral-400">{t("settings.platform")}</p>
           <p className="mt-1 text-sm text-neutral-300">{PLATFORM_LABELS[platform] ?? platform}</p>
           {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
         </div>
@@ -1539,7 +1561,7 @@ function SetupPromptSection() {
 
   return (
     <Section title={t("settings.setupPrompt")}>
-      <p className="text-xs text-neutral-500 mb-3">
+      <p className={cx(sectionDescriptionClass, "mb-4")}>
         {t("settings.setupPromptDesc")}
       </p>
 
@@ -1578,8 +1600,8 @@ function DeleteAccountSection() {
   };
 
   return (
-    <div className="mt-10 rounded-2xl bg-red-950/[0.08] p-5 ring-1 ring-inset ring-red-500/[0.10]">
-      <h2 className="mb-4 text-[11px] font-medium uppercase tracking-[0.18em] text-red-300/75">
+    <div className="mt-10 rounded-xl bg-red-950/[0.08] p-5 ring-1 ring-inset ring-red-500/[0.12]">
+      <h2 className="mb-4 text-[13px] font-semibold uppercase text-red-200/90">
         {t("settings.dangerZone")}
       </h2>
 
@@ -1593,7 +1615,7 @@ function DeleteAccountSection() {
             placeholder={t("settings.typeEmailConfirm")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mb-3 w-full rounded-xl bg-neutral-950/65 px-3 py-2.5 text-sm text-white placeholder:text-neutral-600 ring-1 ring-inset ring-red-500/[0.18] transition focus:outline-none focus:ring-red-400/[0.28]"
+            className="mb-3 w-full min-h-10 rounded-xl bg-neutral-950/68 px-4 py-2.5 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-red-500/[0.18] transition focus:outline-none focus:ring-red-400/[0.28]"
           />
           {err && <p className="text-xs text-red-400 mb-3">{err}</p>}
           <div className="flex gap-2">

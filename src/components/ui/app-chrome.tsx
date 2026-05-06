@@ -6,35 +6,43 @@ export function cx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
-export const pageFrameClass = "px-6 py-8 lg:px-8 lg:py-10";
-export const pageTitleClass = "text-[2rem] font-semibold tracking-[-0.03em] text-white";
-export const pageSubtitleClass = "mt-2 max-w-2xl text-sm leading-6 text-neutral-500";
-export const sectionDividerClass = "border-t border-white/[0.06] pt-6";
-export const panelClass = "rounded-[1.5rem] bg-neutral-950/55 ring-1 ring-inset ring-white/[0.06]";
-export const panelSoftClass = "rounded-[1.25rem] bg-white/[0.03] ring-1 ring-inset ring-white/[0.05]";
-export const codePanelClass = "rounded-[1.25rem] bg-neutral-950/78 ring-1 ring-inset ring-white/[0.07]";
-export const chipBaseClass = "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-medium";
+export const pageFrameClass = "px-5 py-7 sm:px-6 lg:px-8 lg:py-9";
+export const pageTitleClass = "text-[1.875rem] font-semibold text-white";
+export const pageSubtitleClass = "mt-2 max-w-2xl text-sm leading-6 text-neutral-400";
+export const sectionDividerClass = "border-t border-white/[0.08] pt-6";
+export const sectionShellClass = "group border-b border-white/[0.08] py-6 transition-colors hover:border-white/[0.14]";
+export const sectionHeaderClass = "-mx-3 mb-4 rounded-xl px-3 py-2 transition-colors group-hover:bg-white/[0.03]";
+export const sectionTitleClass = "text-[13px] font-semibold uppercase text-neutral-300 transition-colors group-hover:text-white";
+export const sectionDescriptionClass = "mt-1.5 max-w-2xl text-[13px] leading-5 text-neutral-400";
+export const panelClass = "rounded-xl bg-neutral-950/58 ring-1 ring-inset ring-white/[0.08]";
+export const panelSoftClass = "rounded-xl bg-white/[0.035] ring-1 ring-inset ring-white/[0.07]";
+export const codePanelClass = "rounded-xl bg-neutral-950/78 ring-1 ring-inset ring-white/[0.08]";
+export const chipBaseClass = "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium";
 export const mattePillBaseClass =
-  "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.01em]";
+  "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium";
 export const subtleButtonClass =
-  "inline-flex items-center justify-center rounded-xl bg-neutral-950/55 px-4 py-2 text-sm font-medium text-neutral-300 ring-1 ring-inset ring-white/[0.08] transition hover:bg-neutral-900/75 hover:text-white disabled:opacity-50";
+  "inline-flex min-h-10 items-center justify-center rounded-xl bg-neutral-950/58 px-4 py-2.5 text-sm font-medium text-neutral-300 ring-1 ring-inset ring-white/[0.10] transition hover:bg-neutral-900/80 hover:text-white hover:ring-white/[0.16] disabled:opacity-50";
 export const subtleButtonSmallClass =
-  "inline-flex items-center justify-center rounded-xl bg-neutral-950/55 px-3 py-1.5 text-xs font-medium text-neutral-300 ring-1 ring-inset ring-white/[0.08] transition hover:bg-neutral-900/75 hover:text-white disabled:opacity-50";
+  "inline-flex min-h-9 items-center justify-center rounded-xl bg-neutral-950/58 px-3 py-2 text-[13px] font-medium text-neutral-300 ring-1 ring-inset ring-white/[0.10] transition hover:bg-neutral-900/80 hover:text-white hover:ring-white/[0.16] disabled:opacity-50";
 export const primaryButtonClass =
-  "inline-flex items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50";
+  "inline-flex min-h-10 items-center justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50";
 export const primaryButtonSmallClass =
-  "inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 text-xs font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50";
+  "inline-flex min-h-9 items-center justify-center rounded-xl bg-white px-3 py-2 text-[13px] font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50";
 export const dangerButtonClass =
-  "inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:opacity-50";
+  "inline-flex min-h-10 items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-500 disabled:opacity-50";
+export const dangerButtonSmallClass =
+  "inline-flex min-h-9 items-center justify-center rounded-xl bg-red-600 px-3 py-2 text-[13px] font-medium text-white transition hover:bg-red-500 disabled:opacity-50";
+export const dangerSubtleButtonClass =
+  "inline-flex min-h-10 items-center justify-center rounded-xl bg-red-950/25 px-4 py-2.5 text-sm font-medium text-red-200 ring-1 ring-inset ring-red-500/[0.20] transition hover:bg-red-950/42 hover:text-red-100 disabled:opacity-50";
 export const inputClass =
-  "w-full rounded-[1rem] bg-neutral-950/68 px-4 py-3 text-sm text-white placeholder:text-neutral-600 ring-1 ring-inset ring-white/[0.08] transition focus:outline-none focus:ring-white/[0.16]";
+  "w-full min-h-10 rounded-xl bg-neutral-950/68 px-4 py-2.5 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.10] transition focus:outline-none focus:ring-white/[0.18]";
 export const tabBaseClass =
-  "inline-flex items-center rounded-full px-4 py-2 text-xs font-medium transition-all";
+  "inline-flex min-h-9 items-center rounded-full px-4 py-2 text-[13px] font-medium transition-all";
 export const tabIdleClass =
-  "bg-white/[0.04] text-neutral-400 ring-1 ring-inset ring-white/[0.05] hover:bg-white/[0.06] hover:text-neutral-200";
+  "bg-white/[0.04] text-neutral-400 ring-1 ring-inset ring-white/[0.07] hover:bg-white/[0.06] hover:text-neutral-200";
 export const tabActiveClass =
   "bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.08)]";
-export const metricCardClass = "rounded-[1.25rem] bg-neutral-950/55 p-4 ring-1 ring-inset ring-white/[0.06]";
+export const metricCardClass = "rounded-xl bg-neutral-950/58 p-4 ring-1 ring-inset ring-white/[0.08]";
 
 export type MattePillTone =
   | "neutral"
@@ -194,12 +202,12 @@ export function SectionTitle({
     <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
       <div>
         {eyebrow ? (
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-600">
+          <p className="text-xs font-medium uppercase text-neutral-500">
             {eyebrow}
           </p>
         ) : null}
-        <h2 className={cx("text-sm font-medium text-white", eyebrow && "mt-1")}>{title}</h2>
-        {subtitle ? <p className="mt-1 text-xs leading-5 text-neutral-500">{subtitle}</p> : null}
+        <h2 className={cx("text-[15px] font-semibold text-white", eyebrow && "mt-1")}>{title}</h2>
+        {subtitle ? <p className="mt-1 text-[13px] leading-5 text-neutral-400">{subtitle}</p> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
@@ -217,11 +225,11 @@ export function MetricCard({
 }) {
   return (
     <div className={metricCardClass}>
-      <div className="text-[1.75rem] font-semibold leading-none tracking-[-0.03em] text-white">
+      <div className="text-[1.75rem] font-semibold leading-none text-white">
         {value}
       </div>
-      <div className="mt-3 text-xs text-neutral-500">{label}</div>
-      {detail ? <div className="mt-1 text-[11px] text-neutral-600">{detail}</div> : null}
+      <div className="mt-3 text-[13px] text-neutral-400">{label}</div>
+      {detail ? <div className="mt-1 text-xs text-neutral-500">{detail}</div> : null}
     </div>
   );
 }

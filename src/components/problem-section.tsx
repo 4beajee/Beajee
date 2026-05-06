@@ -20,15 +20,15 @@ export function ProblemSection() {
   };
 
   return (
-    <section className="py-[74px] sm:py-[122px] px-4 sm:px-6 max-w-5xl mx-auto space-y-[100px] sm:space-y-[132px]">
+    <section className="mx-auto max-w-5xl space-y-20 px-4 py-16 sm:px-6 sm:py-24">
       {/* Block 1: Problem */}
       <div className="flex flex-col md:flex-row gap-12 md:gap-20 items-center">
         <div className="flex-1 space-y-8">
           <div>
-            <h2 className="text-4xl sm:text-5xl font-semibold tracking-tight text-white leading-tight">
+            <h2 className="text-3xl font-semibold leading-tight text-white sm:text-4xl">
               Why networking is broken
             </h2>
-            <p className="text-lg text-neutral-400 mt-4 leading-relaxed">
+            <p className="mt-4 text-base leading-7 text-neutral-400">
               Gennety is a new kind of social network. No feeds, no algorithms. Your personal AI agent finds people who genuinely fit you — and arranges the introduction.
             </p>
           </div>
@@ -46,7 +46,7 @@ export function ProblemSection() {
                 <div 
                   key={i} 
                   onClick={() => setOpenIndex(isOpen ? null : i)}
-                  className={`flex gap-4 items-start p-4 bg-[#0a0a0a] rounded-xl border transition-colors cursor-pointer ${isOpen ? 'border-[#333]' : 'border-[#1a1a1a] hover:border-[#2a2a2a]'}`}
+                  className={`flex cursor-pointer items-start gap-4 rounded-xl border bg-[#0a0a0a] p-4 transition-colors ${isOpen ? 'border-white/[0.18] bg-white/[0.04]' : 'border-white/[0.08] hover:border-white/[0.14]'}`}
                 >
                   <div className={`min-w-8 h-8 rounded-full border flex items-center justify-center text-xs font-medium mt-0.5 shrink-0 transition-colors ${isOpen ? 'bg-[#1a1a1a] border-[#333] text-white' : 'bg-[#111] border-[#2a2a2a] text-neutral-400'}`}>
                     {i + 1}
@@ -75,7 +75,7 @@ export function ProblemSection() {
                           transition={{ duration: 0.2, ease: "easeInOut" }}
                           className="overflow-hidden"
                         >
-                          <p className="text-sm text-neutral-500 leading-relaxed pt-2">{item.desc}</p>
+                          <p className="pt-2 text-sm leading-6 text-neutral-400">{item.desc}</p>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -113,7 +113,7 @@ export function ProblemSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
           
           <div className="max-w-xl">
-            <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-neutral-600 mb-4">
+            <p className="mb-4 text-[13px] font-semibold uppercase text-neutral-400">
               Mutual Match principle
             </p>
             
@@ -122,7 +122,7 @@ export function ProblemSection() {
               onClick={() => setIsMatchPrincipleOpen(!isMatchPrincipleOpen)}
             >
               <div className="flex items-start justify-between gap-6">
-                <h3 className="text-2xl sm:text-3xl font-medium text-white leading-snug group-hover:text-neutral-200 transition-colors">
+                <h3 className="text-2xl font-semibold leading-snug text-white transition-colors group-hover:text-neutral-200">
                   Nobody reaches out first. Both sides receive the proposal at the same time.
                 </h3>
                 <motion.div
@@ -146,11 +146,11 @@ export function ProblemSection() {
                     className="overflow-hidden"
                   >
                     <div className="pt-4">
-                      <p className="text-base sm:text-lg text-neutral-400 leading-relaxed mb-8">
+                      <p className="mb-8 text-base leading-7 text-neutral-400">
                         Agents negotiate behind the scenes before either person knows the other exists. Nobody feels like they &quot;messaged first&quot; — which removes the biggest psychological barrier in cold networking.
                       </p>
                       <div className="pt-8 border-t border-[#1a1a1a]">
-                        <p className="text-base text-neutral-500 leading-relaxed">
+                        <p className="text-base leading-7 text-neutral-400">
                           Social networks were built to connect people. Gennety returns to that original idea — with agents that do the searching for you.
                         </p>
                       </div>
