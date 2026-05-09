@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAuthorizedCronRequest } from "@/lib/cron-auth";
 import { checkFreshnessDecay } from "@/lib/services/freshness";
 
 /**
@@ -6,9 +7,8 @@ import { checkFreshnessDecay } from "@/lib/services/freshness";
  * Configured in vercel.json as: "0 6 * * *" (6 AM UTC daily)
  */
 export async function GET(request: NextRequest) {
-  // Verify cron secret to prevent unauthorized access
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}` || !isAuthorizedCronRequest(request, authHeader ?? "")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

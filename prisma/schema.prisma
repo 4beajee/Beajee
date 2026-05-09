@@ -43,6 +43,8 @@ model Owner {
   communityMemberships     CommunityMember[]
   communityInvitesSent     CommunityInvite[] @relation("CommunityInviteInviter")
   communityInvitesReceived CommunityInvite[] @relation("CommunityInviteInvitee")
+  communityChatMessages    CommunityChatMessage[] @relation("CommunityChatMessageAuthor")
+  communityChatReads       CommunityChatRead[]
 
   @@index([isDemo])
   @@map("owners")
@@ -444,6 +446,8 @@ model Community {
   nextStrategySessionAt      DateTime?                  @map("next_strategy_session_at")
   strategyTokenLimit         Int                        @default(80000) @map("strategy_token_limit")
   monthlyTokenLimit          Int?                       @map("monthly_token_limit")
+  strategyUsdLimit           Float?                     @map("strategy_usd_limit")
+  monthlyUsdLimit            Float?                     @map("monthly_usd_limit")
   judgeIterationLimit        Int                        @default(3) @map("judge_iteration_limit")
   strategyLockUntil          DateTime?                  @map("strategy_lock_until")
   roleChangesRequireApproval Boolean                    @default(true) @map("role_changes_require_approval")
@@ -460,6 +464,7 @@ model Community {
   strategySessions   CommunityStrategySession[]
   strategyTurns      CommunityStrategyTurn[]
   actionProposals    CommunityActionProposal[]
+  chat               CommunityChat?
 
   @@index([ownerId])
   @@index([visibility, status, category])
@@ -707,6 +712,54 @@ model CommunityActionProposal {
   @@map("community_action_proposals")
 }
 
+model CommunityChat {
+  id          String              @id @default(cuid())
+  communityId String              @unique @map("community_id")
+  community   Community           @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  status      CommunityChatStatus @default(OPEN)
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  messages CommunityChatMessage[]
+  reads    CommunityChatRead[]
+
+  @@map("community_chats")
+}
+
+model CommunityChatMessage {
+  id          String                   @id @default(cuid())
+  chatId      String                   @map("chat_id")
+  chat        CommunityChat            @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  communityId String                   @map("community_id")
+  fromOwnerId String?                  @map("from_owner_id")
+  fromOwner   Owner?                   @relation("CommunityChatMessageAuthor", fields: [fromOwnerId], references: [id], onDelete: SetNull)
+  kind        CommunityChatMessageKind @default(HUMAN)
+  content     String                   @db.Text
+  metadata    Json?
+  createdAt   DateTime                 @default(now()) @map("created_at")
+
+  @@index([chatId, createdAt])
+  @@index([communityId, createdAt])
+  @@index([fromOwnerId])
+  @@map("community_chat_messages")
+}
+
+model CommunityChatRead {
+  id          String        @id @default(cuid())
+  chatId      String        @map("chat_id")
+  chat        CommunityChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  communityId String        @map("community_id")
+  ownerId     String        @map("owner_id")
+  owner       Owner         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  lastReadAt  DateTime      @default(now()) @map("last_read_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@unique([chatId, ownerId])
+  @@index([ownerId, lastReadAt])
+  @@index([communityId, ownerId])
+  @@map("community_chat_reads")
+}
+
 enum CommunityVisibility {
   PUBLIC
   PRIVATE
@@ -813,6 +866,17 @@ enum CommunityActionProposalStatus {
   REJECTED
   APPLIED
   EXPIRED
+}
+
+enum CommunityChatStatus {
+  OPEN
+  ARCHIVED
+}
+
+enum CommunityChatMessageKind {
+  HUMAN
+  SYSTEM
+  STRATEGY_SUMMARY
 }
 
 enum CommunityCategory {

@@ -13,6 +13,7 @@ import {
   createCommunityKnowledgeSource,
   ingestCommunityKnowledgeDocument,
 } from "@/lib/services/community-knowledge";
+import { postCommunityStrategyChatSummary } from "@/lib/services/community-chat";
 import type { StrategyClaim, JudgeVerdict } from "@/types/community-strategy";
 
 const STRATEGY_LOCK_MS = 30 * 60 * 1000;
@@ -322,7 +323,7 @@ export async function runCommunityStrategySession(communityId: string, scheduled
     const allEvidence = [...evidence, ...memberEvidence];
     const evidenceIds = new Set(allEvidence.map((item) => item.id));
 
-    const participantClaims = community.members.flatMap((member) => {
+    const participantClaimRecords = community.members.flatMap((member) => {
       if (!member.agentParticipationEnabled) return [];
       return buildParticipantClaims({
         memberId: member.id,
@@ -330,25 +331,37 @@ export async function runCommunityStrategySession(communityId: string, scheduled
         role: member.role,
         hubSpecialization: member.hubSpecialization,
         expertise: member.owner.agent?.context?.expertise ?? member.skillTags,
-      });
+      }).map((claim) => ({ member, claim }));
     });
 
-    const sanitizedClaims = participantClaims.map((claim) => ({
-      ...claim,
-      evidenceIds: claim.evidenceIds.filter((id) => evidenceIds.has(id)),
-    }));
-
-    await prisma.communityStrategyTurn.create({
-      data: {
-        sessionId: session.id,
-        communityId,
-        role: "PARTICIPANT",
-        round: 1,
-        output: { claims: sanitizedClaims } as Prisma.InputJsonValue,
-        tokensInput: estimateStrategyTokens(JSON.stringify(memberEvidence)),
-        tokensOutput: estimateStrategyTokens(JSON.stringify(sanitizedClaims)),
+    const sanitizedClaimRecords = participantClaimRecords.map(({ member, claim }) => ({
+      member,
+      claim: {
+        ...claim,
+        evidenceIds: claim.evidenceIds.filter((id) => evidenceIds.has(id)),
       },
-    });
+    }));
+    const sanitizedClaims = sanitizedClaimRecords.map((record) => record.claim);
+
+    for (const { member, claim } of sanitizedClaimRecords) {
+      await prisma.communityStrategyTurn.create({
+        data: {
+          sessionId: session.id,
+          communityId,
+          agentId: member.owner.agent?.id ?? null,
+          memberId: member.id,
+          role: "PARTICIPANT",
+          round: 1,
+          output: {
+            speaker: member.owner.name ?? "Community member agent",
+            member_role: member.role,
+            claim,
+          } as Prisma.InputJsonValue,
+          tokensInput: estimateStrategyTokens(JSON.stringify(memberEvidence.find((item) => item.id === `member:${member.id}`) ?? {})),
+          tokensOutput: estimateStrategyTokens(JSON.stringify(claim)),
+        },
+      });
+    }
 
     const verdict = judgeStrategyClaims(sanitizedClaims, community.judgeIterationLimit);
     const partnershipCandidates = await findPartnershipCandidates(
@@ -540,6 +553,13 @@ export async function runCommunityStrategySession(communityId: string, scheduled
         tokens_used: totalTokens,
       },
     });
+    await postCommunityStrategyChatSummary({
+      communityId,
+      sessionId: session.id,
+      summary,
+      status: updatedSession.status,
+      actionProposals: proposals.length,
+    }).catch((error) => console.error("[community-strategy] Chat summary failed:", error));
 
     return {
       sessionId: session.id,

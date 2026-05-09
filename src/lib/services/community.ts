@@ -13,6 +13,7 @@ import {
   finalizeApprovedCommunityInviteHandshake,
   startCommunityInviteHandshake,
 } from "@/lib/services/community-handshake";
+import { ensureCommunityChatUnlocked } from "@/lib/services/community-chat";
 
 export class CommunityError extends Error {
   constructor(
@@ -144,6 +145,8 @@ function serializeCommunity(
     nextStrategySessionAt: community.nextStrategySessionAt,
     strategyTokenLimit: community.strategyTokenLimit,
     monthlyTokenLimit: community.monthlyTokenLimit,
+    strategyUsdLimit: community.strategyUsdLimit,
+    monthlyUsdLimit: community.monthlyUsdLimit,
     judgeIterationLimit: community.judgeIterationLimit,
     createdAt: community.createdAt,
     updatedAt: community.updatedAt,
@@ -460,6 +463,8 @@ export async function updateCommunity(ownerId: string, communityId: string, inpu
         : {}),
       ...(input.strategyTokenLimit !== undefined ? { strategyTokenLimit: input.strategyTokenLimit } : {}),
       ...(input.monthlyTokenLimit !== undefined ? { monthlyTokenLimit: input.monthlyTokenLimit } : {}),
+      ...(input.strategyUsdLimit !== undefined ? { strategyUsdLimit: input.strategyUsdLimit } : {}),
+      ...(input.monthlyUsdLimit !== undefined ? { monthlyUsdLimit: input.monthlyUsdLimit } : {}),
       ...(input.judgeIterationLimit !== undefined ? { judgeIterationLimit: input.judgeIterationLimit } : {}),
     },
   });
@@ -489,6 +494,7 @@ export async function joinPublicCommunity(ownerId: string, communityId: string) 
     create: { communityId, ownerId, role: "MEMBER", status: "ACTIVE", showOnProfile: true },
     update: { status: "ACTIVE" },
   });
+  await ensureCommunityChatUnlocked(communityId);
 
   return getCommunityBySlug(community.slug, ownerId);
 }

@@ -42,6 +42,8 @@ export const AgentCommunityCreateSchema = z
     strategyIntervalHours: z.number().int().min(1).max(720).default(72),
     strategyTokenLimit: z.number().int().min(1000).max(2_000_000).default(80_000),
     monthlyTokenLimit: z.number().int().min(1000).max(50_000_000).nullable().optional(),
+    strategyUsdLimit: z.number().min(0).max(100_000).nullable().optional(),
+    monthlyUsdLimit: z.number().min(0).max(1_000_000).nullable().optional(),
     judgeIterationLimit: z.number().int().min(1).max(10).default(3),
     channels: z.array(CommunityChannelSchema).max(8).default([]),
     initialKnowledge: z.array(AgentKnowledgeDocumentSchema).max(10).default([]),
@@ -184,7 +186,7 @@ Required interview topics:
 - What knowledge should become the hub SSOT.
 - Suggested channels/sub-contexts.
 - Whether 72-hour strategy sessions should be enabled.
-- Token budget preferences.
+- Token budget preferences, including optional USD caps per session and per month.
 - Privacy boundaries: never include raw MEMORY.md, secrets, health, finances, personal relationships, or psychological topics unless the owner explicitly says the sanitized business-level fact is safe to share.
 
 Allowed categories and specializations:
@@ -204,6 +206,8 @@ Request body JSON schema:
   "strategyIntervalHours": 72,
   "strategyTokenLimit": 80000,
   "monthlyTokenLimit": null,
+  "strategyUsdLimit": null,
+  "monthlyUsdLimit": null,
   "judgeIterationLimit": 3,
   "channels": [
     {
@@ -252,6 +256,8 @@ export async function createCommunityFromAgent(ownerId: string, rawInput: unknow
       strategyIntervalHours: input.strategyIntervalHours,
       strategyTokenLimit: input.strategyTokenLimit,
       monthlyTokenLimit: input.monthlyTokenLimit ?? null,
+      strategyUsdLimit: input.strategyUsdLimit ?? null,
+      monthlyUsdLimit: input.monthlyUsdLimit ?? null,
       judgeIterationLimit: input.judgeIterationLimit,
       nextStrategySessionAt: input.strategyEnabled ? new Date() : null,
     },

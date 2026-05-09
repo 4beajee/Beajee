@@ -102,6 +102,8 @@ export const UpdateCommunitySchema = z
     strategyIntervalHours: z.number().int().min(1).max(720).optional(),
     strategyTokenLimit: z.number().int().min(1000).max(2_000_000).optional(),
     monthlyTokenLimit: z.number().int().min(1000).max(50_000_000).nullable().optional(),
+    strategyUsdLimit: z.number().min(0).max(100_000).nullable().optional(),
+    monthlyUsdLimit: z.number().min(0).max(1_000_000).nullable().optional(),
     judgeIterationLimit: z.number().int().min(1).max(10).optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {

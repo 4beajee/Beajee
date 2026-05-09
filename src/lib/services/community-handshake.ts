@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { createInboxEvent } from "@/lib/services/inbox";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
 import { recordAnalyticsEvent } from "@/lib/analytics-tracking";
+import { ensureCommunityChatUnlocked } from "@/lib/services/community-chat";
 
 const HANDSHAKE_TTL_MS = 48 * 60 * 60 * 1000;
 
@@ -366,6 +367,7 @@ export async function finalizeApprovedCommunityInviteHandshake(handshakeId: stri
         completedAt: new Date(),
       },
     });
+    await ensureCommunityChatUnlocked(handshake.communityId, tx);
 
     return {
       communityId: handshake.communityId,

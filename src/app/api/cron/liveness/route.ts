@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAuthorizedCronRequest } from "@/lib/cron-auth";
 import { prisma } from "@/lib/db";
 import { DEACTIVATION_THRESHOLD_MS } from "@/lib/config/liveness";
 
@@ -9,7 +10,7 @@ import { DEACTIVATION_THRESHOLD_MS } from "@/lib/config/liveness";
  */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}` || !isAuthorizedCronRequest(request, authHeader ?? "")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

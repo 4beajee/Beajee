@@ -26,6 +26,14 @@ interface CommunitySettings {
   profileVisibility: "VISIBLE" | "HIDDEN";
   category: CommunityCategory | null;
   specialization: CommunitySpecialization | null;
+  ssotEnabled: boolean;
+  strategyEnabled: boolean;
+  strategyIntervalHours: number;
+  strategyTokenLimit: number;
+  monthlyTokenLimit: number | null;
+  strategyUsdLimit: number | null;
+  monthlyUsdLimit: number | null;
+  judgeIterationLimit: number;
   viewer: {
     canManage: boolean;
     showOnProfile: boolean;
@@ -46,6 +54,14 @@ export default function CommunitySettingsPage() {
   const [showOnProfile, setShowOnProfile] = useState(true);
   const [category, setCategory] = useState<CommunityCategory>("TECHNOLOGY");
   const [specialization, setSpecialization] = useState<CommunitySpecialization>("AI_DEVELOPMENT");
+  const [ssotEnabled, setSsotEnabled] = useState(true);
+  const [strategyEnabled, setStrategyEnabled] = useState(false);
+  const [strategyIntervalHours, setStrategyIntervalHours] = useState("72");
+  const [strategyTokenLimit, setStrategyTokenLimit] = useState("80000");
+  const [monthlyTokenLimit, setMonthlyTokenLimit] = useState("");
+  const [strategyUsdLimit, setStrategyUsdLimit] = useState("");
+  const [monthlyUsdLimit, setMonthlyUsdLimit] = useState("");
+  const [judgeIterationLimit, setJudgeIterationLimit] = useState("3");
   const [inviteeEmail, setInviteeEmail] = useState("");
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,6 +101,14 @@ export default function CommunitySettingsPage() {
         setShowOnProfile(next.viewer.showOnProfile);
         setCategory(nextCategory);
         setSpecialization(nextSpecialization);
+        setSsotEnabled(next.ssotEnabled);
+        setStrategyEnabled(next.strategyEnabled);
+        setStrategyIntervalHours(String(next.strategyIntervalHours ?? 72));
+        setStrategyTokenLimit(String(next.strategyTokenLimit ?? 80000));
+        setMonthlyTokenLimit(next.monthlyTokenLimit === null ? "" : String(next.monthlyTokenLimit));
+        setStrategyUsdLimit(next.strategyUsdLimit === null ? "" : String(next.strategyUsdLimit));
+        setMonthlyUsdLimit(next.monthlyUsdLimit === null ? "" : String(next.monthlyUsdLimit));
+        setJudgeIterationLimit(String(next.judgeIterationLimit ?? 3));
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load community");
       } finally {
@@ -116,6 +140,14 @@ export default function CommunitySettingsPage() {
           profileVisibility: profileVisible ? "VISIBLE" : "HIDDEN",
           category: visibility === "PUBLIC" ? category : category || null,
           specialization: visibility === "PUBLIC" ? specialization : specialization || null,
+          ssotEnabled,
+          strategyEnabled,
+          strategyIntervalHours: Number(strategyIntervalHours),
+          strategyTokenLimit: Number(strategyTokenLimit),
+          monthlyTokenLimit: monthlyTokenLimit ? Number(monthlyTokenLimit) : null,
+          strategyUsdLimit: strategyUsdLimit ? Number(strategyUsdLimit) : null,
+          monthlyUsdLimit: monthlyUsdLimit ? Number(monthlyUsdLimit) : null,
+          judgeIterationLimit: Number(judgeIterationLimit),
         }),
       });
       const data = await res.json().catch(() => null);
@@ -279,6 +311,112 @@ export default function CommunitySettingsPage() {
                 ))}
               </select>
             </Field>
+          </div>
+
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-white">Context hub</h2>
+                <p className="mt-1 text-xs leading-5 text-neutral-500">
+                  Controls the indexed SSOT attached to this community.
+                </p>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-neutral-300">
+                <input
+                  type="checkbox"
+                  checked={ssotEnabled}
+                  onChange={(event) => setSsotEnabled(event.target.checked)}
+                  className="h-4 w-4"
+                />
+                Enabled
+              </label>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-white">Strategy sessions</h2>
+                <p className="mt-1 text-xs leading-5 text-neutral-500">
+                  Agent debate cycle, budget controls, and judge limits.
+                </p>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-neutral-300">
+                <input
+                  type="checkbox"
+                  checked={strategyEnabled}
+                  onChange={(event) => setStrategyEnabled(event.target.checked)}
+                  className="h-4 w-4"
+                />
+                Enabled
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <Field label="Interval hours">
+                <input
+                  type="number"
+                  min={1}
+                  max={720}
+                  value={strategyIntervalHours}
+                  onChange={(event) => setStrategyIntervalHours(event.target.value)}
+                  className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                />
+              </Field>
+              <Field label="Tokens per session">
+                <input
+                  type="number"
+                  min={1000}
+                  max={2000000}
+                  value={strategyTokenLimit}
+                  onChange={(event) => setStrategyTokenLimit(event.target.value)}
+                  className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                />
+              </Field>
+              <Field label="Monthly token cap">
+                <input
+                  type="number"
+                  min={1000}
+                  max={50000000}
+                  value={monthlyTokenLimit}
+                  onChange={(event) => setMonthlyTokenLimit(event.target.value)}
+                  placeholder="No cap"
+                  className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white/[0.18]"
+                />
+              </Field>
+              <Field label="USD per session">
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={strategyUsdLimit}
+                  onChange={(event) => setStrategyUsdLimit(event.target.value)}
+                  placeholder="No cap"
+                  className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white/[0.18]"
+                />
+              </Field>
+              <Field label="Monthly USD cap">
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={monthlyUsdLimit}
+                  onChange={(event) => setMonthlyUsdLimit(event.target.value)}
+                  placeholder="No cap"
+                  className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white/[0.18]"
+                />
+              </Field>
+              <Field label="Judge iterations">
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={judgeIterationLimit}
+                  onChange={(event) => setJudgeIterationLimit(event.target.value)}
+                  className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                />
+              </Field>
+            </div>
           </div>
 
           <label className="flex items-center justify-between gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.025] px-4 py-3">
