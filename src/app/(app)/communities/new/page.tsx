@@ -12,8 +12,20 @@ import {
 } from "@/types/community";
 import {
   PageHeader,
+  SectionTitle,
   Surface,
+  compactInputClass,
+  compactSelectClass,
+  compactTabActiveClass,
+  compactTabBaseClass,
+  compactTabIdleClass,
+  compactTextareaClass,
+  cx,
+  errorNoticeClass,
+  fieldLabelClass,
   pageFrameClass,
+  primaryButtonClass,
+  subtleButtonClass,
 } from "@/components/ui/app-chrome";
 
 const CATEGORIES = Object.keys(COMMUNITY_CATEGORY_LABELS) as CommunityCategory[];
@@ -103,46 +115,41 @@ export default function NewCommunityPage() {
         subtitle="Start with a focused group. You can keep it private or publish it to the catalog."
       />
 
-      <div className="mb-5 grid gap-2 rounded-2xl bg-white/[0.025] p-1 ring-1 ring-inset ring-white/[0.06] sm:grid-cols-2">
+      <div className="mb-5 grid gap-1 rounded-xl bg-white/[0.025] p-1 ring-1 ring-inset ring-white/[0.06] sm:grid-cols-2">
         <button
           type="button"
           onClick={() => setMode("manual")}
-          className={`rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
-            mode === "manual"
-              ? "bg-white text-black"
-              : "text-neutral-400 hover:bg-white/[0.05] hover:text-white"
-          }`}
+          className={cx(compactTabBaseClass, "justify-center", mode === "manual" ? compactTabActiveClass : compactTabIdleClass)}
         >
           Manual setup
         </button>
         <button
           type="button"
           onClick={() => setMode("agent")}
-          className={`rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
-            mode === "agent"
-              ? "bg-white text-black"
-              : "text-neutral-400 hover:bg-white/[0.05] hover:text-white"
-          }`}
+          className={cx(compactTabBaseClass, "justify-center", mode === "agent" ? compactTabActiveClass : compactTabIdleClass)}
         >
           OpenClaw-assisted
         </button>
       </div>
 
       {mode === "agent" ? (
-        <Surface className="px-5 py-5">
-          <div className="mb-5">
-            <h2 className="text-base font-semibold text-white">Let OpenClaw draft the hub</h2>
-            <p className="mt-2 text-sm leading-relaxed text-neutral-400">
+        <Surface className="px-4 py-4">
+          <SectionTitle
+            title="Let OpenClaw draft the hub"
+            subtitle="The agent interviews you, prepares JSON, asks for approval, then calls the scoped API."
+          />
+          <div className="mb-4">
+            <p className="text-sm leading-6 text-neutral-400">
               Copy this prompt to your OpenClaw agent. It will interview you, prepare the full JSON, ask for your approval, then create the community through a scoped API token.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={copyAgentPrompt}
               disabled={agentPromptLoading}
-              className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              className={primaryButtonClass}
             >
               {agentPromptCopied ? "Copied" : agentPromptLoading ? "Generating..." : "Copy OpenClaw prompt"}
             </button>
@@ -150,20 +157,20 @@ export default function NewCommunityPage() {
               type="button"
               onClick={loadAgentPrompt}
               disabled={agentPromptLoading}
-              className="rounded-2xl bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white ring-1 ring-inset ring-white/[0.08] transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-50"
+              className={subtleButtonClass}
             >
               {agentPromptLoading ? "Generating..." : agentPrompt ? "Regenerate prompt" : "Preview prompt"}
             </button>
           </div>
 
           {agentPromptError && (
-            <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className={cx(errorNoticeClass, "mt-4")}>
               {agentPromptError}
             </div>
           )}
 
           {agentPrompt && (
-            <pre className="mt-5 max-h-[520px] overflow-auto whitespace-pre-wrap rounded-2xl border border-white/[0.08] bg-black/30 px-4 py-4 text-xs leading-relaxed text-neutral-300">
+            <pre className="mt-4 max-h-[520px] overflow-auto whitespace-pre-wrap rounded-lg bg-black/30 px-3 py-3 text-xs leading-5 text-neutral-300 ring-1 ring-inset ring-white/[0.08]">
               {agentPrompt}
             </pre>
           )}
@@ -173,7 +180,8 @@ export default function NewCommunityPage() {
           </p>
         </Surface>
       ) : (
-      <Surface className="px-5 py-5">
+      <Surface className="px-4 py-4">
+        <SectionTitle title="Manual setup" />
         <form onSubmit={submit} className="space-y-5">
           <Field label="Name">
             <input
@@ -182,7 +190,7 @@ export default function NewCommunityPage() {
               required
               maxLength={80}
               placeholder="AI Solo Founders"
-              className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-neutral-600 focus:border-white/[0.18]"
+              className={compactInputClass}
             />
           </Field>
 
@@ -193,7 +201,7 @@ export default function NewCommunityPage() {
               maxLength={1000}
               rows={5}
               placeholder="Who belongs here, what the group is for, and how members should use it."
-              className="w-full resize-none rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm leading-relaxed text-white outline-none transition-colors placeholder:text-neutral-600 focus:border-white/[0.18]"
+              className={cx(compactTextareaClass, "resize-y")}
             />
           </Field>
 
@@ -202,7 +210,7 @@ export default function NewCommunityPage() {
               <select
                 value={visibility}
                 onChange={(event) => setVisibility(event.target.value as CommunityVisibility)}
-                className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                className={compactSelectClass}
               >
                 <option value="PUBLIC">Public: open link and catalog</option>
                 <option value="PRIVATE">Private: direct invite only</option>
@@ -213,7 +221,7 @@ export default function NewCommunityPage() {
               <select
                 value={profileVisible ? "VISIBLE" : "HIDDEN"}
                 onChange={(event) => setProfileVisible(event.target.value === "VISIBLE")}
-                className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                className={compactSelectClass}
               >
                 <option value="VISIBLE">Show in my profile</option>
                 <option value="HIDDEN">Hide from my profile</option>
@@ -230,7 +238,7 @@ export default function NewCommunityPage() {
                   setCategory(next);
                   setSpecialization(COMMUNITY_SPECIALIZATIONS_BY_CATEGORY[next][0]!);
                 }}
-                className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                className={compactSelectClass}
               >
                 {CATEGORIES.map((item) => (
                   <option key={item} value={item}>
@@ -244,7 +252,7 @@ export default function NewCommunityPage() {
               <select
                 value={specialization}
                 onChange={(event) => setSpecialization(event.target.value as CommunitySpecialization)}
-                className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                className={compactSelectClass}
               >
                 {specializations.map((item) => (
                   <option key={item} value={item}>
@@ -256,13 +264,13 @@ export default function NewCommunityPage() {
           </div>
 
           {visibility === "PRIVATE" && (
-            <div className="rounded-2xl border border-amber-500/15 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            <div className="rounded-lg border border-amber-500/15 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
               Private groups are not listed in Communities. People can enter only through a direct invite.
             </div>
           )}
 
           {error && (
-            <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className={errorNoticeClass}>
               {error}
             </div>
           )}
@@ -270,7 +278,7 @@ export default function NewCommunityPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className={cx(primaryButtonClass, "w-full")}
           >
             {submitting ? "Creating..." : "Create community"}
           </button>
@@ -284,9 +292,7 @@ export default function NewCommunityPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-neutral-500">
-        {label}
-      </span>
+      <span className={fieldLabelClass}>{label}</span>
       {children}
     </label>
   );

@@ -13,8 +13,22 @@ import {
 } from "@/types/community";
 import {
   PageHeader,
+  SectionTitle,
   Surface,
+  compactInputClass,
+  compactSelectClass,
+  compactTextareaClass,
+  cx,
+  errorNoticeClass,
+  fieldLabelClass,
+  noticeClass,
   pageFrameClass,
+  primaryButtonClass,
+  primaryButtonSmallClass,
+  subtleButtonClass,
+  subtleButtonSmallClass,
+  toggleInputClass,
+  toggleRowClass,
 } from "@/components/ui/app-chrome";
 
 interface CommunitySettings {
@@ -230,19 +244,20 @@ export default function CommunitySettingsPage() {
         title="Community settings"
         subtitle={community.name}
         action={
-          <Link href={`/communities/${community.slug}`} className="rounded-xl bg-white/[0.06] px-4 py-2 text-sm font-medium text-white ring-1 ring-inset ring-white/[0.08] hover:bg-white/[0.1]">
+          <Link href={`/communities/${community.slug}`} className={subtleButtonClass}>
             Open
           </Link>
         }
       />
 
-      <Surface className="mb-6 px-5 py-5">
+      <Surface className="mb-5 px-4 py-4">
         <form onSubmit={save} className="space-y-5">
+          <SectionTitle title="Identity" />
           <Field label="Name">
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
-              className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white/[0.18]"
+              className={compactInputClass}
             />
           </Field>
 
@@ -251,16 +266,17 @@ export default function CommunitySettingsPage() {
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={5}
-              className="w-full resize-none rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm leading-relaxed text-white outline-none placeholder:text-neutral-600 focus:border-white/[0.18]"
+              className={cx(compactTextareaClass, "resize-y")}
             />
           </Field>
 
+          <SectionTitle title="Visibility" />
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Visibility">
               <select
                 value={visibility}
                 onChange={(event) => setVisibility(event.target.value as CommunityVisibility)}
-                className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                className={compactSelectClass}
               >
                 <option value="PUBLIC">Public: catalog and open link</option>
                 <option value="PRIVATE">Private: direct invite only</option>
@@ -271,7 +287,7 @@ export default function CommunitySettingsPage() {
               <select
                 value={profileVisible ? "VISIBLE" : "HIDDEN"}
                 onChange={(event) => setProfileVisible(event.target.value === "VISIBLE")}
-                className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                className={compactSelectClass}
               >
                 <option value="VISIBLE">Show this group in owner profile</option>
                 <option value="HIDDEN">Hide this group from owner profile</option>
@@ -288,7 +304,7 @@ export default function CommunitySettingsPage() {
                   setCategory(next);
                   setSpecialization(COMMUNITY_SPECIALIZATIONS_BY_CATEGORY[next][0]!);
                 }}
-                className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                className={compactSelectClass}
               >
                 {CATEGORIES.map((item) => (
                   <option key={item} value={item}>
@@ -302,7 +318,7 @@ export default function CommunitySettingsPage() {
               <select
                 value={specialization}
                 onChange={(event) => setSpecialization(event.target.value as CommunitySpecialization)}
-                className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                className={compactSelectClass}
               >
                 {COMMUNITY_SPECIALIZATIONS_BY_CATEGORY[category].map((item) => (
                   <option key={item} value={item}>
@@ -313,27 +329,25 @@ export default function CommunitySettingsPage() {
             </Field>
           </div>
 
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
-            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold text-white">Context hub</h2>
-                <p className="mt-1 text-xs leading-5 text-neutral-500">
-                  Controls the indexed SSOT attached to this community.
-                </p>
-              </div>
-              <label className="flex items-center gap-2 text-sm text-neutral-300">
-                <input
-                  type="checkbox"
-                  checked={ssotEnabled}
-                  onChange={(event) => setSsotEnabled(event.target.checked)}
-                  className="h-4 w-4"
-                />
-                Enabled
-              </label>
+          <div className={toggleRowClass}>
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-white">Context hub</h2>
+              <p className="mt-1 text-xs leading-5 text-neutral-500">
+                Controls the indexed SSOT attached to this community.
+              </p>
             </div>
+            <label className="flex shrink-0 items-center gap-2 text-sm text-neutral-300">
+              <input
+                type="checkbox"
+                checked={ssotEnabled}
+                onChange={(event) => setSsotEnabled(event.target.checked)}
+                className={toggleInputClass}
+              />
+              Enabled
+            </label>
           </div>
 
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
+          <div className="rounded-lg bg-white/[0.025] p-4 ring-1 ring-inset ring-white/[0.07]">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-sm font-semibold text-white">Strategy sessions</h2>
@@ -346,7 +360,7 @@ export default function CommunitySettingsPage() {
                   type="checkbox"
                   checked={strategyEnabled}
                   onChange={(event) => setStrategyEnabled(event.target.checked)}
-                  className="h-4 w-4"
+                  className={toggleInputClass}
                 />
                 Enabled
               </label>
@@ -360,7 +374,7 @@ export default function CommunitySettingsPage() {
                   max={720}
                   value={strategyIntervalHours}
                   onChange={(event) => setStrategyIntervalHours(event.target.value)}
-                  className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                  className={compactInputClass}
                 />
               </Field>
               <Field label="Tokens per session">
@@ -370,7 +384,7 @@ export default function CommunitySettingsPage() {
                   max={2000000}
                   value={strategyTokenLimit}
                   onChange={(event) => setStrategyTokenLimit(event.target.value)}
-                  className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                  className={compactInputClass}
                 />
               </Field>
               <Field label="Monthly token cap">
@@ -381,7 +395,7 @@ export default function CommunitySettingsPage() {
                   value={monthlyTokenLimit}
                   onChange={(event) => setMonthlyTokenLimit(event.target.value)}
                   placeholder="No cap"
-                  className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white/[0.18]"
+                  className={compactInputClass}
                 />
               </Field>
               <Field label="USD per session">
@@ -392,7 +406,7 @@ export default function CommunitySettingsPage() {
                   value={strategyUsdLimit}
                   onChange={(event) => setStrategyUsdLimit(event.target.value)}
                   placeholder="No cap"
-                  className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white/[0.18]"
+                  className={compactInputClass}
                 />
               </Field>
               <Field label="Monthly USD cap">
@@ -403,7 +417,7 @@ export default function CommunitySettingsPage() {
                   value={monthlyUsdLimit}
                   onChange={(event) => setMonthlyUsdLimit(event.target.value)}
                   placeholder="No cap"
-                  className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white/[0.18]"
+                  className={compactInputClass}
                 />
               </Field>
               <Field label="Judge iterations">
@@ -413,13 +427,13 @@ export default function CommunitySettingsPage() {
                   max={10}
                   value={judgeIterationLimit}
                   onChange={(event) => setJudgeIterationLimit(event.target.value)}
-                  className="w-full rounded-2xl border border-white/[0.08] bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-white/[0.18]"
+                  className={compactInputClass}
                 />
               </Field>
             </div>
           </div>
 
-          <label className="flex items-center justify-between gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.025] px-4 py-3">
+          <label className={toggleRowClass}>
             <span>
               <span className="block text-sm font-medium text-white">Show my membership in profile</span>
               <span className="text-xs text-neutral-500">This controls your own membership card.</span>
@@ -428,27 +442,25 @@ export default function CommunitySettingsPage() {
               type="checkbox"
               checked={showOnProfile}
               onChange={(event) => setShowOnProfile(event.target.checked)}
-              className="h-4 w-4"
+              className={toggleInputClass}
             />
           </label>
 
-          {message && <div className="rounded-2xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-200">{message}</div>}
-          {error && <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</div>}
+          {message && <div className={noticeClass}>{message}</div>}
+          {error && <div className={errorNoticeClass}>{error}</div>}
 
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className={cx(primaryButtonClass, "w-full")}
           >
             {saving ? "Saving..." : "Save settings"}
           </button>
         </form>
       </Surface>
 
-      <Surface className="px-5 py-5">
-        <h2 className="mb-4 text-xs font-medium uppercase tracking-wider text-neutral-500">
-          Invite people
-        </h2>
+      <Surface className="px-4 py-4">
+        <SectionTitle title="Invite people" />
         <form onSubmit={createInvite} className="flex flex-col gap-3 sm:flex-row">
           <input
             value={inviteeEmail}
@@ -456,29 +468,29 @@ export default function CommunitySettingsPage() {
             type="email"
             required
             placeholder="person@example.com"
-            className="min-w-0 flex-1 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white/[0.18]"
+            className={cx(compactInputClass, "min-w-0 flex-1")}
           />
           <button
             type="submit"
             disabled={inviting}
-            className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className={primaryButtonSmallClass}
           >
             {inviting ? "Inviting..." : "Create invite"}
           </button>
         </form>
 
         {inviteUrl && (
-          <div className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
+          <div className="mt-4 rounded-lg bg-white/[0.025] p-3 ring-1 ring-inset ring-white/[0.07]">
             <p className="mb-2 text-xs uppercase tracking-wider text-neutral-500">Invite link</p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <input
                 readOnly
                 value={inviteUrl}
-                className="min-w-0 flex-1 rounded-xl border border-white/[0.08] bg-black/30 px-3 py-2 text-xs text-neutral-300"
+                className={cx(compactInputClass, "min-w-0 flex-1 text-xs text-neutral-300")}
               />
               <button
                 onClick={() => navigator.clipboard.writeText(inviteUrl)}
-                className="rounded-xl bg-white/[0.06] px-3 py-2 text-sm font-medium text-white ring-1 ring-inset ring-white/[0.08] hover:bg-white/[0.1]"
+                className={subtleButtonSmallClass}
               >
                 Copy
               </button>
@@ -493,9 +505,7 @@ export default function CommunitySettingsPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-neutral-500">
-        {label}
-      </span>
+      <span className={fieldLabelClass}>{label}</span>
       {children}
     </label>
   );

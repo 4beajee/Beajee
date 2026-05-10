@@ -36,13 +36,42 @@ export const dangerSubtleButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl bg-red-500/[0.12] px-4 py-2.5 text-sm font-medium text-red-200 transition hover:bg-red-500/[0.18] hover:text-red-100 disabled:opacity-50";
 export const inputClass =
   "w-full min-h-10 rounded-xl bg-neutral-950/68 px-4 py-2.5 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.10] transition focus:outline-none focus:ring-white/[0.18]";
+export const compactInputClass =
+  "w-full min-h-9 rounded-lg bg-neutral-950/70 px-3 py-2 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.10] transition focus:outline-none focus:ring-white/[0.20]";
+export const compactSelectClass =
+  "w-full min-h-9 rounded-lg bg-neutral-950 px-3 py-2 text-sm text-white ring-1 ring-inset ring-white/[0.10] transition focus:outline-none focus:ring-white/[0.20]";
+export const compactTextareaClass =
+  "w-full rounded-lg bg-neutral-950/70 px-3 py-2 text-sm leading-5 text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.10] transition focus:outline-none focus:ring-white/[0.20]";
+export const fieldLabelClass =
+  "mb-1.5 block text-[11px] font-medium uppercase text-neutral-500";
+export const toolbarButtonClass =
+  "inline-flex min-h-8 items-center justify-center rounded-lg bg-white/[0.05] px-3 py-1.5 text-xs font-medium text-neutral-300 ring-1 ring-inset ring-white/[0.08] transition hover:bg-white/[0.08] hover:text-white disabled:opacity-50";
+export const listRowClass =
+  "rounded-lg bg-white/[0.025] px-3 py-3 ring-1 ring-inset ring-white/[0.06] transition-colors hover:bg-white/[0.04]";
+export const emptyStateClass =
+  "rounded-lg border border-dashed border-white/[0.10] bg-white/[0.02] px-4 py-6 text-center text-sm text-neutral-500";
+export const noticeClass =
+  "rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200";
+export const errorNoticeClass =
+  "rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-200";
+export const toggleRowClass =
+  "flex items-center justify-between gap-4 rounded-lg bg-white/[0.025] px-3 py-2.5 ring-1 ring-inset ring-white/[0.07]";
+export const toggleInputClass =
+  "h-4 w-4 rounded border-white/[0.18] bg-neutral-950 text-white accent-white";
 export const tabBaseClass =
   "inline-flex min-h-9 items-center rounded-full px-4 py-2 text-[13px] font-medium transition-all";
 export const tabIdleClass =
   "bg-white/[0.04] text-neutral-400 ring-1 ring-inset ring-white/[0.07] hover:bg-white/[0.06] hover:text-neutral-200";
 export const tabActiveClass =
   "bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.08)]";
+export const compactTabBaseClass =
+  "inline-flex min-h-8 items-center rounded-lg px-3 py-1.5 text-xs font-medium transition";
+export const compactTabIdleClass =
+  "text-neutral-400 hover:bg-white/[0.05] hover:text-neutral-200";
+export const compactTabActiveClass =
+  "bg-white/[0.10] text-white ring-1 ring-inset ring-white/[0.12]";
 export const metricCardClass = "rounded-xl bg-neutral-950/58 p-4 ring-1 ring-inset ring-white/[0.08]";
+export const compactMetricCardClass = "rounded-lg bg-neutral-950/58 p-3 ring-1 ring-inset ring-white/[0.08]";
 
 export type MattePillTone =
   | "neutral"
@@ -232,4 +261,32 @@ export function MetricCard({
       {detail ? <div className="mt-1 text-xs text-neutral-500">{detail}</div> : null}
     </div>
   );
+}
+
+export function CompactMetric({
+  value,
+  label,
+  detail,
+}: {
+  value: ReactNode;
+  label: string;
+  detail?: string;
+}) {
+  return (
+    <div className={compactMetricCardClass}>
+      <div className="truncate text-lg font-semibold leading-none text-white">{value}</div>
+      <div className="mt-2 truncate text-xs text-neutral-500">{label}</div>
+      {detail ? <div className="mt-1 truncate text-[11px] text-neutral-600">{detail}</div> : null}
+    </div>
+  );
+}
+
+export function EmptyState({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <div className={cx(emptyStateClass, className)}>{children}</div>;
 }

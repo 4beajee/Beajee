@@ -8,22 +8,28 @@ import {
   COMMUNITY_SPECIALIZATION_LABELS,
 } from "@/types/community";
 import {
-  MetricCard,
+  CompactMetric,
+  EmptyState,
   PageHeader,
   SectionTitle,
-  SoftSurface,
   Surface,
+  compactInputClass,
+  compactSelectClass,
+  compactTabActiveClass,
+  compactTabBaseClass,
+  compactTabIdleClass,
+  compactTextareaClass,
   cx,
+  errorNoticeClass,
+  fieldLabelClass,
   getMattePillClass,
-  inputClass,
+  listRowClass,
+  noticeClass,
   pageFrameClass,
-  primaryButtonClass,
   primaryButtonSmallClass,
   subtleButtonClass,
   subtleButtonSmallClass,
-  tabActiveClass,
-  tabBaseClass,
-  tabIdleClass,
+  toolbarButtonClass,
 } from "@/components/ui/app-chrome";
 
 type Tab = "overview" | "chat" | "hub" | "strategy";
@@ -48,6 +54,8 @@ interface CommunityDetail {
   strategyUsdLimit: number | null;
   monthlyUsdLimit: number | null;
   judgeIterationLimit: number;
+  createdAt: string;
+  updatedAt: string;
   memberCount: number;
   owner: { id: string; name: string | null; image: string | null };
   members: Array<{
@@ -195,6 +203,16 @@ function asPrettyJson(value: unknown) {
   if (!value) return "";
   if (typeof value === "string") return value;
   return JSON.stringify(value, null, 2);
+}
+
+function statusTone(status: string): "success" | "warning" | "muted" {
+  if (["ACTIVE", "OPEN", "COMPLETED"].includes(status)) return "success";
+  if (["FAILED", "DEGRADED", "SKIPPED_BUDGET"].includes(status)) return "warning";
+  return "muted";
+}
+
+function roleLabel(role: string) {
+  return role.charAt(0) + role.slice(1).toLowerCase();
 }
 
 export default function CommunityDetailPage() {
@@ -479,6 +497,12 @@ export default function CommunityDetailPage() {
     : community.category
     ? COMMUNITY_CATEGORY_LABELS[community.category]
     : "Custom community";
+  const tabCount = (tab: Tab) => {
+    if (tab === "chat" && chat && !chat.locked) return chat.messages.length;
+    if (tab === "hub" && hub) return hub.community._count.knowledgeDocuments;
+    if (tab === "strategy" && strategy) return strategy.sessions.length;
+    return null;
+  };
 
   return (
     <div className={pageFrameClass}>
@@ -494,21 +518,29 @@ export default function CommunityDetailPage() {
         }
       />
 
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-5 flex flex-wrap items-center gap-2 rounded-xl bg-white/[0.025] p-1 ring-1 ring-inset ring-white/[0.06]">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={cx(tabBaseClass, activeTab === tab.id ? tabActiveClass : tabIdleClass)}
+            className={cx(
+              compactTabBaseClass,
+              activeTab === tab.id ? compactTabActiveClass : compactTabIdleClass
+            )}
           >
-            {tab.label}
+            <span>{tab.label}</span>
+            {tabCount(tab.id) !== null ? (
+              <span className="ml-2 rounded-full bg-white/[0.08] px-1.5 py-0.5 text-[10px] text-neutral-300">
+                {tabCount(tab.id)}
+              </span>
+            ) : null}
           </button>
         ))}
       </div>
 
-      {notice && <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{notice}</div>}
-      {error && <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</div>}
+      {notice && <div className={cx(noticeClass, "mb-4")}>{notice}</div>}
+      {error && <div className={cx(errorNoticeClass, "mb-4")}>{error}</div>}
 
       {activeTab === "overview" && (
         <OverviewTab
@@ -585,74 +617,87 @@ function OverviewTab({
   onLeave: () => void;
 }) {
   return (
-    <>
-      <Surface className="mb-6 px-5 py-5">
-        <div className="mb-5 flex flex-wrap gap-2">
-          <span className={getMattePillClass(community.visibility === "PUBLIC" ? "neutral" : "muted", "text-xs")}>
-            {community.visibility === "PUBLIC" ? "Public" : "Private"}
-          </span>
-          <span className={getMattePillClass("muted", "text-xs")}>{community.memberCount} members</span>
-          <span className={getMattePillClass(community.ssotEnabled ? "success" : "muted", "text-xs")}>
-            SSOT {community.ssotEnabled ? "enabled" : "off"}
-          </span>
-          <span className={getMattePillClass(community.strategyEnabled ? "info" : "muted", "text-xs")}>
-            Strategy {community.strategyEnabled ? `${community.strategyIntervalHours}h` : "off"}
-          </span>
-        </div>
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.75fr)]">
+      <Surface className="px-4 py-4 sm:px-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="mb-3 flex flex-wrap gap-2">
+              <span className={getMattePillClass(community.visibility === "PUBLIC" ? "neutral" : "muted", "text-[11px]")}>
+                {community.visibility === "PUBLIC" ? "Public" : "Private"}
+              </span>
+              <span className={getMattePillClass("muted", "text-[11px]")}>{community.memberCount} members</span>
+              <span className={getMattePillClass(community.ssotEnabled ? "success" : "muted", "text-[11px]")}>
+                SSOT {community.ssotEnabled ? "on" : "off"}
+              </span>
+              <span className={getMattePillClass(community.strategyEnabled ? "info" : "muted", "text-[11px]")}>
+                Strategy {community.strategyEnabled ? `${community.strategyIntervalHours}h` : "off"}
+              </span>
+            </div>
+            <p className="max-w-3xl text-sm leading-6 text-neutral-300">
+              {community.description ?? "No description yet."}
+            </p>
+          </div>
 
-        <p className="text-sm leading-relaxed text-neutral-300">
-          {community.description ?? "No description yet."}
-        </p>
-
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <MetricCard value={formatNumber(community.strategyTokenLimit)} label="Tokens per session" />
-          <MetricCard value={formatNumber(community.monthlyTokenLimit)} label="Monthly token cap" />
-          <MetricCard value={formatUsd(community.monthlyUsdLimit)} label="Monthly USD cap" />
-        </div>
-
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-5">
-          <p className="text-xs text-neutral-500">Owned by {community.owner.name ?? "Gennety member"}</p>
-          {community.viewer.isMember ? (
-            community.viewer.isOwner ? (
-              <span className="text-xs text-neutral-500">You own this community</span>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {community.viewer.isMember ? (
+              community.viewer.isOwner ? (
+                <span className={getMattePillClass("muted", "text-[11px]")}>Owner</span>
+              ) : (
+                <button onClick={onLeave} disabled={actionLoading} className={subtleButtonSmallClass}>
+                  {actionLoading ? "Leaving..." : "Leave"}
+                </button>
+              )
             ) : (
-              <button onClick={onLeave} disabled={actionLoading} className={subtleButtonSmallClass}>
-                {actionLoading ? "Leaving..." : "Leave"}
+              <button
+                onClick={onJoin}
+                disabled={community.visibility !== "PUBLIC" || actionLoading}
+                className={primaryButtonSmallClass}
+              >
+                {actionLoading ? "Joining..." : community.visibility === "PUBLIC" ? "Join" : "Invite only"}
               </button>
-            )
-          ) : (
-            <button
-              onClick={onJoin}
-              disabled={community.visibility !== "PUBLIC" || actionLoading}
-              className={primaryButtonSmallClass}
-            >
-              {actionLoading ? "Joining..." : community.visibility === "PUBLIC" ? "Join community" : "Invite only"}
-            </button>
-          )}
+            )}
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <CompactMetric value={formatNumber(community.strategyTokenLimit)} label="Session tokens" />
+          <CompactMetric value={formatNumber(community.monthlyTokenLimit)} label="Monthly tokens" />
+          <CompactMetric value={formatUsd(community.monthlyUsdLimit)} label="Monthly USD" />
+          <CompactMetric value={formatDate(community.nextStrategySessionAt)} label="Next strategy" />
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
+          <p className="text-xs text-neutral-500">Owned by {community.owner.name ?? "Gennety member"}</p>
+          <p className="text-xs text-neutral-600">
+            Created {formatDate(community.createdAt)}
+          </p>
         </div>
       </Surface>
 
-      <Surface className="px-5 py-5">
-        <SectionTitle title="Members" />
-        <div className="grid gap-3 sm:grid-cols-2">
+      <Surface className="px-4 py-4">
+        <SectionTitle title="Members" action={<span className={getMattePillClass("muted", "text-[11px]")}>{community.memberCount}</span>} />
+        <div className="space-y-2">
           {community.members.map((member) => (
-            <Link key={member.ownerId} href={`/u/${member.ownerId}`} className="flex items-center gap-3 rounded-xl bg-white/[0.025] px-4 py-3 ring-1 ring-inset ring-white/[0.05] transition-colors hover:bg-white/[0.04]">
+            <Link key={member.ownerId} href={`/u/${member.ownerId}`} className={cx(listRowClass, "flex items-center gap-3")}>
               {member.image ? (
-                <img src={member.image} alt={member.name ?? "Member"} className="h-9 w-9 rounded-full object-cover" />
+                <img src={member.image} alt={member.name ?? "Member"} className="h-8 w-8 rounded-full object-cover" />
               ) : (
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-800 text-sm font-semibold text-neutral-400">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-800 text-xs font-semibold text-neutral-400">
                   {member.name?.charAt(0).toUpperCase() ?? "?"}
                 </div>
               )}
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-white">{member.name ?? "Gennety member"}</p>
-                <p className="text-xs text-neutral-600">{member.role.toLowerCase()}</p>
+                <p className="text-xs text-neutral-600">{roleLabel(member.role)}</p>
               </div>
+              <span className={getMattePillClass(member.role === "OWNER" ? "neutral" : "muted", "text-[10px]")}>
+                {roleLabel(member.role)}
+              </span>
             </Link>
           ))}
         </div>
       </Surface>
-    </>
+    </div>
   );
 }
 
@@ -674,15 +719,15 @@ function ChatTab({
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
   if (!community.viewer.isMember) {
-    return <Surface className="px-5 py-5 text-sm text-neutral-400">Join this community to open the shared chat.</Surface>;
+    return <EmptyState>Join this community to open the shared chat.</EmptyState>;
   }
   if (loading || !chat) {
-    return <Surface className="px-5 py-5 text-sm text-neutral-400">Loading chat...</Surface>;
+    return <EmptyState>Loading chat...</EmptyState>;
   }
   if (chat.locked) {
     return (
-      <Surface className="px-5 py-5">
-        <SectionTitle title="Community chat" />
+      <Surface className="px-4 py-4">
+        <SectionTitle title="Community chat" action={<span className={getMattePillClass("muted", "text-[11px]")}>{chat.memberCount}/{chat.requiredMembers}</span>} />
         <p className="text-sm text-neutral-400">
           Shared chat opens when the hub has at least {chat.requiredMembers} active members.
         </p>
@@ -691,14 +736,28 @@ function ChatTab({
   }
 
   return (
-    <Surface className="px-5 py-5">
-      <SectionTitle title="Community chat" />
-      <div className="mb-4 max-h-[520px] space-y-3 overflow-y-auto rounded-xl bg-black/20 p-3 ring-1 ring-inset ring-white/[0.06]">
+    <Surface className="px-4 py-4">
+      <SectionTitle
+        title="Community chat"
+        subtitle={`${chat.memberCount} active members`}
+        action={chat.unreadCount > 0 ? <span className={getMattePillClass("info", "text-[11px]")}>{chat.unreadCount} unread</span> : null}
+      />
+      <div className="mb-3 max-h-[520px] space-y-2 overflow-y-auto rounded-lg bg-black/20 p-2 ring-1 ring-inset ring-white/[0.06]">
         {chat.messages.length === 0 ? (
-          <p className="px-2 py-8 text-center text-sm text-neutral-500">No messages yet.</p>
+          <EmptyState className="border-0 bg-transparent">No messages yet.</EmptyState>
         ) : (
           chat.messages.map((message) => (
-            <div key={message.id} className={cx("rounded-xl px-4 py-3", message.kind === "HUMAN" ? "bg-white/[0.04]" : "bg-sky-950/30")}>
+            <div
+              key={message.id}
+              className={cx(
+                "rounded-lg px-3 py-2.5",
+                message.kind === "HUMAN"
+                  ? "bg-white/[0.04]"
+                  : message.kind === "STRATEGY_SUMMARY"
+                  ? "bg-indigo-950/35 ring-1 ring-inset ring-indigo-300/10"
+                  : "bg-white/[0.025] text-neutral-400"
+              )}
+            >
               <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
                 <span className="text-xs font-medium text-neutral-300">
                   {message.kind === "HUMAN"
@@ -709,7 +768,7 @@ function ChatTab({
                 </span>
                 <span className="text-[11px] text-neutral-600">{formatDate(message.createdAt)}</span>
               </div>
-              <p className="whitespace-pre-wrap text-sm leading-6 text-neutral-200">{message.content}</p>
+              <p className="whitespace-pre-wrap text-sm leading-5 text-neutral-200">{message.content}</p>
             </div>
           ))
         )}
@@ -719,9 +778,9 @@ function ChatTab({
           value={messageText}
           onChange={(event) => setMessageText(event.target.value)}
           placeholder="Write to the community"
-          className={cx(inputClass, "min-w-0 flex-1")}
+          className={cx(compactInputClass, "min-w-0 flex-1")}
         />
-        <button type="submit" disabled={actionLoading || !messageText.trim()} className={primaryButtonClass}>
+        <button type="submit" disabled={actionLoading || !messageText.trim()} className={primaryButtonSmallClass}>
           Send
         </button>
       </form>
@@ -759,132 +818,190 @@ function HubTab(props: {
   addChannel: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
   const { community, hub, loading } = props;
+  const [managerPanel, setManagerPanel] = useState<"context" | "source" | "channel" | null>(null);
+
   if (!community.viewer.isMember) {
-    return <Surface className="px-5 py-5 text-sm text-neutral-400">Join this community to open the context hub.</Surface>;
+    return <EmptyState>Join this community to open the context hub.</EmptyState>;
   }
   if (loading || !hub) {
-    return <Surface className="px-5 py-5 text-sm text-neutral-400">Loading context hub...</Surface>;
+    return <EmptyState>Loading context hub...</EmptyState>;
   }
 
   return (
-    <div className="space-y-6">
-      <Surface className="px-5 py-5">
-        <SectionTitle title="Context Hub" />
-        <div className="grid gap-3 sm:grid-cols-4">
-          <MetricCard value={hub.community._count.knowledgeDocuments} label="Documents" />
-          <MetricCard value={hub.community._count.knowledgeChunks} label="Vector chunks" />
-          <MetricCard value={hub.community._count.knowledgeSources} label="Sources" />
-          <MetricCard value={hub.community._count.channels} label="Channels" />
+    <div className="space-y-5">
+      <Surface className="px-4 py-4">
+        <SectionTitle
+          title="Context Hub"
+          subtitle="Single source of truth for this community"
+          action={
+            hub.viewer.canManage ? (
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => setManagerPanel(managerPanel === "context" ? null : "context")} className={toolbarButtonClass}>
+                  Add context
+                </button>
+                <button type="button" onClick={() => setManagerPanel(managerPanel === "source" ? null : "source")} className={toolbarButtonClass}>
+                  Connect source
+                </button>
+                <button type="button" onClick={() => setManagerPanel(managerPanel === "channel" ? null : "channel")} className={toolbarButtonClass}>
+                  New channel
+                </button>
+              </div>
+            ) : null
+          }
+        />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <CompactMetric value={hub.community._count.knowledgeDocuments} label="Documents" />
+          <CompactMetric value={hub.community._count.knowledgeChunks} label="Vector chunks" />
+          <CompactMetric value={hub.community._count.knowledgeSources} label="Sources" />
+          <CompactMetric value={hub.community._count.channels} label="Channels" />
         </div>
-        <SoftSurface className="mt-4 px-4 py-3">
-          <p className="whitespace-pre-wrap text-sm leading-6 text-neutral-300">
+        <div className="mt-4 rounded-lg bg-white/[0.025] px-3 py-3 ring-1 ring-inset ring-white/[0.06]">
+          <p className="whitespace-pre-wrap text-sm leading-5 text-neutral-300">
             {hub.community.knowledgeSummary ?? "No strategy or knowledge summary has been generated yet."}
           </p>
-        </SoftSurface>
+        </div>
       </Surface>
 
-      {hub.viewer.canManage && (
-        <div className="grid gap-6 xl:grid-cols-3">
-          <Surface className="px-5 py-5">
-            <SectionTitle title="Add context" />
-            <form onSubmit={props.addManualContext} className="space-y-3">
-              <input value={props.manualTitle} onChange={(event) => props.setManualTitle(event.target.value)} placeholder="Title" className={inputClass} />
-              <textarea value={props.manualContent} onChange={(event) => props.setManualContent(event.target.value)} rows={6} placeholder="Distilled context, decisions, open questions" className={cx(inputClass, "resize-none leading-6")} />
-              <input value={props.manualTags} onChange={(event) => props.setManualTags(event.target.value)} placeholder="tags, separated, by comma" className={inputClass} />
-              <select value={props.manualPrivacy} onChange={(event) => props.setManualPrivacy(event.target.value)} className={inputClass}>
-                <option value="COMMUNITY">Community</option>
-                <option value="ADMINS">Admins</option>
-                <option value="OWNER_ONLY">Owner only</option>
-                <option value="PUBLIC">Public</option>
-              </select>
-              <button type="submit" disabled={props.actionLoading} className={primaryButtonClass}>Add to SSOT</button>
+      {hub.viewer.canManage && managerPanel && (
+        <Surface className="px-4 py-4">
+          {managerPanel === "context" && (
+            <form onSubmit={props.addManualContext} className="grid gap-3 lg:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.2fr)]">
+              <div className="space-y-3">
+                <label className="block">
+                  <span className={fieldLabelClass}>Title</span>
+                  <input value={props.manualTitle} onChange={(event) => props.setManualTitle(event.target.value)} placeholder="Decision log" className={compactInputClass} />
+                </label>
+                <label className="block">
+                  <span className={fieldLabelClass}>Tags</span>
+                  <input value={props.manualTags} onChange={(event) => props.setManualTags(event.target.value)} placeholder="strategy, roadmap" className={compactInputClass} />
+                </label>
+                <label className="block">
+                  <span className={fieldLabelClass}>Privacy</span>
+                  <select value={props.manualPrivacy} onChange={(event) => props.setManualPrivacy(event.target.value)} className={compactSelectClass}>
+                    <option value="COMMUNITY">Community</option>
+                    <option value="ADMINS">Admins</option>
+                    <option value="OWNER_ONLY">Owner only</option>
+                    <option value="PUBLIC">Public</option>
+                  </select>
+                </label>
+              </div>
+              <label className="block">
+                <span className={fieldLabelClass}>Context</span>
+                <textarea value={props.manualContent} onChange={(event) => props.setManualContent(event.target.value)} rows={5} placeholder="Distilled context, decisions, open questions" className={cx(compactTextareaClass, "resize-y")} />
+                <button type="submit" disabled={props.actionLoading} className={cx(primaryButtonSmallClass, "mt-3")}>Add to SSOT</button>
+              </label>
             </form>
-          </Surface>
+          )}
 
-          <Surface className="px-5 py-5">
-            <SectionTitle title="Connect source" />
-            <form onSubmit={props.addSource} className="space-y-3">
-              <select value={props.sourceType} onChange={(event) => props.setSourceType(event.target.value)} className={inputClass}>
-                <option value="GITHUB">GitHub</option>
-                <option value="NOTION">Notion</option>
-                <option value="MANUAL">Manual</option>
-              </select>
-              <input value={props.sourceName} onChange={(event) => props.setSourceName(event.target.value)} placeholder="Source name" className={inputClass} />
-              <textarea value={props.sourceConfig} onChange={(event) => props.setSourceConfig(event.target.value)} rows={6} className={cx(inputClass, "resize-none font-mono text-xs leading-5")} />
-              <button type="submit" disabled={props.actionLoading} className={primaryButtonClass}>Save source</button>
+          {managerPanel === "source" && (
+            <form onSubmit={props.addSource} className="grid gap-3 lg:grid-cols-[260px_minmax(0,1fr)]">
+              <div className="space-y-3">
+                <label className="block">
+                  <span className={fieldLabelClass}>Type</span>
+                  <select value={props.sourceType} onChange={(event) => props.setSourceType(event.target.value)} className={compactSelectClass}>
+                    <option value="GITHUB">GitHub</option>
+                    <option value="NOTION">Notion</option>
+                    <option value="MANUAL">Manual</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className={fieldLabelClass}>Source name</span>
+                  <input value={props.sourceName} onChange={(event) => props.setSourceName(event.target.value)} placeholder="Product repo" className={compactInputClass} />
+                </label>
+              </div>
+              <label className="block">
+                <span className={fieldLabelClass}>Config JSON</span>
+                <textarea value={props.sourceConfig} onChange={(event) => props.setSourceConfig(event.target.value)} rows={5} className={cx(compactTextareaClass, "resize-y font-mono text-xs leading-5")} />
+                <button type="submit" disabled={props.actionLoading} className={cx(primaryButtonSmallClass, "mt-3")}>Save source</button>
+              </label>
             </form>
-          </Surface>
+          )}
 
-          <Surface className="px-5 py-5">
-            <SectionTitle title="Create channel" />
-            <form onSubmit={props.addChannel} className="space-y-3">
-              <input value={props.channelSlug} onChange={(event) => props.setChannelSlug(event.target.value)} placeholder="channel-slug" className={inputClass} />
-              <input value={props.channelName} onChange={(event) => props.setChannelName(event.target.value)} placeholder="Channel name" className={inputClass} />
-              <textarea value={props.channelQuery} onChange={(event) => props.setChannelQuery(event.target.value)} rows={6} placeholder="Semantic retrieval focus" className={cx(inputClass, "resize-none leading-6")} />
-              <button type="submit" disabled={props.actionLoading} className={primaryButtonClass}>Save channel</button>
+          {managerPanel === "channel" && (
+            <form onSubmit={props.addChannel} className="grid gap-3 lg:grid-cols-[220px_220px_minmax(0,1fr)_auto] lg:items-end">
+              <label className="block">
+                <span className={fieldLabelClass}>Slug</span>
+                <input value={props.channelSlug} onChange={(event) => props.setChannelSlug(event.target.value)} placeholder="strategy" className={compactInputClass} />
+              </label>
+              <label className="block">
+                <span className={fieldLabelClass}>Name</span>
+                <input value={props.channelName} onChange={(event) => props.setChannelName(event.target.value)} placeholder="Strategy" className={compactInputClass} />
+              </label>
+              <label className="block">
+                <span className={fieldLabelClass}>Semantic focus</span>
+                <input value={props.channelQuery} onChange={(event) => props.setChannelQuery(event.target.value)} placeholder="roadmap, blockers, partner needs" className={compactInputClass} />
+              </label>
+              <button type="submit" disabled={props.actionLoading} className={primaryButtonSmallClass}>Save</button>
             </form>
-          </Surface>
-        </div>
+          )}
+        </Surface>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <Surface className="px-5 py-5">
-          <SectionTitle title="Channels" />
-          <div className="space-y-3">
-            {hub.channels.length === 0 ? <p className="text-sm text-neutral-500">No channels yet.</p> : hub.channels.map((channel) => (
-              <SoftSurface key={channel.id} className="px-4 py-3">
-                <p className="text-sm font-medium text-white">{channel.name}</p>
-                <p className="mt-1 text-xs text-neutral-500">{channel.slug}</p>
-                {channel.semanticQuery && <p className="mt-2 text-xs leading-5 text-neutral-400">{channel.semanticQuery}</p>}
-              </SoftSurface>
-            ))}
-          </div>
-        </Surface>
-
-        <Surface className="px-5 py-5">
-          <SectionTitle title="Sources" />
-          <div className="space-y-3">
-            {hub.sources.length === 0 ? <p className="text-sm text-neutral-500">No sources yet.</p> : hub.sources.map((source) => (
-              <SoftSurface key={source.id} className="px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-medium text-white">{source.name}</p>
-                  <span className={getMattePillClass(source.status === "ACTIVE" ? "success" : "warning", "text-[11px]")}>{source.status}</span>
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Surface className="px-4 py-4">
+          <SectionTitle title="Documents" action={<span className={getMattePillClass("muted", "text-[11px]")}>{hub.documents.length}</span>} />
+          <div className="space-y-2">
+            {hub.documents.length === 0 ? <EmptyState>No documents indexed yet.</EmptyState> : hub.documents.map((document) => (
+              <div key={document.id} className={listRowClass}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-white">{document.title}</p>
+                    <p className="mt-1 text-xs text-neutral-500">{document.source.name} · {document.privacyLevel} · {document.chunks} chunks</p>
+                  </div>
+                  <span className={getMattePillClass(statusTone(document.status), "text-[11px]")}>{document.status}</span>
                 </div>
-                <p className="mt-1 text-xs text-neutral-500">{source.type} · {formatDate(source.lastSuccessfulSyncAt)}</p>
-                {source.lastError && <p className="mt-2 text-xs leading-5 text-red-200">{source.lastError}</p>}
-              </SoftSurface>
-            ))}
-          </div>
-        </Surface>
-
-        <Surface className="px-5 py-5">
-          <SectionTitle title="Budget" />
-          <div className="space-y-3">
-            <MetricCard value={formatNumber(hub.budget.monthTokensUsed)} label="Tokens used this month" />
-            <MetricCard value={`$${hub.budget.monthCostUsd.toFixed(4)}`} label="USD used this month" />
-            <MetricCard value={formatNumber(hub.budget.remainingMonthlyTokens)} label="Remaining monthly tokens" />
-          </div>
-        </Surface>
-      </div>
-
-      <Surface className="px-5 py-5">
-        <SectionTitle title="Documents" />
-        <div className="space-y-3">
-          {hub.documents.length === 0 ? <p className="text-sm text-neutral-500">No documents indexed yet.</p> : hub.documents.map((document) => (
-            <SoftSurface key={document.id} className="px-4 py-3">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium text-white">{document.title}</p>
-                  <p className="mt-1 text-xs text-neutral-500">{document.source.name} · {document.privacyLevel} · {document.chunks} chunks</p>
-                </div>
-                <span className={getMattePillClass(document.status === "ACTIVE" ? "success" : "warning", "text-[11px]")}>{document.status}</span>
+                {document.summary && <p className="mt-2 text-sm leading-5 text-neutral-300">{document.summary}</p>}
+                {document.distilledContent && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-xs text-neutral-500 hover:text-neutral-300">Show distilled content</summary>
+                    <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-black/30 p-3 text-xs leading-5 text-neutral-400">{document.distilledContent}</pre>
+                  </details>
+                )}
               </div>
-              {document.summary && <p className="mt-3 text-sm leading-6 text-neutral-300">{document.summary}</p>}
-              {document.distilledContent && <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-xl bg-black/30 p-3 text-xs leading-5 text-neutral-400">{document.distilledContent}</pre>}
-            </SoftSurface>
-          ))}
+            ))}
+          </div>
+        </Surface>
+
+        <div className="space-y-5">
+          <Surface className="px-4 py-4">
+            <SectionTitle title="Budget" />
+            <div className="grid gap-2">
+              <CompactMetric value={formatNumber(hub.budget.monthTokensUsed)} label="Tokens used this month" />
+              <CompactMetric value={`$${hub.budget.monthCostUsd.toFixed(4)}`} label="USD used this month" />
+              <CompactMetric value={formatNumber(hub.budget.remainingMonthlyTokens)} label="Remaining monthly tokens" />
+            </div>
+          </Surface>
+
+          <Surface className="px-4 py-4">
+            <SectionTitle title="Sources" />
+            <div className="space-y-2">
+              {hub.sources.length === 0 ? <EmptyState>No sources yet.</EmptyState> : hub.sources.map((source) => (
+                <div key={source.id} className={listRowClass}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="truncate text-sm font-medium text-white">{source.name}</p>
+                    <span className={getMattePillClass(statusTone(source.status), "text-[11px]")}>{source.status}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-neutral-500">{source.type} · {formatDate(source.lastSuccessfulSyncAt)}</p>
+                  {source.lastError && <p className="mt-2 text-xs leading-5 text-red-200">{source.lastError}</p>}
+                </div>
+              ))}
+            </div>
+          </Surface>
+
+          <Surface className="px-4 py-4">
+            <SectionTitle title="Channels" />
+            <div className="space-y-2">
+              {hub.channels.length === 0 ? <EmptyState>No channels yet.</EmptyState> : hub.channels.map((channel) => (
+                <div key={channel.id} className={listRowClass}>
+                  <p className="truncate text-sm font-medium text-white">{channel.name}</p>
+                  <p className="mt-1 text-xs text-neutral-500">{channel.slug}</p>
+                  {channel.semanticQuery && <p className="mt-2 text-xs leading-5 text-neutral-400">{channel.semanticQuery}</p>}
+                </div>
+              ))}
+            </div>
+          </Surface>
         </div>
-      </Surface>
+      </div>
     </div>
   );
 }
@@ -903,67 +1020,71 @@ function StrategyTab({
   onRun: () => void;
 }) {
   if (!community.viewer.canManage) {
-    return <Surface className="px-5 py-5 text-sm text-neutral-400">Only owners and admins can view strategy sessions.</Surface>;
+    return <EmptyState>Only owners and admins can view strategy sessions.</EmptyState>;
   }
   if (loading || !strategy) {
-    return <Surface className="px-5 py-5 text-sm text-neutral-400">Loading strategy sessions...</Surface>;
+    return <EmptyState>Loading strategy sessions...</EmptyState>;
   }
 
   return (
-    <div className="space-y-6">
-      <Surface className="px-5 py-5">
+    <div className="space-y-5">
+      <Surface className="px-4 py-4">
         <SectionTitle
           title="Strategy engine"
           action={<button type="button" onClick={onRun} disabled={actionLoading || !community.strategyEnabled} className={primaryButtonSmallClass}>Run now</button>}
         />
-        <div className="grid gap-3 sm:grid-cols-4">
-          <MetricCard value={community.strategyEnabled ? "On" : "Off"} label="Status" />
-          <MetricCard value={`${community.strategyIntervalHours}h`} label="Cycle" />
-          <MetricCard value={formatDate(community.nextStrategySessionAt)} label="Next session" />
-          <MetricCard value={community.judgeIterationLimit} label="Judge iterations" />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <CompactMetric value={community.strategyEnabled ? "On" : "Off"} label="Status" />
+          <CompactMetric value={`${community.strategyIntervalHours}h`} label="Cycle" />
+          <CompactMetric value={formatDate(community.nextStrategySessionAt)} label="Next session" />
+          <CompactMetric value={community.judgeIterationLimit} label="Judge iterations" />
         </div>
       </Surface>
 
       {strategy.sessions.length === 0 ? (
-        <Surface className="px-5 py-5 text-sm text-neutral-500">No strategy sessions yet.</Surface>
+        <EmptyState>No strategy sessions yet.</EmptyState>
       ) : (
         strategy.sessions.map((session) => (
-          <Surface key={session.id} className="px-5 py-5">
-            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <Surface key={session.id} className="px-4 py-4">
+            <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-sm font-semibold text-white">{formatDate(session.startedAt ?? session.scheduledFor)}</h2>
-                  <span className={getMattePillClass(session.status === "COMPLETED" ? "success" : session.status === "FAILED" ? "warning" : "info", "text-[11px]")}>{session.status}</span>
+                  <span className={getMattePillClass(statusTone(session.status), "text-[11px]")}>{session.status}</span>
                 </div>
                 <p className="mt-1 text-xs text-neutral-500">{formatNumber(session.tokensUsed)} / {formatNumber(session.tokenLimit)} tokens · ${session.costUsd.toFixed(4)}</p>
               </div>
+              <span className={getMattePillClass("muted", "text-[11px]")}>{session.actionProposals.length} proposals</span>
             </div>
-            {session.summary && <p className="mb-4 whitespace-pre-wrap text-sm leading-6 text-neutral-300">{session.summary}</p>}
+            {session.summary && <p className="mb-3 whitespace-pre-wrap text-sm leading-5 text-neutral-300">{session.summary}</p>}
             {session.failureReason && <p className="mb-4 text-sm text-red-200">{session.failureReason}</p>}
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {session.turns.map((turn) => (
-                <SoftSurface key={turn.id} className="px-4 py-3">
+                <div key={turn.id} className={listRowClass}>
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs font-medium text-neutral-300">Round {turn.round} · {turn.role}</span>
+                    <span className="text-xs font-medium text-neutral-300">Round {turn.round} · {roleLabel(turn.role)}</span>
                     <span className="text-[11px] text-neutral-600">{formatNumber(turn.tokensInput + turn.tokensOutput)} tokens</span>
                   </div>
-                  <pre className="overflow-x-auto whitespace-pre-wrap text-xs leading-5 text-neutral-300">{asPrettyJson(turn.output)}</pre>
-                </SoftSurface>
+                  <details>
+                    <summary className="cursor-pointer text-xs text-neutral-500 hover:text-neutral-300">Raw output</summary>
+                    <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-black/30 p-3 text-xs leading-5 text-neutral-300">{asPrettyJson(turn.output)}</pre>
+                  </details>
+                </div>
               ))}
             </div>
 
             {session.actionProposals.length > 0 && (
-              <div className="mt-5 space-y-3">
+              <div className="mt-4 space-y-2">
                 <p className="text-xs font-medium uppercase text-neutral-500">Action proposals</p>
                 {session.actionProposals.map((proposal) => (
-                  <SoftSurface key={proposal.id} className="px-4 py-3">
+                  <div key={proposal.id} className={listRowClass}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-sm font-medium text-white">{proposal.title}</p>
                       <span className={getMattePillClass("muted", "text-[11px]")}>{proposal.status}</span>
                     </div>
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-neutral-300">{proposal.summary}</p>
-                  </SoftSurface>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-5 text-neutral-300">{proposal.summary}</p>
+                  </div>
                 ))}
               </div>
             )}

@@ -10,6 +10,7 @@ const tests = [
   "tests/model-advice.test.ts",
   "tests/community-validation.test.ts",
   "tests/contextual-hubs.test.ts",
+  "tests/community-hub-e2e.test.ts",
   "tests/monitoring.test.ts",
   "tests/networking-goal.test.ts",
   "tests/privacy-sync.test.ts",

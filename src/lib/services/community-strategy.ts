@@ -286,6 +286,13 @@ export async function runCommunityStrategySession(communityId: string, scheduled
           failureReason: preflight.reason,
         },
       });
+      await prisma.community.update({
+        where: { id: communityId },
+        data: {
+          strategyLockUntil: null,
+          nextStrategySessionAt: new Date(Date.now() + community.strategyIntervalHours * 60 * 60 * 1000),
+        },
+      });
       return { skipped: true, reason: preflight.reason, sessionId: session.id };
     }
 
