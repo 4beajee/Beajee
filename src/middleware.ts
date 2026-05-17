@@ -9,8 +9,8 @@ const APP_HOST = process.env.NEXT_PUBLIC_APP_URL
 const LANDING_URL = process.env.NEXT_PUBLIC_LANDING_URL ?? "";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
-// Routes that belong on the landing domain only
-const landingExact = ["/", "/feed", "/cookie-policy", "/privacy", "/terms"];
+// Routes that belong on the landing domain only.
+const landingExact = ["/cookie-policy", "/privacy", "/terms"];
 
 // Public static files served from public/ — agent discovery surface.
 // Must stay on landing domain and require no auth.
@@ -58,7 +58,6 @@ function isPublicFile(pathname: string) {
 function isLandingRoute(pathname: string) {
   return (
     landingExact.includes(pathname) ||
-    pathname.startsWith("/feed/") ||
     isPublicFile(pathname)
   );
 }
@@ -85,8 +84,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(pathname + request.nextUrl.search, APP_URL));
   }
 
-  if (APP_HOST && !isLocalDev && host === APP_HOST && isLandingRoute(pathname)) {
-    // Someone hit app.gennety.com/ or app.gennety.com/feed → redirect to landing
+  if (APP_HOST && !isLocalDev && host === APP_HOST && pathname === "/") {
+    return NextResponse.redirect(new URL("/home", APP_URL));
+  }
+
+  if (APP_HOST && LANDING_URL && !isLocalDev && host === APP_HOST && isLandingRoute(pathname)) {
+    // Someone hit app.gennety.com/privacy or public agent docs → redirect to landing
     return NextResponse.redirect(new URL(pathname + request.nextUrl.search, LANDING_URL));
   }
 
