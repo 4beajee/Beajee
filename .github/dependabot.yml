@@ -13,6 +13,14 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # eslint 10.4+ pulls in eslint-plugin-react-hooks 7.1.x, which
+      # enables react-hooks/set-state-in-effect and fails lint on 14
+      # existing useEffect callsites in the codebase. Bumps are pinned
+      # via overrides; unblock once the callsites are refactored.
+      - dependency-name: "eslint"
+      - dependency-name: "eslint-config-next"
+      - dependency-name: "eslint-plugin-react-hooks"
     labels:
       - "dependencies"
       - "area:maintenance"
