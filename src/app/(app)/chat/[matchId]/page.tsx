@@ -286,8 +286,26 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (sessionStatus !== "authenticated") return;
-    fetchChat().then(() => markAsRead());
-  }, [fetchChat, markAsRead, sessionStatus]);
+    const ac = new AbortController();
+    fetch(`/api/chat?matchId=${matchId}`, { signal: ac.signal })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          setError(data.error);
+          return;
+        }
+        setError(null);
+        setChat(data);
+        messageIdsRef.current = new Set<string>(
+          data.messages.map((message: Message) => message.id)
+        );
+        markAsRead();
+      })
+      .catch((err) => {
+        if (err?.name !== "AbortError") setError("Failed to load chat");
+      });
+    return () => ac.abort();
+  }, [matchId, markAsRead, sessionStatus]);
 
   useEffect(() => {
     if (sessionStatus !== "authenticated" || !chat) return;
@@ -436,23 +454,32 @@ export default function ChatPage() {
     ? `gennety-chat-match-reason:${matchId}:${chat.overlapSummary}`
     : null;
 
-  useEffect(() => {
-    if (!latestAdviceStatus) return;
-
+  const [prevAdviceSignal, setPrevAdviceSignal] = useState<string | null>(null);
+  const adviceSignal = latestAdviceSessionId
+    ? `${latestAdviceSessionId}:${latestAdviceStatus ?? ""}`
+    : null;
+  if (adviceSignal !== prevAdviceSignal) {
+    setPrevAdviceSignal(adviceSignal);
     if (latestAdviceStatus === "PENDING" || latestAdviceStatus === "ACTIVE") {
       setIsAdvicePanelOpen(true);
     }
-  }, [latestAdviceSessionId, latestAdviceStatus]);
+  }
 
-  useEffect(() => {
-    if (!matchReasonDismissKey) return;
-
-    try {
-      setIsMatchReasonDismissed(window.localStorage.getItem(matchReasonDismissKey) === "1");
-    } catch {
+  const [prevReasonKey, setPrevReasonKey] = useState<string | null>(null);
+  if (prevReasonKey !== matchReasonDismissKey) {
+    setPrevReasonKey(matchReasonDismissKey);
+    if (matchReasonDismissKey) {
+      let dismissed = false;
+      try {
+        dismissed = window.localStorage.getItem(matchReasonDismissKey) === "1";
+      } catch {
+        dismissed = false;
+      }
+      setIsMatchReasonDismissed(dismissed);
+    } else {
       setIsMatchReasonDismissed(false);
     }
-  }, [matchReasonDismissKey]);
+  }
 
   function isAgentIntro(msg: Message) {
     return msg.kind === "AGENT_INTRO";
@@ -1075,12 +1102,13 @@ export default function ChatPage() {
       {sidebarSlot
         ? createPortal(<ModelAdvicePanel {...modelAdvicePanelProps} />, sidebarSlot)
         : null}
-      <ChatReportDialog
-        open={isReportDialogOpen}
-        chatId={chat.chatId}
-        targetName={otherPerson.name}
-        onClose={() => setIsReportDialogOpen(false)}
-      />
+      {isReportDialogOpen && (
+        <ChatReportDialog
+          chatId={chat.chatId}
+          targetName={otherPerson.name}
+          onClose={() => setIsReportDialogOpen(false)}
+        />
+      )}
     </div>
   );
 }

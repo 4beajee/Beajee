@@ -45,8 +45,8 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "eslint": "10.1.0",
-    "eslint-config-next": "16.2.4",
+    "eslint": "^10.4.0",
+    "eslint-config-next": "^16.2.6",
     "postcss": "^8.5.10",
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
@@ -64,7 +64,6 @@
     "eslint-plugin-react": {
       "brace-expansion": "1.1.13"
     },
-    "eslint-plugin-react-hooks": "7.0.1",
     "hono": "4.12.17",
     "path-to-regexp": "8.4.0",
     "postcss": "$postcss"
