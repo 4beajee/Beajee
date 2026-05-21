@@ -210,12 +210,13 @@ export default function ChatsPage() {
           </div>
         ))}
       </div>
-      <ChatReportDialog
-        open={!!reportChat}
-        chatId={reportChat?.chatId ?? null}
-        targetName={reportChat?.otherPerson.name ?? null}
-        onClose={() => setReportChat(null)}
-      />
+      {reportChat && (
+        <ChatReportDialog
+          chatId={reportChat.chatId}
+          targetName={reportChat.otherPerson.name}
+          onClose={() => setReportChat(null)}
+        />
+      )}
     </div>
   );
 }

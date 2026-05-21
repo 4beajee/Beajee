@@ -148,10 +148,6 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
   const detailsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setData(initialData);
-  }, [initialData]);
-
-  useEffect(() => {
     return () => {
       if (toastTimeout.current) clearTimeout(toastTimeout.current);
     };
