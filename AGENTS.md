@@ -209,6 +209,7 @@ Quality over quantity. One precise match per month beats ten vague ones per week
 │   AgentDelivery    WakeStream               │
 │   TeamActivity     AgentTaskPipeline        │
 │   PersonalConnectors ProfilePatcher         │
+│   TelegramIntelligram                       │
 └──────┬───────────────────┬──────────────────┘
        ▼                   ▼
 ┌────────────┐    ┌─────────────────┐
@@ -223,6 +224,7 @@ Quality over quantity. One precise match per month beats ten vague ones per week
 │ profile_audit_logs  │
 │ team_activity_logs │
 │ agent_tasks        │
+│ telegram_topics   │
 │ analytics_events │
 │ compute_usage    │
 └────────────┘
@@ -315,11 +317,19 @@ gennety/
 │   │       ├── login/page.tsx
 │   │       ├── forgot-password/page.tsx
 │   │       ├── reset-password/page.tsx
+│   │       ├── telegram/page.tsx      ← Telegram Mini App shell
 │   │       ├── privacy/page.tsx
 │   │       ├── terms/page.tsx
 │   │       └── cookie-policy/page.tsx
 │   │
 │   ├── lib/
+│   │   ├── telegram/
+│   │   │   ├── bot.ts              ← Grammy bot, Mini App URL/keyboard helpers
+│   │   │   ├── auth.ts             ← Telegram initData verification + 7-day JWTs
+│   │   │   ├── topics.ts           ← private forum topic creation and owner delivery
+│   │   │   ├── match-card.ts       ← Match Card / Live Photo delivery
+│   │   │   ├── negotiation.ts      ← Bot-to-bot negotiation payload protocol
+│   │   │   └── team-space.ts       ← task/blocker/strategy alerts to Team Space
 │   │   ├── onboarding/
 │   │   │   ├── openclaw-bridge.ts   ← bridge URLs + config generation
 │   │   │   └── openclaw-prompt-generator.ts ← owner-facing OpenClaw prompts
@@ -427,12 +437,14 @@ Current model groups:
 | Analytics/cost | `AnalyticsEvent`, `ComputeUsage` |
 | Team collaboration | `TeamActivityLog`, `AgentTask`, `AgentTaskStatus`, `TaskRiskLevel` |
 | Personal connectors | `PersonalConnector`, `PersonalConnectorEvent`, `ProfileAuditLog` |
+| Telegram / Intelligram | `Owner.telegramId`, `TelegramTopic`, `TelegramTopicType`, community `teamMode` |
 
 Important current fields:
 
 - `Owner` includes `passwordHash`, `emailVerified`, `image`, `networkingGoal`,
   `countryCode`, `privacyConsent`, `researchConsent`, `excludedTopics`,
-  `agentPlatform`, `onboarded`, `isDemo`, personal connectors, and profile audit logs.
+  `agentPlatform`, `telegramId`, `onboarded`, `isDemo`, Telegram topics,
+  personal connectors, and profile audit logs.
 - `Agent` includes display name, agent type/version, integration method,
   outbound wake stream status, optional legacy wake webhook status,
   owner-controlled `searchPaused`, reputation counters, demo persona state,
@@ -451,6 +463,10 @@ Important current fields:
   agents and strategy sessions; blocker entries notify community managers.
 - `AgentTask` stores proposed, delegated, and HITL-blocked community work with
   `requiresHitl`, `approvalRequested`, and owner approval fields.
+- `TelegramTopic` stores owner-scoped private forum topic routing for Intelligram
+  (`matches`, `dates`, `settings`, `agent_log`, `team_space`) including the
+  Telegram workspace chat and `message_thread_id`; Team Space notifications
+  are gated by `Community.teamMode`.
 
 ---
 
@@ -497,6 +513,8 @@ object is not the real schema.
 7. **Model Advice** — inside chat flow: request, approval, agent debate, joint report
 8. **Profile / Settings** — owner profile, agent credentials, realtime wake status, optional legacy webhook setup, goal/privacy changes
 9. **Public Feed** — public match discovery/trust surface with reactions and comments
+10. **Telegram Mini App** — Telegram WebApp auth and mobile surfaces for onboarding,
+    match cards, agent dialogue, team tasks, and strategy summaries
 
 ---
 

@@ -6,7 +6,9 @@ interface TelegramResponse {
 export type TelegramInlineKeyboard = Array<
   Array<{
     text: string;
-    callback_data: string;
+    callback_data?: string;
+    url?: string;
+    web_app?: { url: string };
   }>
 >;
 

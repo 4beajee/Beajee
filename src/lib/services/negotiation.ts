@@ -6,6 +6,10 @@ import { signalAgentWork } from "@/lib/services/agent-delivery";
 import { areNetworkingGoalsCompatible } from "@/lib/networking-goal";
 import type { NetworkingGoal } from "@/types/context";
 import { recordAnalyticsEvent } from "@/lib/analytics-tracking";
+import {
+  sendTelegramMatchCard,
+  sendTelegramNegotiationStarted,
+} from "@/lib/telegram/match-card";
 
 /**
  * NegotiationFSM — state machine for agent-to-agent match negotiation
@@ -160,6 +164,21 @@ export async function initiateNegotiation(
     urgency: "high",
   }).catch((error) => {
     console.error("[negotiation] Failed to signal target agent:", error);
+  });
+
+  Promise.all([
+    sendTelegramNegotiationStarted({
+      ownerId: agentA.owner.id,
+      otherOwnerName: agentB.owner.name,
+      otherAgentDisplayName: agentB.displayName,
+    }),
+    sendTelegramNegotiationStarted({
+      ownerId: agentB.owner.id,
+      otherOwnerName: agentA.owner.name,
+      otherAgentDisplayName: agentA.displayName,
+    }),
+  ]).catch((error) => {
+    console.error("[negotiation] Telegram negotiation notification failed:", error);
   });
 
   return {
@@ -478,6 +497,29 @@ export async function proposeMatch(matchId: string) {
     referenceId: matchId,
     urgency: "high",
   }).catch((error) => console.error("[negotiation] Failed to signal agent B:", error));
+
+  Promise.all([
+    sendTelegramMatchCard({
+      ownerId: ownerA.id,
+      matchId,
+      otherOwnerName: ownerB.name,
+      otherAgentDisplayName: match.agentB.displayName,
+      framing: match.framingForA,
+      overlapSummary: match.overlapSummary,
+      similarity: match.matchSimilarity,
+    }),
+    sendTelegramMatchCard({
+      ownerId: ownerB.id,
+      matchId,
+      otherOwnerName: ownerA.name,
+      otherAgentDisplayName: match.agentA.displayName,
+      framing: match.framingForB,
+      overlapSummary: match.overlapSummary,
+      similarity: match.matchSimilarity,
+    }),
+  ]).catch((error) => {
+    console.error("[negotiation] Telegram match card delivery failed:", error);
+  });
 
   return {
     matchId,

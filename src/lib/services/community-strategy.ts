@@ -14,6 +14,7 @@ import {
   ingestCommunityKnowledgeDocument,
 } from "@/lib/services/community-knowledge";
 import { postCommunityStrategyChatSummary } from "@/lib/services/community-chat";
+import { notifyStrategySessionDone as notifyTelegramStrategySessionDone } from "@/lib/telegram/team-space";
 import type { StrategyClaim, JudgeVerdict } from "@/types/community-strategy";
 
 const STRATEGY_LOCK_MS = 30 * 60 * 1000;
@@ -596,6 +597,15 @@ export async function runCommunityStrategySession(communityId: string, scheduled
       status: updatedSession.status,
       actionProposals: proposals.length,
     }).catch((error) => console.error("[community-strategy] Chat summary failed:", error));
+
+    notifyTelegramStrategySessionDone({
+      communityId,
+      status: updatedSession.status,
+      summary,
+      actionProposals: proposals.length,
+    }).catch((error) =>
+      console.error("[community-strategy] Telegram strategy notification failed:", error)
+    );
 
     return {
       sessionId: session.id,

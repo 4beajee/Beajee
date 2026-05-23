@@ -9,6 +9,7 @@ import {
   escapeTelegramHtml,
   sendTelegramNotification,
 } from "@/lib/services/telegram";
+import { notifyBlockerFlagged as notifyTelegramBlockerFlagged } from "@/lib/telegram/team-space";
 
 export const TEAM_ACTIVITY_CATEGORIES = [
   "code",
@@ -299,6 +300,12 @@ export async function logTeamActivity(input: LogTeamActivityInput) {
         `Actor: ${escapeTelegramHtml(actor.actorId)}\n` +
         `${escapeTelegramHtml(preview)}`,
     }).catch((error) => console.error("[team-activity] Manager notification failed:", error));
+
+    notifyTelegramBlockerFlagged({
+      communityId: input.communityId,
+      actorId: actor.actorId,
+      contentPreview: preview,
+    }).catch((error) => console.error("[team-activity] Telegram blocker notification failed:", error));
 
     await postTeamSystemMessage({
       communityId: input.communityId,

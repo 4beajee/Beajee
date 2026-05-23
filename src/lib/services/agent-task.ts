@@ -13,6 +13,10 @@ import {
   escapeTelegramHtml,
 } from "@/lib/services/telegram";
 import { sanitizeConnectorContent } from "@/lib/services/community-knowledge";
+import {
+  notifyApprovalRequested as notifyTelegramApprovalRequested,
+  notifyTaskProposed as notifyTelegramTaskProposed,
+} from "@/lib/telegram/team-space";
 
 export const TASK_RISK_LEVELS = ["LOW", "MEDIUM", "HIGH"] as const;
 export type TaskRiskLevelInput = (typeof TASK_RISK_LEVELS)[number];
@@ -287,6 +291,14 @@ export async function proposeAgentTask(input: ProposeAgentTaskInput) {
     content: `Task proposed: ${title.content}${requiresHitl ? " [HITL required]" : ""}`,
   });
 
+  notifyTelegramTaskProposed({
+    communityId: input.communityId,
+    title: task.title,
+    riskLevel: task.riskLevel,
+    requiresHitl,
+    creatorId: creator.actorId,
+  }).catch((error) => console.error("[agent-task] Telegram task proposal failed:", error));
+
   await recordAnalyticsEvent({
     type: "AGENT_TASK_PROPOSED",
     ownerId: creator.ownerId ?? null,
@@ -456,6 +468,14 @@ export async function requestTaskApproval(input: RequestTaskApprovalInput) {
       `Risk: ${escapeTelegramHtml(updated.riskLevel)}\n` +
       `${escapeTelegramHtml(explanation.content)}`,
   });
+
+  notifyTelegramApprovalRequested({
+    communityId: updated.communityId,
+    title: updated.title,
+    riskLevel: updated.riskLevel,
+    requestedBy: requester.agentId,
+    explanation: explanation.content,
+  }).catch((error) => console.error("[agent-task] Telegram approval notification failed:", error));
 
   await postTeamSystemMessage({
     communityId: updated.communityId,

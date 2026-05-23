@@ -24,6 +24,7 @@ model Owner {
   researchConsent Boolean   @default(false) @map("research_consent") // Purpose B — separate GDPR basis
   excludedTopics  String[]  @default([]) @map("excluded_topics")
   agentPlatform   String?   @map("agent_platform") // "open_claw" | "nemo_claw" | "zero_claw" | "nano_claw"
+  telegramId      String?   @unique @map("telegram_id")
   onboarded       Boolean   @default(false)
 
   // Demo network — simulated accounts driven by the server-side responder.
@@ -46,11 +47,34 @@ model Owner {
   communityChatMessages    CommunityChatMessage[] @relation("CommunityChatMessageAuthor")
   communityChatReads       CommunityChatRead[]
   agentTasksApproved       AgentTask[]            @relation("AgentTaskApprovedByOwner")
+  telegramTopics           TelegramTopic[]
   personalConnectors       PersonalConnector[]
   profileAuditLogs         ProfileAuditLog[]
 
   @@index([isDemo])
   @@map("owners")
+}
+
+model TelegramTopic {
+  id              String            @id @default(cuid())
+  ownerId         String            @map("owner_id")
+  owner           Owner             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  chatId          String            @map("chat_id")
+  topicType       TelegramTopicType @map("topic_type")
+  messageThreadId Int               @map("message_thread_id")
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  @@unique([ownerId, topicType])
+  @@index([chatId])
+  @@map("telegram_topics")
+}
+
+enum TelegramTopicType {
+  MATCHES    @map("matches")
+  DATES      @map("dates")
+  SETTINGS   @map("settings")
+  AGENT_LOG  @map("agent_log")
+  TEAM_SPACE @map("team_space")
 }
 
 model Account {
@@ -493,6 +517,7 @@ model Community {
   ssotEnabled                Boolean                    @default(false) @map("ssot_enabled")
   knowledgeSummary           String?                    @map("knowledge_summary") @db.Text
   strategyEnabled            Boolean                    @default(false) @map("strategy_enabled")
+  teamMode                   Boolean                    @default(false) @map("team_mode")
   strategyIntervalHours      Int                        @default(72) @map("strategy_interval_hours")
   lastStrategySessionAt      DateTime?                  @map("last_strategy_session_at")
   nextStrategySessionAt      DateTime?                  @map("next_strategy_session_at")
