@@ -184,6 +184,18 @@ async function main() {
   }
 
   {
+    const middleware = fs.readFileSync(path.join(ROOT, "src/middleware.ts"), "utf8");
+    const layout = fs.readFileSync(
+      path.join(ROOT, "src/app/(public)/telegram/layout.tsx"),
+      "utf8"
+    );
+    assert.match(middleware, /appExact\s*=\s*\[[^\]]*"\/telegram"/s);
+    assert.match(middleware, /publicApiPrefixes\s*=\s*\[[^\]]*"\/api\/telegram"/s);
+    assert.match(layout, /https:\/\/telegram\.org\/js\/telegram-web-app\.js/);
+    ok("Mini App page, auth API, and Telegram WebApp SDK are public");
+  }
+
+  {
     const authDate = Math.floor(Date.now() / 1000);
     const initData = signInitData(
       {

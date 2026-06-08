@@ -19,7 +19,7 @@ const publicFilesPrefixes = ["/skills/", "/tools/", "/.well-known/"];
 
 // Routes that belong on the app subdomain
 const appPrefixes = ["/home", "/matches", "/profile", "/u", "/activity", "/notify", "/chat", "/communities", "/onboarding", "/settings"];
-const appExact = ["/login", "/forgot-password", "/reset-password"];
+const appExact = ["/login", "/forgot-password", "/reset-password", "/telegram"];
 
 // Public API routes — no auth required
 const publicApiPrefixes = [
@@ -38,6 +38,7 @@ const publicApiPrefixes = [
   "/api/cron",
   "/api/stats",
   "/api/locale",
+  "/api/telegram",
 ];
 
 function isAppRoute(pathname: string) {
