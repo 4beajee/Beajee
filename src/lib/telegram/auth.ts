@@ -163,7 +163,7 @@ export async function issueUnifiedToken(verified: VerifiedTelegramInitData) {
     },
     create: {
       telegramId: verified.telegramId,
-      email: `telegram-${verified.telegramId}@telegram.gennety.local`,
+      email: `telegram-${verified.telegramId}@telegram.beajee.local`,
       name: displayNameFromTelegramUser(verified.user),
       image: verified.user.photo_url,
       emailVerified: new Date(),
@@ -181,8 +181,8 @@ export async function issueUnifiedToken(verified: VerifiedTelegramInitData) {
 
   const now = Math.floor(Date.now() / 1000);
   const payload = {
-    iss: "gennety",
-    aud: "gennety.telegram-mini-app",
+    iss: "beajee",
+    aud: "beajee.telegram-mini-app",
     sub: owner.id,
     ownerId: owner.id,
     telegramId: verified.telegramId,

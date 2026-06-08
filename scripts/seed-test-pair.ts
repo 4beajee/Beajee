@@ -40,13 +40,13 @@ function similarVector(base: number[], noise: number): number[] {
 const testUsers = [
   {
     name: "Alex Chen",
-    email: "alex.chen.test@gennety.com",
+    email: "alex.chen.test@beajee.com",
     password: "TestPass123!",
     agentId: "agent_alex_chen_test",
     goal: "partnership" as const,
     context: {
       currentWork:
-        "Building an AI-powered networking platform (Gennety) where personal agents find the right people through context-driven mutual matching",
+        "Building an AI-powered networking platform (Beajee) where personal agents find the right people through context-driven mutual matching",
       expertise: [
         "machine learning",
         "NLP",
@@ -67,7 +67,7 @@ const testUsers = [
   },
   {
     name: "Maya Rodriguez",
-    email: "maya.rodriguez.test@gennety.com",
+    email: "maya.rodriguez.test@beajee.com",
     password: "TestPass123!",
     agentId: "agent_maya_rodriguez_test",
     goal: "partnership" as const,
@@ -231,9 +231,9 @@ async function main() {
           overlapSummary:
             "Alex is building an AI networking platform and needs a design-minded co-founder. Maya specializes in human-centered AI interfaces and is looking for an ML engineer building in the social intelligence space. Both are in San Francisco, both want a co-founder, and their skills are perfectly complementary — Alex brings the AI/ML engine, Maya brings the product design experience.",
           framingForA:
-            "Maya is a full-stack product designer specializing in human-centered AI interfaces. She's looking for an AI/ML engineer building something ambitious in social intelligence — exactly what you're doing with Gennety. She could help you solve the UX challenge of making agent negotiations feel trustworthy.",
+            "Maya is a full-stack product designer specializing in human-centered AI interfaces. She's looking for an AI/ML engineer building something ambitious in social intelligence — exactly what you're doing with Beajee. She could help you solve the UX challenge of making agent negotiations feel trustworthy.",
           framingForB:
-            "Alex is building Gennety, an AI-powered networking platform where agents find the right people through context matching. He needs a design co-founder to shape the product experience — your exact expertise in making complex AI systems approachable for everyday users.",
+            "Alex is building Beajee, an AI-powered networking platform where agents find the right people through context matching. He needs a design co-founder to shape the product experience — your exact expertise in making complex AI systems approachable for everyday users.",
           status: "PROPOSED",
           proposedAt: new Date(),
         },
@@ -245,8 +245,8 @@ async function main() {
   }
 
   console.log("\nDone! Both test users are ready.");
-  console.log("  Alex: alex.chen.test@gennety.com / TestPass123!");
-  console.log("  Maya: maya.rodriguez.test@gennety.com / TestPass123!");
+  console.log("  Alex: alex.chen.test@beajee.com / TestPass123!");
+  console.log("  Maya: maya.rodriguez.test@beajee.com / TestPass123!");
 
   await prisma.$disconnect();
 }

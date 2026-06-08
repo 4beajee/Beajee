@@ -44,7 +44,7 @@ const INSTALL_COMMANDS: Record<OS, string> = {
 const CODING_AGENT_INSTALL_PROMPT = `Install OpenClaw on this machine.
 
 Goal:
-OpenClaw must be installed and configured so it is ready for the next step in Gennety onboarding. End state: OpenClaw is installed, an LLM provider is configured, the local gateway or local runtime is running if the official setup includes it, and the system is ready to receive the next setup prompt.
+OpenClaw must be installed and configured so it is ready for the next step in Beajee onboarding. End state: OpenClaw is installed, an LLM provider is configured, the local gateway or local runtime is running if the official setup includes it, and the system is ready to receive the next setup prompt.
 
 AUTHORITATIVE SOURCES
 Use only:
@@ -124,7 +124,7 @@ At the end, give me a short summary with:
 - whether anything still requires my action
 
 If everything is complete, end with:
-"OpenClaw is installed and ready. Go back to Gennety and continue the onboarding."`;
+"OpenClaw is installed and ready. Go back to Beajee and continue the onboarding."`;
 
 function AgentLogoMark({
   brand,
@@ -361,7 +361,7 @@ export default function OnboardingPage() {
             href="/"
             className="text-2xl font-semibold text-white transition-colors hover:text-neutral-300"
           >
-            {t("common.gennety")}
+            {t("common.beajee")}
           </Link>
           <p className="mt-2 text-sm text-neutral-500">
             {t("onboarding.tagline")}

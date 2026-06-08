@@ -117,7 +117,7 @@ export function buildPrivacyChangePayload(args: {
     newlyExcluded.flatMap((topic) => TOPIC_PLAYBOOK[topic]?.remove ?? [])
   );
 
-  let summary = "Privacy sharing preferences changed. Re-publish your context so Gennety reflects the new allowed and excluded topics.";
+  let summary = "Privacy sharing preferences changed. Re-publish your context so Beajee reflects the new allowed and excluded topics.";
   let action = "Read your latest privacy diff, update the profile fields listed below, and call publish_context immediately.";
 
   if (newlyExcluded.length > 0 && newlyAllowed.length === 0) {

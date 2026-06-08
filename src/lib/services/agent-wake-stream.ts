@@ -29,13 +29,13 @@ interface WakeStreamConnection {
 type ConnectionMap = Map<string, Map<string, WakeStreamConnection>>;
 
 const globalForWakeStreams = globalThis as unknown as {
-  gennetyWakeStreams?: ConnectionMap;
+  beajeeWakeStreams?: ConnectionMap;
 };
 
 const wakeStreams =
-  globalForWakeStreams.gennetyWakeStreams ?? new Map<string, Map<string, WakeStreamConnection>>();
+  globalForWakeStreams.beajeeWakeStreams ?? new Map<string, Map<string, WakeStreamConnection>>();
 
-globalForWakeStreams.gennetyWakeStreams = wakeStreams;
+globalForWakeStreams.beajeeWakeStreams = wakeStreams;
 
 function formatSse(event: string, data: Record<string, unknown>, id?: string) {
   const lines = [`event: ${event}`];

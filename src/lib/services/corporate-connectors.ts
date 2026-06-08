@@ -219,7 +219,7 @@ export async function assertCorporateOwnerMapped(args: {
 }) {
   const ownerId = resolveOwnerIdFromCorporateUser(args);
   if (!ownerId) {
-    throw new CorporateConnectorError("Corporate user is not mapped to a Gennety owner", 403);
+    throw new CorporateConnectorError("Corporate user is not mapped to a Beajee owner", 403);
   }
 
   const membership = await prisma.communityMember.findUnique({

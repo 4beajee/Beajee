@@ -2,7 +2,7 @@
 
 ## Our Pledge
 
-We want Gennety to be a focused, respectful, and useful open source project. Contributors, maintainers, and users are expected to participate in a way that keeps collaboration constructive and safe.
+We want Beajee to be a focused, respectful, and useful open source project. Contributors, maintainers, and users are expected to participate in a way that keeps collaboration constructive and safe.
 
 ## Expected Behavior
 

@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
           result: {
             protocolVersion: "2024-11-05",
             capabilities: { tools: {} },
-            serverInfo: { name: "gennety", version: "1.0.0" },
+            serverInfo: { name: "beajee", version: "1.0.0" },
           },
           id,
         });
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
 // Health check
 export async function GET() {
   return NextResponse.json({
-    name: "gennety-mcp",
+    name: "beajee-mcp",
     version: "1.0.0",
     tools: tools.map((t) => t.name),
     status: "ok",

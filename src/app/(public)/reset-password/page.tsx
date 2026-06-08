@@ -34,7 +34,7 @@ function ResetPasswordContent() {
               href="/"
               className="text-3xl font-bold tracking-tight text-white hover:text-neutral-300 transition-colors"
             >
-              {t("common.gennety")}
+              {t("common.beajee")}
             </Link>
           </div>
           <div className="p-4 rounded-lg bg-neutral-900 border border-neutral-800 mb-6">
@@ -117,7 +117,7 @@ function ResetPasswordContent() {
               href="/"
               className="text-3xl font-bold tracking-tight text-white hover:text-neutral-300 transition-colors"
             >
-              Gennety
+              Beajee
             </Link>
           </div>
           <div className="p-4 rounded-lg bg-neutral-900 border border-emerald-800/50 mb-6">
@@ -149,7 +149,7 @@ function ResetPasswordContent() {
             href="/"
             className="text-3xl font-bold tracking-tight text-white hover:text-neutral-300 transition-colors"
           >
-            Gennety
+            Beajee
           </Link>
           <h1 className="mt-4 text-lg font-semibold text-white">
             Set new password

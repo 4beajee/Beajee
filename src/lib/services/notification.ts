@@ -4,7 +4,7 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM = "Gennety <legal@gennety.com>";
+const FROM = "Beajee <legal@beajee.com>";
 const BASE_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
 function escapeHtml(str: string): string {
@@ -24,7 +24,7 @@ function emailLayout(body: string, settingsUrl?: string): string {
       ${body}
       <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee;">
         <p style="font-size: 12px; color: #888; margin: 0;">
-          Gennety — AI-powered professional networking
+          Beajee — AI-powered professional networking
         </p>
         <p style="font-size: 11px; color: #aaa; margin: 4px 0 0 0;">
           <a href="${manageUrl}" style="color: #aaa; text-decoration: underline;">Account settings</a>
@@ -69,11 +69,11 @@ async function sendEmail(to: string, subject: string, html: string): Promise<Sen
 export async function sendPasswordResetEmail(email: string, resetUrl: string) {
   return sendEmail(
     email,
-    "Reset your password — Gennety",
+    "Reset your password — Beajee",
     emailLayout(`
       <h2 style="font-size: 20px; color: #111; margin-bottom: 8px;">Password reset request</h2>
       <p style="color: #555; line-height: 1.6; margin-bottom: 24px;">
-        We received a request to reset the password for your Gennety account.
+        We received a request to reset the password for your Beajee account.
         Click the button below to choose a new password.
       </p>
       ${ctaButton("Reset password", resetUrl)}
@@ -89,11 +89,11 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
 export async function sendPasswordChangedEmail(email: string) {
   return sendEmail(
     email,
-    "Your password has been changed — Gennety",
+    "Your password has been changed — Beajee",
     emailLayout(`
       <h2 style="font-size: 20px; color: #111; margin-bottom: 8px;">Password changed</h2>
       <p style="color: #555; line-height: 1.6;">
-        Your Gennety account password was successfully changed.
+        Your Beajee account password was successfully changed.
         If you did not make this change, please reset your password immediately or contact support.
       </p>
     `)
@@ -108,15 +108,15 @@ export async function sendCommunityInviteEmail(
   inviterName: string | null,
   inviteUrl: string
 ) {
-  const inviter = inviterName ? escapeHtml(inviterName) : "A Gennety member";
+  const inviter = inviterName ? escapeHtml(inviterName) : "A Beajee member";
 
   return sendEmail(
     email,
-    `Invitation to join ${communityName} — Gennety`,
+    `Invitation to join ${communityName} — Beajee`,
     emailLayout(`
       <h2 style="font-size: 20px; color: #111; margin-bottom: 8px;">Community invitation</h2>
       <p style="color: #555; line-height: 1.6; margin-bottom: 16px;">
-        ${inviter} invited you to join <strong>${escapeHtml(communityName)}</strong> on Gennety.
+        ${inviter} invited you to join <strong>${escapeHtml(communityName)}</strong> on Beajee.
       </p>
       <p style="color: #555; line-height: 1.6; margin-bottom: 24px;">
         This invitation is personal and expires in 7 days.

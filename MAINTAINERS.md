@@ -1,6 +1,6 @@
 # Maintainers
 
-Gennety is currently maintained by:
+Beajee is currently maintained by:
 
 - Gleb4442
 

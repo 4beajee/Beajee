@@ -88,7 +88,7 @@ export default function TelegramMiniAppPage() {
       <div className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-4 px-4 py-4">
         <header className="flex items-center justify-between border-b border-zinc-200 pb-3">
           <div>
-            <h1 className="text-lg font-semibold tracking-normal">Gennety</h1>
+            <h1 className="text-lg font-semibold tracking-normal">Beajee</h1>
             <p className="text-sm text-zinc-500">{ownerLabel}</p>
           </div>
           <span className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-600">

@@ -4,7 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
-// Cookie domain for cross-subdomain session sharing (e.g. ".gennety.com")
+// Cookie domain for cross-subdomain session sharing (e.g. ".beajee.com")
 // Strip surrounding quotes to be safe across different env-file parsers
 const cookieDomain = process.env.NEXTAUTH_COOKIE_DOMAIN?.replace(/^["']|["']$/g, "") || undefined;
 const useSecureCookies = process.env.NEXTAUTH_URL?.startsWith("https://") ?? false;

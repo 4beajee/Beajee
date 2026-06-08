@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       agentId: agent.id,
       webhookUrl: agent.webhookUrl,
       webhookToken: agent.webhookToken,
-      reason: "Test connection from Gennety settings",
+      reason: "Test connection from Beajee settings",
     });
 
     return NextResponse.json({

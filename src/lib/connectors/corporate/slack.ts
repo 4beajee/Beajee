@@ -81,14 +81,14 @@ export function buildSlackApprovalBlocks(args: {
           type: "button",
           text: { type: "plain_text", text: "Approve" },
           style: "primary",
-          action_id: "gennety_task_approve",
+          action_id: "beajee_task_approve",
           value,
         },
         {
           type: "button",
           text: { type: "plain_text", text: "Reject" },
           style: "danger",
-          action_id: "gennety_task_reject",
+          action_id: "beajee_task_reject",
           value,
         },
       ],
@@ -170,7 +170,7 @@ export function buildSlackAppHomeView(args: {
     blocks: [
       {
         type: "header",
-        text: { type: "plain_text", text: `Gennety: ${truncateSlackText(args.communityName, 120)}` },
+        text: { type: "plain_text", text: `Beajee: ${truncateSlackText(args.communityName, 120)}` },
       },
       {
         type: "section",

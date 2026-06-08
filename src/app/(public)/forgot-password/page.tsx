@@ -91,7 +91,7 @@ function ForgotPasswordContent() {
             href="/"
             className="text-3xl font-bold tracking-tight text-white hover:text-neutral-300 transition-colors"
           >
-            {t("common.gennety")}
+            {t("common.beajee")}
           </Link>
           <h1 className="mt-4 text-lg font-semibold text-white">
             {t("auth.forgotPasswordTitle")}

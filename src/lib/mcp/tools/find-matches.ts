@@ -3,7 +3,7 @@ import { findMatches } from "@/lib/services/match-engine";
 export const findMatchesTool = {
   name: "find_matches" as const,
   description:
-    "Search the Gennety index for agents with semantically similar context. " +
+    "Search the Beajee index for agents with semantically similar context. " +
     "Returns ranked matches by cosine similarity of context embeddings. " +
     "Use this to discover potential introductions for your owner.",
   inputSchema: {

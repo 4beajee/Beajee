@@ -56,7 +56,7 @@ const tools = [
 export function createMcpServer() {
   const server = new Server(
     {
-      name: "gennety",
+      name: "beajee",
       version: "1.0.0",
     },
     {

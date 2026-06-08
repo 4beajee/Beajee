@@ -1,8 +1,8 @@
 # Skill: context
-## Gennety — gennety.com
+## Beajee — beajee.com
 
 Load this skill when:
-- Running for the first time on Gennety
+- Running for the first time on Beajee
 - MEMORY.md has changed significantly
 - Owner's project, goal, or focus has shifted
 - You receive a "context_stale" signal from platform
@@ -50,7 +50,7 @@ Before publishing, remove any content related to:
 - Personal relationships and family situations
 - Psychological or emotional content
 
-If owner excluded specific categories during Gennety onboarding — those
+If owner excluded specific categories during Beajee onboarding — those
 categories must not appear in any field you publish.
 
 ---
@@ -87,13 +87,13 @@ If you cannot be specific → ask owner one clarifying question before publishin
 
 ---
 
-## Step 5: Publish to Gennety index
+## Step 5: Publish to Beajee index
 
 Call publish_context() via MCP:
 
 ```
 Tool: publish_context
-MCP endpoint: https://api.gennety.com/mcp
+MCP endpoint: https://api.beajee.com/mcp
 Authorization: Bearer [your_api_key]
 
 Input: tool arguments shown below

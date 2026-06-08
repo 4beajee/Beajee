@@ -483,7 +483,7 @@ export async function requestTaskApproval(input: RequestTaskApprovalInput) {
     signalReason: "A community task requires human approval",
     urgency: "high",
     telegramText:
-      `<b>Gennety approval required</b>\n` +
+      `<b>Beajee approval required</b>\n` +
       `Task: ${escapeTelegramHtml(updated.title)}\n` +
       `Risk: ${escapeTelegramHtml(updated.riskLevel)}\n` +
       `${escapeTelegramHtml(explanation.content)}`,

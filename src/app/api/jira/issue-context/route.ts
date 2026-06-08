@@ -14,7 +14,7 @@ import { JiraIssueContextSchema } from "@/types/corporate-connectors";
 function bearerSecret(request: NextRequest) {
   const auth = request.headers.get("authorization");
   if (auth?.toLowerCase().startsWith("bearer ")) return auth.slice(7).trim();
-  return request.headers.get("x-gennety-webhook-secret");
+  return request.headers.get("x-beajee-webhook-secret");
 }
 
 function errorResponse(error: unknown) {

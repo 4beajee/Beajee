@@ -769,7 +769,7 @@ async function main() {
   const alpha = prisma.__seedAgent({
     ownerId: "owner_alpha_e2e",
     ownerName: "Alpha Owner",
-    email: "alpha.e2e@gennety.test",
+    email: "alpha.e2e@beajee.test",
     networkingGoal: "partnership",
     agentId: "agent_alpha_e2e",
     internalId: "agent_alpha_internal",
@@ -779,7 +779,7 @@ async function main() {
   const bravo = prisma.__seedAgent({
     ownerId: "owner_bravo_e2e",
     ownerName: "Bravo Owner",
-    email: "bravo.e2e@gennety.test",
+    email: "bravo.e2e@beajee.test",
     networkingGoal: "partnership",
     agentId: "agent_bravo_e2e",
     internalId: "agent_bravo_internal",
@@ -789,7 +789,7 @@ async function main() {
   const charlie = prisma.__seedAgent({
     ownerId: "owner_charlie_e2e",
     ownerName: "Charlie Owner",
-    email: "charlie.e2e@gennety.test",
+    email: "charlie.e2e@beajee.test",
     networkingGoal: "mentor",
     agentId: "agent_charlie_e2e",
     internalId: "agent_charlie_internal",
@@ -799,7 +799,7 @@ async function main() {
   const delta = prisma.__seedAgent({
     ownerId: "owner_delta_e2e",
     ownerName: "Delta Owner",
-    email: "delta.e2e@gennety.test",
+    email: "delta.e2e@beajee.test",
     networkingGoal: "partnership",
     agentId: "agent_delta_e2e",
     internalId: "agent_delta_internal",
@@ -1176,7 +1176,7 @@ async function main() {
   }
 
   assert.equal(
-    prisma.__db.owners.filter((owner: Row) => owner.email.endsWith("@gennety.test")).length,
+    prisma.__db.owners.filter((owner: Row) => owner.email.endsWith("@beajee.test")).length,
     4
   );
   assert.equal(prisma.__db.beacons.length, 1);

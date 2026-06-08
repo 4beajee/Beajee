@@ -138,7 +138,7 @@ export default function FeedPage() {
       <nav className="sticky top-0 z-40 backdrop-blur-xl bg-[#050505]/80 border-b border-[#1a1a1a]">
         <div className="flex items-center justify-between px-4 sm:px-6 h-14 sm:h-16 max-w-5xl mx-auto">
           <Link href="/" className="text-base sm:text-lg font-semibold text-white">
-            Gennety
+            Beajee
           </Link>
           <div className="flex items-center gap-4 sm:gap-6">
             <Link href="/feed" className="text-sm text-white transition-colors">

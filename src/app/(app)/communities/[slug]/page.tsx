@@ -667,7 +667,7 @@ function OverviewTab({
         </div>
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
-          <p className="text-xs text-neutral-500">Owned by {community.owner.name ?? "Gennety member"}</p>
+          <p className="text-xs text-neutral-500">Owned by {community.owner.name ?? "Beajee member"}</p>
           <p className="text-xs text-neutral-600">
             Created {formatDate(community.createdAt)}
           </p>
@@ -687,7 +687,7 @@ function OverviewTab({
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-white">{member.name ?? "Gennety member"}</p>
+                <p className="truncate text-sm font-medium text-white">{member.name ?? "Beajee member"}</p>
                 <p className="text-xs text-neutral-600">{roleLabel(member.role)}</p>
               </div>
               <span className={getMattePillClass(member.role === "OWNER" ? "neutral" : "muted", "text-[10px]")}>

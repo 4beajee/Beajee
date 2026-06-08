@@ -886,7 +886,7 @@ function getInstantWakeStatus(settings: Pick<
       tone: "bg-sky-950/60 text-sky-200",
       detail: settings.wakeStreamLastSeenAt
         ? `Last realtime contact: ${formatWakeTimestamp(settings.wakeStreamLastSeenAt)}. Polling fallback is active.`
-        : "OpenClaw has connected before. Gennety will use polling until it reconnects.",
+        : "OpenClaw has connected before. Beajee will use polling until it reconnects.",
     };
   }
 
@@ -1147,7 +1147,7 @@ function InstantWakeSection({
         <div>
           <h3 className="text-[15px] font-semibold text-white">Realtime wake-up for your agent</h3>
           <p className={sectionDescriptionClass}>
-            OpenClaw keeps an outbound connection to Gennety, so hot events can
+            OpenClaw keeps an outbound connection to Beajee, so hot events can
             wake it without exposing a public URL.
           </p>
         </div>
@@ -1232,7 +1232,7 @@ function InstantWakeSection({
             Recommended setup
           </p>
           <p className={sectionDescriptionClass}>
-            Let your OpenClaw install the Gennety bridge and open the realtime
+            Let your OpenClaw install the Beajee bridge and open the realtime
             stream itself. No public agent URL, DNS setup, or Tailscale Funnel
             is required.
           </p>
@@ -1242,7 +1242,7 @@ function InstantWakeSection({
           <p className="text-sm font-semibold text-white">OpenClaw Prompt</p>
           <p className={sectionDescriptionClass}>
             Copy this prompt and send it to your OpenClaw. It installs the
-            Gennety bridge, keeps the outbound wake stream live, and preserves
+            Beajee bridge, keeps the outbound wake stream live, and preserves
             scheduled polling as fallback.
           </p>
 
@@ -1280,7 +1280,7 @@ function InstantWakeSection({
         <div className="space-y-3">
           <p className="text-[13px] leading-5 text-neutral-400">
             Optional power-user path if you already expose a public agent endpoint.
-            The default realtime channel above does not need this. Gennety will use{" "}
+            The default realtime channel above does not need this. Beajee will use{" "}
             <code className="text-neutral-400 font-mono">{WAKE_PATH}</code> automatically.
           </p>
 

@@ -2,9 +2,9 @@
 
 Status: authoritative future personal profile connector spec.
 Cross-references:
-- [MODEL_ROUTING.md](file:///Users/pro/Desktop/Gennety/docs/MODEL_ROUTING.md) (cheap tier models for distillation and vector processing)
-- [AGENT_COLLABORATION_PIPELINE.md](file:///Users/pro/Desktop/Gennety/docs/AGENT_COLLABORATION_PIPELINE.md) (collaboration events and logs)
-- [ARCHITECTURE.md](file:///Users/pro/Desktop/Gennety/docs/ARCHITECTURE.md) (privacy guidelines and AgentContext models)
+- [MODEL_ROUTING.md](file:///Users/pro/Desktop/Beajee/docs/MODEL_ROUTING.md) (cheap tier models for distillation and vector processing)
+- [AGENT_COLLABORATION_PIPELINE.md](file:///Users/pro/Desktop/Beajee/docs/AGENT_COLLABORATION_PIPELINE.md) (collaboration events and logs)
+- [ARCHITECTURE.md](file:///Users/pro/Desktop/Beajee/docs/ARCHITECTURE.md) (privacy guidelines and AgentContext models)
 
 ---
 
@@ -98,7 +98,7 @@ Webhooks ingest real-time events from SaaS platforms:
 
 ### 4.2 Polling Adaptors (Cron-Driven)
 A cron job `/api/cron/personal-connectors` triggers every 15-30 minutes for poll-based sources:
-* **Obsidian**: Reads files from configured synced directories. Files are processed only if they contain a metadata tag `#gennety-sync`.
+* **Obsidian**: Reads files from configured synced directories. Files are processed only if they contain a metadata tag `#beajee-sync`.
 * **Apple/Google Calendar**: Queries events for the next 7 days, filtering out private blocks (e.g. marked as "Private" or "Busy").
 * *Gmail/broad email ingestion is strictly out of scope for v1.*
 

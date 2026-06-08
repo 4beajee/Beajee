@@ -1,7 +1,7 @@
 /**
  * E2E Teardown Script
  * Removes all test data created during E2E verification.
- * Pattern: emails matching *@gennety.dev with "e2e_test_" prefix
+ * Pattern: emails matching *@beajee.dev with "e2e_test_" prefix
  */
 import { PrismaClient } from "@prisma/client";
 
@@ -13,7 +13,7 @@ async function teardown() {
   // Find all E2E test owners
   const testOwners = await prisma.owner.findMany({
     where: {
-      email: { startsWith: "e2e_test_", endsWith: "@gennety.dev" },
+      email: { startsWith: "e2e_test_", endsWith: "@beajee.dev" },
     },
     include: {
       agent: { select: { id: true } },
@@ -36,7 +36,7 @@ async function teardown() {
 
   // Also find XSS test account
   const xssOwner = await prisma.owner.findUnique({
-    where: { email: "xss_test@gennety.dev" },
+    where: { email: "xss_test@beajee.dev" },
     include: { agent: { select: { id: true } } },
   });
   if (xssOwner) {
@@ -119,8 +119,8 @@ async function teardown() {
   const remaining = await prisma.owner.count({
     where: {
       OR: [
-        { email: { startsWith: "e2e_test_", endsWith: "@gennety.dev" } },
-        { email: "xss_test@gennety.dev" },
+        { email: { startsWith: "e2e_test_", endsWith: "@beajee.dev" } },
+        { email: "xss_test@beajee.dev" },
       ],
     },
   });

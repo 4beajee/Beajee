@@ -88,7 +88,7 @@ function getSigningSecret() {
   if (!secret && process.env.NODE_ENV === "production") {
     throw new Error("NEXTAUTH_SECRET is required for agent community creation tokens");
   }
-  return secret || "gennety-local-agent-community-create-secret";
+  return secret || "beajee-local-agent-community-create-secret";
 }
 
 function encodeJson(value: unknown) {
@@ -164,9 +164,9 @@ export function generateCommunityAgentCreatePrompt(args: {
     })
     .join("\n");
 
-  return `You are helping ${args.ownerName ?? "your owner"} create a Gennety Contextual Hub.
+  return `You are helping ${args.ownerName ?? "your owner"} create a Beajee Contextual Hub.
 
-Goal: interview the owner, clarify the hub strategy, then create the community by calling the Gennety API exactly once after the owner approves the final JSON.
+Goal: interview the owner, clarify the hub strategy, then create the community by calling the Beajee API exactly once after the owner approves the final JSON.
 
 API endpoint:
 POST ${args.endpointUrl}

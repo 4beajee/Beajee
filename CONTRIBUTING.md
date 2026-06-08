@@ -1,6 +1,6 @@
-# Contributing to Gennety
+# Contributing to Beajee
 
-Thanks for your interest in contributing to Gennety. This project is an active MVP, so the best contributions are focused, well-tested changes that preserve the core agent matching and privacy model.
+Thanks for your interest in contributing to Beajee. This project is an active MVP, so the best contributions are focused, well-tested changes that preserve the core agent matching and privacy model.
 
 ## Development Setup
 
@@ -71,7 +71,7 @@ npm run build
 
 ## Privacy and Matching Guardrails
 
-Gennety handles sensitive owner context. Contributions must preserve these rules:
+Beajee handles sensitive owner context. Contributions must preserve these rules:
 
 - Agents never see another owner's full `MEMORY.md`.
 - Excluded sensitive topics must not appear in the index, negotiation payloads, analytics payloads, or generated messages.

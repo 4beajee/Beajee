@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const DEMO_OWNER_EMAIL = "demo.chat.nora@gennety.dev";
+const DEMO_OWNER_EMAIL = "demo.chat.nora@beajee.dev";
 const DEMO_AGENT_ID = "agent_demo_nora_chat_001";
 
 function generateApiKey() {
@@ -20,7 +20,7 @@ function humanProfile(owner) {
     ownerDomain: "AI agents and product strategy",
     ownerExperience: "6+ years across product, growth, and shipping internet products",
     ownerGoals:
-      "Turn Gennety into a believable, demo-ready product where agents create introductions that feel genuinely relevant",
+      "Turn Beajee into a believable, demo-ready product where agents create introductions that feel genuinely relevant",
     agentSpecialization:
       "Finding collaborators who can improve trust, onboarding, and chat UX in agent-mediated networking",
     agentDomains: [
@@ -36,7 +36,7 @@ function humanProfile(owner) {
     communicationStyle:
       "Direct, practical, and detail-oriented; prefers examples over abstract discussion",
     currentWork:
-      "Shipping Gennety, an AI networking product where agents negotiate introductions before the humans ever see a match",
+      "Shipping Beajee, an AI networking product where agents negotiate introductions before the humans ever see a match",
     expertise: [
       "product strategy",
       "AI product design",
@@ -107,21 +107,21 @@ function initialMessages(ownerName) {
       fromOwner: "agent_a",
       kind: "AGENT_INTRO",
       content:
-        "Nora works on trust signals for AI-mediated introductions. Her lens is useful because Gennety already has a working match-to-chat loop and now needs the interaction to feel credible, calm, and specific.",
+        "Nora works on trust signals for AI-mediated introductions. Her lens is useful because Beajee already has a working match-to-chat loop and now needs the interaction to feel credible, calm, and specific.",
       hoursAgo: 20,
     },
     {
       fromOwner: "agent_b",
       kind: "AGENT_INTRO",
       content:
-        `${ownerName} is actively shipping Gennety and focusing on the exact moment where an AI match turns into a human conversation. That is the product moment Nora obsesses over.`,
+        `${ownerName} is actively shipping Beajee and focusing on the exact moment where an AI match turns into a human conversation. That is the product moment Nora obsesses over.`,
       hoursAgo: 19.9,
     },
     {
       fromOwner: "demo_owner",
       kind: "HUMAN",
       content:
-        `Hey ${ownerName}. Your agent summary on Gennety was immediately clear to me. I spend most of my time on the moment where an AI system says "trust me, this intro makes sense" without sounding mechanical.`,
+        `Hey ${ownerName}. Your agent summary on Beajee was immediately clear to me. I spend most of my time on the moment where an AI system says "trust me, this intro makes sense" without sounding mechanical.`,
       hoursAgo: 4.5,
     },
     {
@@ -260,7 +260,7 @@ async function loadTargets(emails) {
     where: {
       onboarded: true,
       email: {
-        notIn: ["arlan@example.com", "e2e_test_1774997875@gennety.dev"],
+        notIn: ["arlan@example.com", "e2e_test_1774997875@beajee.dev"],
       },
     },
     include: { agent: { include: { context: true } } },
@@ -306,11 +306,11 @@ async function ensureHumanContext(target) {
 
 async function recreateMatchAndChat({ target, demoAgent, demoOwner }) {
   const matchOverlap =
-    "Gennety is already solving agent-mediated introductions, and Nora focuses on the exact trust layer that determines whether that transition into chat feels credible. The overlap is concrete: product trust, first-message framing, and how much agent reasoning a human should actually see.";
+    "Beajee is already solving agent-mediated introductions, and Nora focuses on the exact trust layer that determines whether that transition into chat feels credible. The overlap is concrete: product trust, first-message framing, and how much agent reasoning a human should actually see.";
   const framingForHuman =
-    "Nora designs trust and conversation systems for AI products. She is a strong fit because Gennety already has the core loop working and now needs sharper UX around why a match feels real before a person sends the first message.";
+    "Nora designs trust and conversation systems for AI products. She is a strong fit because Beajee already has the core loop working and now needs sharper UX around why a match feels real before a person sends the first message.";
   const framingForDemo =
-    `${target.name ?? "This founder"} is actively shipping Gennety and can test trust-design ideas in a live agent-mediated networking flow right now. This is a real product surface, not a concept deck.`;
+    `${target.name ?? "This founder"} is actively shipping Beajee and can test trust-design ideas in a live agent-mediated networking flow right now. This is a real product surface, not a concept deck.`;
 
   const existingMatches = await prisma.match.findMany({
     where: {
@@ -368,7 +368,7 @@ async function recreateMatchAndChat({ target, demoAgent, demoOwner }) {
         role: "initiator",
         type: "reasoning",
         content:
-          "Target is shipping Gennety and already has a functioning match-to-chat flow. Strong relevance because the open problem is trust, clarity, and the human handoff moment.",
+          "Target is shipping Beajee and already has a functioning match-to-chat flow. Strong relevance because the open problem is trust, clarity, and the human handoff moment.",
         createdAt: new Date(createdAt.getTime() + 10 * 60 * 1000),
       },
       {

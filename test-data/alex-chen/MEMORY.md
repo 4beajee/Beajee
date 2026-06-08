@@ -2,12 +2,12 @@
 
 ## Who I Am
 - AI/ML engineer, 6 years experience
-- Currently sole founder building Gennety — an AI-powered networking platform
+- Currently sole founder building Beajee — an AI-powered networking platform
 - Based in San Francisco
 - Background: Stanford CS, worked at DeepMind on recommendation systems, then early engineer at Anthropic
 
 ## Current Work
-Building Gennety — a context-driven mutual matching system where personal AI agents find the right people for their owners. The core insight: people are bad at networking (they don't know who they need), but once a connection is made, they're great at maintaining it.
+Building Beajee — a context-driven mutual matching system where personal AI agents find the right people for their owners. The core insight: people are bad at networking (they don't know who they need), but once a connection is made, they're great at maintaining it.
 
 ### Technical Stack
 - Next.js 14, TypeScript, PostgreSQL + pgvector (Supabase)

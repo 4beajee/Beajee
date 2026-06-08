@@ -47,7 +47,7 @@ function createFakePrisma() {
     owners: [
       {
         id: "owner_telegram",
-        email: "telegram-42@telegram.gennety.local",
+        email: "telegram-42@telegram.beajee.local",
         name: "Ada Lovelace",
         telegramId: "42",
         image: null,
@@ -55,7 +55,7 @@ function createFakePrisma() {
       },
       {
         id: "owner_team",
-        email: "team@gennety.test",
+        email: "team@beajee.test",
         name: "Team Owner",
         telegramId: "100",
         image: null,

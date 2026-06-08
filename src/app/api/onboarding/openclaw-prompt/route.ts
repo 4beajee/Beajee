@@ -80,8 +80,8 @@ export async function GET(request: NextRequest) {
       prompt,
       mode: mode === "instant-wake" ? "instant-wake" : "setup",
       agent_id: agent.agentId,
-      mcp_endpoint: "https://api.gennety.com/mcp",
-      skill_url: "https://gennety.com/skill.md",
+      mcp_endpoint: "https://api.beajee.com/mcp",
+      skill_url: "https://beajee.com/skill.md",
     });
   } catch (error) {
     const locale = resolveLocale({

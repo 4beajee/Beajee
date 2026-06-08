@@ -1169,7 +1169,7 @@ model DemoAgentQuota {
 }
 
 // Inbox events — primary delivery channel for agent-visible notifications.
-// Written by Gennety on match/message/freshness events, read by the agent
+// Written by Beajee on match/message/freshness events, read by the agent
 // via the check_in MCP tool, acknowledged via ack_inbox after delivery to owner.
 model InboxEvent {
   id          String    @id @default(cuid())

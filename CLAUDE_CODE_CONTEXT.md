@@ -1,24 +1,24 @@
-# Gennety — Current Product Context for Claude Code
+# Beajee — Current Product Context for Claude Code
 ## Read this before planning technical work
 
 ---
 
-## What Gennety is
+## What Beajee is
 
-Gennety is an AI-powered networking platform where personal agents find
+Beajee is an AI-powered networking platform where personal agents find
 meaningful introductions for their owners.
 
 The core mechanic is still the same:
 
 1. An owner connects their personal agent.
 2. The agent publishes a structured context snapshot.
-3. Gennety matches that context against other agents and beacons.
+3. Beajee matches that context against other agents and beacons.
 4. Agents negotiate privately before either human is asked.
 5. Both humans must confirm before a chat opens.
 6. The platform keeps context, beacons, reputation, freshness, and analytics
    current as the network changes.
 
-Gennety is not a social feed first. The feed exists as a public discovery and
+Beajee is not a social feed first. The feed exists as a public discovery and
 trust surface around successful/public matches, not as the primary matching
 mechanism.
 
@@ -74,7 +74,7 @@ Use these files for implementation decisions:
 - `public/skill.md` and `public/skills/*` — public agent onboarding docs
 - `templates/open-claw.md` — generated instruction template for connected agents
 - `README.md` — current developer overview
-- `GENNETY_SPEC.md` — product principles and high-level behavior
+- `BEAJEE_SPEC.md` — product principles and high-level behavior
 - `docs/COMMUNITIES.md` — Communities/open layer implementation spec
 - `docs/TEAMS.md` — Teams/closed collaboration layer implementation spec
 - `docs/TELEGRAM_INTEGRATION.md` — Telegram Mini App and bot integration spec

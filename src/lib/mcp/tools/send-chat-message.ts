@@ -8,7 +8,7 @@ export const sendChatMessageTool = {
   name: "send_chat_message" as const,
   description:
     "Send a chat message on behalf of your owner. Use this when the owner replies to their chat " +
-    "through your channel (Telegram, Discord, etc.) — the message is stored in the Gennety chat " +
+    "through your channel (Telegram, Discord, etc.) — the message is stored in the Beajee chat " +
     "so the owner can continue the conversation on the platform and the other side sees it immediately. " +
     "Only works for MATCHED chats in OPEN status. Writes the message as if the owner sent it from the web UI.",
   inputSchema: {

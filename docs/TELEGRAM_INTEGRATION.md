@@ -2,15 +2,15 @@
 
 Status: authoritative future Telegram Integration spec.
 Cross-references:
-- [MODEL_ROUTING.md](file:///Users/pro/Desktop/Gennety/docs/MODEL_ROUTING.md) (model task 'negotiation' and 'hub_search_answer')
-- [TEAM_FRAMEWORK.md](file:///Users/pro/Desktop/Gennety/docs/TEAM_FRAMEWORK.md) (Owner database references and AgentSelfAssessment data structures)
-- [AGENT_COLLABORATION_PIPELINE.md](file:///Users/pro/Desktop/Gennety/docs/AGENT_COLLABORATION_PIPELINE.md) (Task pipeline events and status flags)
+- [MODEL_ROUTING.md](file:///Users/pro/Desktop/Beajee/docs/MODEL_ROUTING.md) (model task 'negotiation' and 'hub_search_answer')
+- [TEAM_FRAMEWORK.md](file:///Users/pro/Desktop/Beajee/docs/TEAM_FRAMEWORK.md) (Owner database references and AgentSelfAssessment data structures)
+- [AGENT_COLLABORATION_PIPELINE.md](file:///Users/pro/Desktop/Beajee/docs/AGENT_COLLABORATION_PIPELINE.md) (Task pipeline events and status flags)
 
 ---
 
 ## 1. Goal and Concepts
 
-Telegram is the primary mobile gateway for Gennety. The **Intelligram** suite turns a standard Telegram bot into a feature-rich workspace by combining a Grammy-powered bot framework with a Next.js-based Telegram Mini App (TMA). It enables users to view matches, authorize Web sessions, review agent-to-agent negotiations, track team tasks, and review weekly strategy reports.
+Telegram is the primary mobile gateway for Beajee. The **Intelligram** suite turns a standard Telegram bot into a feature-rich workspace by combining a Grammy-powered bot framework with a Next.js-based Telegram Mini App (TMA). It enables users to view matches, authorize Web sessions, review agent-to-agent negotiations, track team tasks, and review weekly strategy reports.
 
 ---
 
@@ -20,7 +20,7 @@ Telegram is the primary mobile gateway for Gennety. The **Intelligram** suite tu
 
 1. **Grammy Bot Core**: Setup a Grammy bot instance configured in `src/lib/telegram/bot.ts`.
 2. **`verifyInitData`**: Implement HMAC-SHA256 signature verification of the raw Telegram WebApp `initData` using the bot token as the secret.
-3. **`issueUnifiedToken`**: Generates a JWT encoding the verified `telegramId` and the corresponding Gennety `ownerId` from the `Owner` model.
+3. **`issueUnifiedToken`**: Generates a JWT encoding the verified `telegramId` and the corresponding Beajee `ownerId` from the `Owner` model.
 4. **Endpoint `POST /api/telegram/auth`**: Consumes `initData` and returns the JWT session token.
 5. **Private Forum Group Onboarding**:
    * *Telegram Constraint*: Forum topics are not supported in direct message (DM) chats with bots; they require a Supergroup.
@@ -36,12 +36,12 @@ Telegram is the primary mobile gateway for Gennety. The **Intelligram** suite tu
 ### BLOCK B — Onboarding Webhook
 
 1. **Endpoint `POST /api/telegram/webhook`**: Standard webhook listener for incoming Telegram updates.
-2. **Command `/start`**: Sends a greeting message containing a description of Gennety and an inline button to launch the Mini App.
+2. **Command `/start`**: Sends a greeting message containing a description of Beajee and an inline button to launch the Mini App.
 3. **Callback Handler**: Processes inline button callback queries for initial profile options.
 
 ### BLOCK C — Bot-to-Bot Negotiation Protocol
 
-Gennety agents conduct matchmaking negotiations autonomously using Telegram's Bot API 10.0.
+Beajee agents conduct matchmaking negotiations autonomously using Telegram's Bot API 10.0.
 
 1. **Handshake**: Agent A sends a `NegotiationPayload` to Agent B (using B's configured Telegram username).
 2. **Evaluation**: Agent B evaluates compatibility using `resolveModel('negotiation')`.

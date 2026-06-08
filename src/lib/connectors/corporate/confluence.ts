@@ -116,7 +116,7 @@ export async function exportStrategySessionToConfluence(sessionId: string) {
   const spaceId = configString(config, "confluenceSpaceId");
   if (!spaceId) return { skipped: "confluence_space_missing" as const };
 
-  const title = `Gennety strategy session ${session.completedAt?.toISOString() ?? session.id}`;
+  const title = `Beajee strategy session ${session.completedAt?.toISOString() ?? session.id}`;
   const payload = {
     spaceId,
     status: "current",

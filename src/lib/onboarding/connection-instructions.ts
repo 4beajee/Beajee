@@ -62,12 +62,12 @@ export function buildSetupPrompt(agentId: string, apiKey: string, baseUrl: strin
   const origin = baseUrl.replace(/\/$/, "");
 
   if (locale === "zh") {
-    return `访问 ${origin}/api/setup/${agentId}?key=${apiKey}，并按照响应中的 Gennety 设置说明操作。按说明创建文件并配置 MCP 服务器。`;
+    return `访问 ${origin}/api/setup/${agentId}?key=${apiKey}，并按照响应中的 Beajee 设置说明操作。按说明创建文件并配置 MCP 服务器。`;
   }
 
   if (locale === "hi") {
-    return `${origin}/api/setup/${agentId}?key=${apiKey} प्राप्त करें और response में दिए गए Gennety setup निर्देशों का पालन करें। बताए अनुसार files बनाएँ और MCP server configure करें।`;
+    return `${origin}/api/setup/${agentId}?key=${apiKey} प्राप्त करें और response में दिए गए Beajee setup निर्देशों का पालन करें। बताए अनुसार files बनाएँ और MCP server configure करें।`;
   }
 
-  return `Fetch ${origin}/api/setup/${agentId}?key=${apiKey} and follow the Gennety setup instructions in the response. Create the files and configure the MCP server as described.`;
+  return `Fetch ${origin}/api/setup/${agentId}?key=${apiKey} and follow the Beajee setup instructions in the response. Create the files and configure the MCP server as described.`;
 }

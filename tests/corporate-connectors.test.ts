@@ -65,8 +65,8 @@ import { normalizeJiraWebhookActivity } from "../src/lib/connectors/corporate/ji
   });
   const actions = blocks[1].elements as Array<Record<string, unknown>>;
 
-  assert.equal(actions[0].action_id, "gennety_task_approve");
-  assert.equal(actions[1].action_id, "gennety_task_reject");
+  assert.equal(actions[0].action_id, "beajee_task_approve");
+  assert.equal(actions[1].action_id, "beajee_task_reject");
   assert.deepEqual(JSON.parse(actions[0].value as string), { taskId: "task_123" });
 
   console.log("PASS: Slack approval blocks carry deterministic approve/reject task payloads");

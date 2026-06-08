@@ -4,17 +4,17 @@ export interface OpenClawBridgeConfigParams {
 }
 
 export function getOpenClawBridgePaths() {
-  const landingOrigin = (process.env.NEXT_PUBLIC_LANDING_URL ?? "https://gennety.com").replace(/\/$/, "");
-  const appOrigin = (process.env.NEXT_PUBLIC_APP_URL ?? "https://app.gennety.com").replace(/\/$/, "");
+  const landingOrigin = (process.env.NEXT_PUBLIC_LANDING_URL ?? "https://beajee.com").replace(/\/$/, "");
+  const appOrigin = (process.env.NEXT_PUBLIC_APP_URL ?? "https://app.beajee.com").replace(/\/$/, "");
 
   return {
     appOrigin,
     landingOrigin,
-    bridgeScriptUrl: `${landingOrigin}/tools/gennety-openclaw-bridge.mjs`,
-    bridgeDocsUrl: `${landingOrigin}/tools/gennety-openclaw-bridge.md`,
-    bridgeConfigPath: "~/.config/gennety/openclaw-bridge.json",
+    bridgeScriptUrl: `${landingOrigin}/tools/beajee-openclaw-bridge.mjs`,
+    bridgeDocsUrl: `${landingOrigin}/tools/beajee-openclaw-bridge.md`,
+    bridgeConfigPath: "~/.config/beajee/openclaw-bridge.json",
     wakeStreamUrl: `${appOrigin}/api/agent/wake/stream`,
-    mcpUrl: "https://api.gennety.com/mcp",
+    mcpUrl: "https://api.beajee.com/mcp",
   };
 }
 
@@ -35,7 +35,7 @@ export function buildOpenClawBridgeConfig(params: OpenClawBridgeConfigParams) {
       delivery: {
         mode: "agent_turn",
         agent: "main",
-        backgroundSessionId: "gennety-bridge-bg",
+        backgroundSessionId: "beajee-bridge-bg",
         thinking: "off",
       },
       polling: {

@@ -59,7 +59,7 @@ export function mapCommunityRoleFromContext(context: ShareableAgentContext | nul
       recommendedSpecialization: null,
       recommendedSkillTags: [],
       confidence: 0.15,
-      candidateSummary: "Candidate has no published Gennety context available for pre-vetting.",
+      candidateSummary: "Candidate has no published Beajee context available for pre-vetting.",
       judgeSummary: "Needs human review because role mapping has no shareable context.",
     };
   }

@@ -101,7 +101,7 @@ sk-testsecretvalue12345678901234567890`,
 
     const merged = mergeProfilePatch(
       {
-        currentWork: "Building Gennety profile context.",
+        currentWork: "Building Beajee profile context.",
         expertise: ["TypeScript"],
         lookingFor: "AI product collaborators.",
       },
@@ -130,7 +130,7 @@ sk-testsecretvalue12345678901234567890`,
         {
           id: "daily-note",
           title: "Daily note",
-          content: "#gennety-sync\nBuilding Obsidian connector sync.",
+          content: "#beajee-sync\nBuilding Obsidian connector sync.",
         },
         {
           id: "private-note",

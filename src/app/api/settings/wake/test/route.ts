@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         source: "settings_test_wakeup",
         urgency: "normal",
         message_suggestion:
-          "Wakeup is working. I am receiving live realtime notifications from Gennety, so if someone writes to you in chat or a new match appears, I can react immediately.",
+          "Wakeup is working. I am receiving live realtime notifications from Beajee, so if someone writes to you in chat or a new match appears, I can react immediately.",
         delivery_instruction:
           "Send a short confirmation to the owner in your normal communication channel, for example Telegram if that is where you talk to them. After sending it, call ack_inbox for this event.",
         created_at: new Date().toISOString(),
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     const result = await signalAgentWork({
       agentId: agent.id,
       kind: "GENERAL",
-      reason: "Wakeup test from Gennety settings — check_in and confirm to owner",
+      reason: "Wakeup test from Beajee settings — check_in and confirm to owner",
       referenceId: confirmationEvent.id,
       urgency: "normal",
     });

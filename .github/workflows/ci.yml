@@ -20,8 +20,8 @@ jobs:
     timeout-minutes: 20
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gennety
-      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/gennety
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/beajee
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/beajee
       NEXTAUTH_SECRET: ci-nextauth-secret
       NEXTAUTH_URL: http://localhost:3000
       OPENAI_API_KEY: ci-openai-key

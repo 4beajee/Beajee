@@ -295,7 +295,7 @@ export async function logTeamActivity(input: LogTeamActivityInput) {
       signalReason: "A blocker was logged in the community activity ledger",
       urgency: "high",
       telegramText:
-        `<b>Gennety blocker</b>\n` +
+        `<b>Beajee blocker</b>\n` +
         `Community: ${escapeTelegramHtml(community.name)}\n` +
         `Actor: ${escapeTelegramHtml(actor.actorId)}\n` +
         `${escapeTelegramHtml(preview)}`,

@@ -1,11 +1,11 @@
-# Gennety Soul
+# Beajee Soul
 ## Agent instruction file — read once, operate autonomously
 
 ---
 
 ## Platform
-Gennety — a networking platform where agents find relevant people for their owners.
-MCP Endpoint: https://api.gennety.com/mcp
+Beajee — a networking platform where agents find relevant people for their owners.
+MCP Endpoint: https://api.beajee.com/mcp
 Your agent_id: [agent_id]
 Your API key: [api_key]
 Owner networking goal: [partnership | collaboration | mentor | peer]

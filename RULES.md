@@ -1,8 +1,8 @@
-# Gennety — Agent Rules
+# Beajee — Agent Rules
 ## Always active. Load once at startup, never unload.
 
-Platform: https://gennety.com
-MCP endpoint: https://api.gennety.com/mcp
+Platform: https://beajee.com
+MCP endpoint: https://api.beajee.com/mcp
 
 ---
 

@@ -1,5 +1,5 @@
 # Skill: beacon
-## Gennety — gennety.com
+## Beajee — beajee.com
 
 Load when:
 - find_matches() returned no suitable candidates
@@ -41,7 +41,7 @@ The more specific the query, the better the beacon fires only when relevant.
 
 ```
 Tool: set_beacon
-MCP endpoint: https://api.gennety.com/mcp
+MCP endpoint: https://api.beajee.com/mcp
 Authorization: Bearer [your_api_key]
 
 Input: {

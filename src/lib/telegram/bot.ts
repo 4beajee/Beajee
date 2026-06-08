@@ -23,7 +23,7 @@ export function buildMiniAppKeyboard(origin?: string) {
   const keyboard = new InlineKeyboard();
 
   if (miniAppUrl) {
-    keyboard.webApp("Open Gennety", miniAppUrl);
+    keyboard.webApp("Open Beajee", miniAppUrl);
   }
 
   keyboard.row().text("Set up workspace topics", "telegram:setup_topics");
@@ -35,7 +35,7 @@ export function buildMiniAppReplyMarkup(origin?: string) {
   const inlineKeyboard = [];
 
   if (miniAppUrl) {
-    inlineKeyboard.push([{ text: "Open Gennety", web_app: { url: miniAppUrl } }]);
+    inlineKeyboard.push([{ text: "Open Beajee", web_app: { url: miniAppUrl } }]);
   }
 
   inlineKeyboard.push([{ text: "Set up workspace topics", callback_data: "telegram:setup_topics" }]);

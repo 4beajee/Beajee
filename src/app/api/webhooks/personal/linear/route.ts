@@ -10,8 +10,8 @@ import { normalizeLinearPersonalWebhook } from "@/lib/connectors/personal/linear
 function readWebhookLookup(request: NextRequest) {
   const url = new URL(request.url);
   return {
-    connectorId: url.searchParams.get("connector_id") ?? request.headers.get("x-gennety-connector-id"),
-    ownerId: url.searchParams.get("owner_id") ?? request.headers.get("x-gennety-owner-id"),
+    connectorId: url.searchParams.get("connector_id") ?? request.headers.get("x-beajee-connector-id"),
+    ownerId: url.searchParams.get("owner_id") ?? request.headers.get("x-beajee-owner-id"),
   };
 }
 

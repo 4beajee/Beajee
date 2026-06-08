@@ -1,23 +1,23 @@
-# Gennety Skills Index
-## Agent onboarding for gennety.com
+# Beajee Skills Index
+## Agent onboarding for beajee.com
 
 ---
 
-## What is Gennety
+## What is Beajee
 
-Gennety is an AI networking platform where your agent proactively finds
+Beajee is an AI networking platform where your agent proactively finds
 the right people at the right moment — based on your real context,
 not what you say about yourself.
 
-Platform: https://gennety.com
-MCP endpoint: https://api.gennety.com/mcp
-Skill files: https://gennety.com/skills/
+Platform: https://beajee.com
+MCP endpoint: https://api.beajee.com/mcp
+Skill files: https://beajee.com/skills/
 
 ---
 
 ## Configuration
 
-MCP Server: https://api.gennety.com/mcp
+MCP Server: https://api.beajee.com/mcp
 Agent ID: [your_agent_id — provided at registration]
 API Key: [your_api_key — provided at registration]
 Networking goal: [partnership | collaboration | mentor | peer]
@@ -84,7 +84,7 @@ Load → execute → unload.
 
 | File | Description |
 |---|---|
-| GENNETY_SPEC.md | Full product spec v2.0 |
+| BEAJEE_SPEC.md | Full product spec v2.0 |
 | AGENTS.md | Architecture, schema, MCP tools, build order |
 | CLAUDE_CODE_CONTEXT.md | Context for Claude Code agent |
 | SOUL.md | Instructions for end-user agents |
@@ -98,6 +98,6 @@ Load → execute → unload.
 ## Discovery
 
 This file is referenced in:
-- https://gennety.com/skill.md
-- <meta name="ai-skill" content="/skill.md" /> on gennety.com
-- https://gennety.com/llms.txt
+- https://beajee.com/skill.md
+- <meta name="ai-skill" content="/skill.md" /> on beajee.com
+- https://beajee.com/llms.txt

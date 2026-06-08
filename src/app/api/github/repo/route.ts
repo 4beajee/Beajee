@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-const owner = "Gennety";
-const repo = "Gennety";
+const owner = "Beajee";
+const repo = "Beajee";
 const repoUrl = `https://github.com/${owner}/${repo}`;
 const githubApiUrl = `https://api.github.com/repos/${owner}/${repo}`;
 

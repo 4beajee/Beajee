@@ -1,13 +1,13 @@
 # Embedded UI / Second Layer Roadmap
 
 Status: high-level integration roadmap.
-Authoritative Specification: Refer to [SLACK_JIRA_INTEGRATION.md](file:///Users/pro/Desktop/Gennety/docs/SLACK_JIRA_INTEGRATION.md) for concrete database schemas, security protocols, API payload layouts, and webhook routing.
+Authoritative Specification: Refer to [SLACK_JIRA_INTEGRATION.md](file:///Users/pro/Desktop/Beajee/docs/SLACK_JIRA_INTEGRATION.md) for concrete database schemas, security protocols, API payload layouts, and webhook routing.
 
 ---
 
 ## Goal
 
-Make Gennety an augmentation layer inside existing work tools rather than forcing teams to move all collaboration into a standalone app.
+Make Beajee an augmentation layer inside existing work tools rather than forcing teams to move all collaboration into a standalone app.
 
 ## Priority Roadmap
 
@@ -18,7 +18,7 @@ Make Gennety an augmentation layer inside existing work tools rather than forcin
 ## Shared Architecture
 
 * The core backend, database (`prisma/schema.prisma`), MCP server, matching, and strategy services remain centralized in this repository.
-* Platform-specific adapters authenticate via OAuth, decrypt workspace tokens using AES-256-GCM, and convert host events into Gennety unified events.
+* Platform-specific adapters authenticate via OAuth, decrypt workspace tokens using AES-256-GCM, and convert host events into Beajee unified events.
 * UI payloads use host-native layouts (Slack Block Kit, Jira Forge UI).
 
-For the implementation details of Slack OAuth, Block Kit structures, Jira context panels, and Confluence page syncs, consult the [SLACK_JIRA_INTEGRATION.md](file:///Users/pro/Desktop/Gennety/docs/SLACK_JIRA_INTEGRATION.md) specification.
+For the implementation details of Slack OAuth, Block Kit structures, Jira context panels, and Confluence page syncs, consult the [SLACK_JIRA_INTEGRATION.md](file:///Users/pro/Desktop/Beajee/docs/SLACK_JIRA_INTEGRATION.md) specification.

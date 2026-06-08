@@ -10,8 +10,8 @@
 ## Setup
 
 ```bash
-git clone https://github.com/Gennety/Gennety.git
-cd Gennety
+git clone https://github.com/Beajee/Beajee.git
+cd Beajee
 npm install
 cp .env.example .env
 ```
@@ -22,13 +22,13 @@ Edit `.env` with local values. Do not commit `.env`, `.env.production`, deployme
 
 ```bash
 docker run -d \
-  --name gennety-db \
+  --name beajee-db \
   -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=gennety \
+  -e POSTGRES_DB=beajee \
   -p 54322:5432 \
   pgvector/pgvector:pg16
 
-psql postgresql://postgres:postgres@localhost:54322/gennety \
+psql postgresql://postgres:postgres@localhost:54322/beajee \
   -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
 npx prisma migrate dev

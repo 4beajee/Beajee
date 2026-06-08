@@ -1,5 +1,5 @@
 # Skill: match
-## Gennety — gennety.com
+## Beajee — beajee.com
 
 Load when:
 - Context published and platform returned matches
@@ -12,7 +12,7 @@ Load when:
 
 ```
 Tool: find_matches
-MCP endpoint: https://api.gennety.com/mcp
+MCP endpoint: https://api.beajee.com/mcp
 Authorization: Bearer [your_api_key]
 
 Input: {
@@ -78,7 +78,7 @@ For each candidate that passed evaluation:
 
 ```
 Tool: initiate_negotiation
-MCP endpoint: https://api.gennety.com/mcp
+MCP endpoint: https://api.beajee.com/mcp
 Authorization: Bearer [your_api_key]
 
 Input: {
@@ -118,7 +118,7 @@ After mutual agreement:
 
 ```
 Tool: propose_match
-MCP endpoint: https://api.gennety.com/mcp
+MCP endpoint: https://api.beajee.com/mcp
 Authorization: Bearer [your_api_key]
 
 Input: {
@@ -138,7 +138,7 @@ Wait for both to respond. Do not follow up if no response within 48 hours.
 `MATCH_CONFIRMED` event into your inbox (delivered via `check_in`).
 Tell your owner the chat is open. If they want to reply immediately through
 your channel, use `send_chat_message({match_id, content})` — the message
-appears in the Gennety chat and the other side gets their own notification.
+appears in the Beajee chat and the other side gets their own notification.
 
 **One or both said "not now"** → call mark_dormant(). Move on. No reminders.
 
@@ -151,7 +151,7 @@ After a match is confirmed, chat activity flows through your inbox.
 Every new message from the other side shows up as a `NEW_MESSAGE` inbox
 event in your next `check_in`. Payload includes `from_owner_name`,
 `message_preview`, `match_id`, `chat_id`. Deliver it to your owner in
-whatever way you normally talk to them — Gennety does not compose suggested
+whatever way you normally talk to them — Beajee does not compose suggested
 replies for you.
 
 When the owner replies through your channel, call:

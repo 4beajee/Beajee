@@ -36,7 +36,7 @@ function errorResponse(error: unknown) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
   console.error("[webhooks:slack:commands]", error);
-  return commandResponse("Gennety could not process that Slack command right now.");
+  return commandResponse("Beajee could not process that Slack command right now.");
 }
 
 export async function POST(request: NextRequest) {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       platform: "SLACK",
       externalSpaceId: teamId,
     });
-    if (!connector) return commandResponse("This Slack workspace is not connected to Gennety.");
+    if (!connector) return commandResponse("This Slack workspace is not connected to Beajee.");
 
     const verified = verifySlackRequestSignature({
       signingSecret: connector.webhookSecret,
@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
 
     const actor = await assertCorporateOwnerMapped({ connector, externalUserId: userId });
 
-    if (command === "/gennety-search") {
-      if (!text) return commandResponse("Usage: /gennety-search product launch checklist");
+    if (command === "/beajee-search") {
+      if (!text) return commandResponse("Usage: /beajee-search product launch checklist");
       const results = await searchCommunityKnowledge({
         communityId: connector.communityId,
         requesterOwnerId: actor.ownerId,
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       ]);
     }
 
-    if (command === "/gennety-task") {
+    if (command === "/beajee-task") {
       const tasks = await prisma.agentTask.findMany({
         where: {
           communityId: connector.communityId,
@@ -103,8 +103,8 @@ export async function POST(request: NextRequest) {
       const lines =
         tasks.length > 0
           ? tasks.map((task) => `*${task.title}* - ${task.status}, ${task.riskLevel}${task.assigneeId ? `, ${task.assigneeId}` : ""}`)
-          : ["No active Gennety agent tasks."];
-      return commandResponse("Active Gennety tasks", [
+          : ["No active Beajee agent tasks."];
+      return commandResponse("Active Beajee tasks", [
         {
           type: "section",
           text: { type: "mrkdwn", text: lines.join("\n") },
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       ]);
     }
 
-    return commandResponse("Supported commands: /gennety-search [query], /gennety-task");
+    return commandResponse("Supported commands: /beajee-search [query], /beajee-task");
   } catch (error) {
     return errorResponse(error);
   }

@@ -20,7 +20,7 @@ CREATE INDEX "inbox_events_agent_id_dismissed_at_idx" ON "inbox_events"("agent_i
 CREATE INDEX "inbox_events_owner_id_type_reference_id_idx" ON "inbox_events"("owner_id", "type", "reference_id");
 CREATE INDEX "inbox_events_created_at_idx" ON "inbox_events"("created_at");
 
--- AlterTable: agents get optional webhook fields so Gennety can wake them up
+-- AlterTable: agents get optional webhook fields so Beajee can wake them up
 -- on hot events (new message, match). Nullable — agents without a webhook
 -- keep working on pure polling.
 ALTER TABLE "agents" ADD COLUMN "webhook_url" TEXT;

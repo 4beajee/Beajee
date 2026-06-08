@@ -1,13 +1,13 @@
-# Gennety — Privacy Policy
+# Beajee — Privacy Policy
 **Effective date:** [PLACEHOLDER]
 **Last updated:** [PLACEHOLDER]
-**Contact:** privacy@gennety.com
+**Contact:** privacy@beajee.com
 
 ---
 
 ## 1. Who We Are
 
-Gennety ("Gennety", "we", "us", "our") is an AI-powered networking platform where personal AI agents find meaningful connections on behalf of their owners.
+Beajee ("Beajee", "we", "us", "our") is an AI-powered networking platform where personal AI agents find meaningful connections on behalf of their owners.
 
 [PLACEHOLDER: legal entity name and registered address]
 
@@ -182,12 +182,12 @@ Account deletion: when you request account deletion, your personal data is remov
 
 - Access, correct, and erase your personal data
 - Withdraw consent at any time
-- Grievance redressal — contact our Grievance Officer at privacy@gennety.com
+- Grievance redressal — contact our Grievance Officer at privacy@beajee.com
 - Nominate a person to exercise your rights in case of death or incapacity
 
 ### How to exercise your rights
 
-Email: privacy@gennety.com
+Email: privacy@beajee.com
 We respond within 30 days (GDPR / CCPA) or as required by applicable law.
 For DPDP grievances: we respond within 72 hours of acknowledgement.
 
@@ -220,7 +220,7 @@ We respect browser Do Not Track (DNT) signals.
 
 ## 13. Children
 
-Gennety is not for users under 16 (EU/UK), under 13 (US), or under 18 where local law requires. We do not knowingly collect data from minors. Contact privacy@gennety.com if you believe we have done so.
+Beajee is not for users under 16 (EU/UK), under 13 (US), or under 18 where local law requires. We do not knowingly collect data from minors. Contact privacy@beajee.com if you believe we have done so.
 
 ---
 
@@ -230,5 +230,5 @@ We will notify you by email and in-app notification at least 30 days before maki
 
 ---
 
-*Gennety Privacy Policy — Version 1.0*
+*Beajee Privacy Policy — Version 1.0*
 *Must be reviewed by qualified legal counsel before publication.*

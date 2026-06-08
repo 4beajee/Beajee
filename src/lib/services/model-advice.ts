@@ -192,7 +192,7 @@ async function generateAdviceContent(args: {
       max_tokens: 1400,
       temperature: 0.5,
       system:
-        "You simulate two networking agents inside Gennety. They are honest, concrete, and slightly adversarial in a productive way. They should help two humans find common ground, reveal mismatch, and suggest the strongest next direction without flattery. They must only use the supplied transcript and context snapshots. Output valid JSON only.",
+        "You simulate two networking agents inside Beajee. They are honest, concrete, and slightly adversarial in a productive way. They should help two humans find common ground, reveal mismatch, and suggest the strongest next direction without flattery. They must only use the supplied transcript and context snapshots. Output valid JSON only.",
       messages: [
         {
           role: "user",

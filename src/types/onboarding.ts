@@ -38,7 +38,7 @@ export const OnboardingSchema = z.object({
     message: "A valid country is required",
   }),
   privacyConsent: z.boolean().refine((v) => v === true, {
-    message: "Privacy consent is required to use Gennety",
+    message: "Privacy consent is required to use Beajee",
   }),
   researchConsent: z.boolean().optional(),
   excludedTopics: z.array(z.string().max(100)).max(20).optional(),

@@ -45,7 +45,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-[#050505]">
         <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b border-[#1a1a1a] bg-[#050505]/80 px-4 backdrop-blur-xl lg:hidden">
           <a href={landingUrl || "/"} className="text-base font-bold text-white">
-            Gennety
+            Beajee
           </a>
           <Link
             href="/settings"
@@ -66,7 +66,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               href={landingUrl || "/"}
               className="mb-10 px-3 text-xl font-bold text-white"
             >
-              Gennety
+              Beajee
             </a>
 
             <nav className="flex flex-1 flex-col gap-1">

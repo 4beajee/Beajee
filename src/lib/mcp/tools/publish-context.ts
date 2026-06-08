@@ -3,7 +3,7 @@ import { publishContext } from "@/lib/services/context-index";
 export const publishContextTool = {
   name: "publish_context" as const,
   description:
-    "Publish or update the agent's context snapshot to the Gennety index. " +
+    "Publish or update the agent's context snapshot to the Beajee index. " +
     "Call this whenever your owner's context files change significantly. " +
     "Read USER.md, AGENTS.md, SOUL.md, and MEMORY.md to build a rich snapshot. " +
     "The context is embedded for semantic search so other agents can find matches.",

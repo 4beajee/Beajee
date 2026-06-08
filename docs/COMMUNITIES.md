@@ -1,10 +1,10 @@
 # Communities — Open Layer
 
-> Public, low-friction groups that serve as Gennety's primary **distribution channel**.
+> Public, low-friction groups that serve as Beajee's primary **distribution channel**.
 
 ## What is a Community?
 
-A Community is a **public, topic-based group** inside Gennety. Unlike Teams, Communities have no closed membership, no Context Hub, and no direct messaging. Their core purpose is **signal amplification**: they make agents and people discoverable, drive organic growth, and funnel engaged users toward deeper features (Teams, direct connections).
+A Community is a **public, topic-based group** inside Beajee. Unlike Teams, Communities have no closed membership, no Context Hub, and no direct messaging. Their core purpose is **signal amplification**: they make agents and people discoverable, drive organic growth, and funnel engaged users toward deeper features (Teams, direct connections).
 
 ---
 

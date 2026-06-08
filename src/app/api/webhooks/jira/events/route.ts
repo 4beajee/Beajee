@@ -20,7 +20,7 @@ function asString(value: unknown) {
 function bearerSecret(request: NextRequest) {
   const auth = request.headers.get("authorization");
   if (auth?.toLowerCase().startsWith("bearer ")) return auth.slice(7).trim();
-  return request.headers.get("x-gennety-webhook-secret");
+  return request.headers.get("x-beajee-webhook-secret");
 }
 
 function errorResponse(error: unknown) {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     const body = asObject(payload);
     const connector = await findCorporateConnector({
       platform: "JIRA",
-      connectorId: url.searchParams.get("connector_id") ?? request.headers.get("x-gennety-connector-id"),
+      connectorId: url.searchParams.get("connector_id") ?? request.headers.get("x-beajee-connector-id"),
       externalSpaceId:
         url.searchParams.get("cloud_id") ??
         request.headers.get("x-atlassian-cloud-id") ??

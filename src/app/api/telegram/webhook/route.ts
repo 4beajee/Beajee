@@ -120,7 +120,7 @@ async function handleStart(message: TelegramMessage, origin?: string) {
   await sendTelegramMessageToChat({
     chatId: message.chat.id,
     text:
-      "<b>Welcome to Gennety</b>\n" +
+      "<b>Welcome to Beajee</b>\n" +
       "Your personal agent can find relevant people, negotiate introductions, and bring you one clear question: Meet?",
     replyMarkup: buildMiniAppReplyMarkup(origin),
   });
@@ -131,7 +131,7 @@ async function handleTopicSetup(message: TelegramMessage, telegramUserId?: numbe
 
   const ownerId = await ownerIdFromTelegramUser(telegramUserId ?? message.from?.id);
   if (!ownerId) {
-    return "Open the Mini App first so Gennety can connect this Telegram account.";
+    return "Open the Mini App first so Beajee can connect this Telegram account.";
   }
 
   if (message.chat.type === "private") {
@@ -153,8 +153,8 @@ async function handleTopicSetup(message: TelegramMessage, telegramUserId?: numbe
     chatId: message.chat.id,
     text:
       result.mode === "topics"
-        ? `<b>Gennety topics ready</b>\nCreated ${result.created.length} private workspace topic(s).`
-        : `<b>Gennety single-channel mode</b>\n${result.reason}`,
+        ? `<b>Beajee topics ready</b>\nCreated ${result.created.length} private workspace topic(s).`
+        : `<b>Beajee single-channel mode</b>\n${result.reason}`,
     ...(message.message_thread_id ? { messageThreadId: message.message_thread_id } : {}),
   });
 

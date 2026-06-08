@@ -97,7 +97,7 @@ async function readFirstExisting(paths: string[]) {
   }
 
   return [
-    "# Gennety Community Agent",
+    "# Beajee Community Agent",
     "",
     "Operate from the published community context, respect owner consent, and keep high-risk actions human-gated.",
   ].join("\n");
@@ -143,7 +143,7 @@ function compileInstructionText(args: {
   generatedAt: Date;
 }) {
   return [
-    "# Gennety Dynamic AgentInstruction",
+    "# Beajee Dynamic AgentInstruction",
     "",
     `Agent: ${args.externalAgentId}`,
     `Community: ${args.communityName}`,

@@ -119,7 +119,7 @@ Rules:
 - currentWork is one specific thing they are building right now (1–2 sentences).
 - lookingFor is one specific kind of person with a specific reason (1 sentence).
 - Expertise is 3–5 concrete skills, not "programming" but "Rust async runtimes" or "PyTorch distributed training."
-- Emails use the pattern firstname.lastname<number>@demo.gennety.com where number is 2-digit.
+- Emails use the pattern firstname.lastname<number>@demo.beajee.com where number is 2-digit.
 - agentId is "agent_demo_<slug>_<nnn>" where slug is lowercased firstname and nnn is a sequential index.
 - personalityTraits: 2–4 adjectives used later to condition the auto-responder.
 - responseTempo: fast = replies in minutes, slow = hours.

@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
     );
     const baseUrl = request.headers.get("x-forwarded-proto") && request.headers.get("host")
       ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get("host")}`
-      : process.env.NEXTAUTH_URL ?? "https://gennety.com";
+      : process.env.NEXTAUTH_URL ?? "https://beajee.com";
     const setupPrompt = buildSetupPrompt(agent.agentId, agent.apiKey, baseUrl, locale);
 
     return NextResponse.json({

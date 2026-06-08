@@ -35,7 +35,7 @@ export function normalizeConfiguredObsidianItems(config: Record<string, unknown>
     const id = asString(value.id) ?? asString(value.path);
     const title = asString(value.title) ?? asString(value.path);
     const content = asString(value.content);
-    if (!id || !title || !content || !content.includes("#gennety-sync")) return [];
+    if (!id || !title || !content || !content.includes("#beajee-sync")) return [];
     return [
       {
         externalId: `obsidian:${id}:${hashText(content)}`,
@@ -86,7 +86,7 @@ export async function fetchObsidianPersonalItems(config: Record<string, unknown>
       if (fileStat.size > MAX_OBSIDIAN_FILE_BYTES) continue;
 
       const content = await readFile(filePath, "utf8");
-      if (!content.includes("#gennety-sync")) continue;
+      if (!content.includes("#beajee-sync")) continue;
 
       const relativePath = path.relative(root, filePath);
       items.push({

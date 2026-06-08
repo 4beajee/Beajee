@@ -1,5 +1,6 @@
 services:
   app:
+    image: beajee-app
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,7 +11,7 @@ services:
         NEXTAUTH_URL: ${NEXTAUTH_URL}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
         NEXT_PUBLIC_LANDING_URL: ${NEXT_PUBLIC_LANDING_URL}
-    container_name: gennety-app
+    container_name: beajee-app
     restart: unless-stopped
     ports:
       - "3000:3000"

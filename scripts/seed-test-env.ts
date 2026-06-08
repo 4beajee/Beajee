@@ -30,7 +30,7 @@ function generateApiKey(): string {
 const testUsers = [
   {
     name: "Elena Vasquez",
-    email: "elena.test@gennety.dev",
+    email: "elena.test@beajee.dev",
     agentId: "agent_elena_test_001",
     goal: "collaboration" as const,
     displayName: "Elena",
@@ -58,7 +58,7 @@ const testUsers = [
   },
   {
     name: "Daniel Park",
-    email: "daniel.test@gennety.dev",
+    email: "daniel.test@beajee.dev",
     agentId: "agent_daniel_test_002",
     goal: "partnership" as const,
     displayName: "Daniel",
@@ -86,7 +86,7 @@ const testUsers = [
   },
   {
     name: "Anya Petrova",
-    email: "anya.test@gennety.dev",
+    email: "anya.test@beajee.dev",
     agentId: "agent_anya_test_003",
     goal: "peer" as const,
     displayName: "Anya",
@@ -114,7 +114,7 @@ const testUsers = [
   },
   {
     name: "Marco Rossi",
-    email: "marco.test@gennety.dev",
+    email: "marco.test@beajee.dev",
     agentId: "agent_marco_test_004",
     goal: "collaboration" as const,
     displayName: "Marco",
@@ -142,7 +142,7 @@ const testUsers = [
   },
   {
     name: "Jia Wei",
-    email: "jia.test@gennety.dev",
+    email: "jia.test@beajee.dev",
     agentId: "agent_jia_test_005",
     goal: "mentor" as const,
     displayName: "Jia",
@@ -170,7 +170,7 @@ const testUsers = [
   },
   {
     name: "Olivia Bennett",
-    email: "olivia.test@gennety.dev",
+    email: "olivia.test@beajee.dev",
     agentId: "agent_olivia_test_006",
     goal: "peer" as const,
     displayName: "Olivia",
@@ -302,7 +302,7 @@ async function seedTestEnv() {
     myOwner = await prisma.owner.findFirst({
       where: {
         onboarded: true,
-        email: { not: { contains: ".test@gennety.dev" } },
+        email: { not: { contains: ".test@beajee.dev" } },
       },
       orderBy: { createdAt: "asc" },
     });

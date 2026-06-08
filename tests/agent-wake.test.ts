@@ -3,7 +3,7 @@
  *   node --import tsx tests/agent-wake.test.ts
  *
  * Verifies that server-side wake webhook validation rejects local/private
- * targets before Gennety tries to POST to them.
+ * targets before Beajee tries to POST to them.
  */
 
 import assert from "node:assert/strict";

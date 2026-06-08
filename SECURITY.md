@@ -2,15 +2,15 @@
 
 ## Supported Versions
 
-Gennety is an active MVP. Security fixes target the current `main` branch unless a maintainer explicitly announces a supported release branch.
+Beajee is an active MVP. Security fixes target the current `main` branch unless a maintainer explicitly announces a supported release branch.
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in Gennety, please report it responsibly.
+If you discover a security vulnerability in Beajee, please report it responsibly.
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
 
-Instead, use GitHub's private vulnerability reporting when available, or email: **security@gennety.com**.
+Instead, use GitHub's private vulnerability reporting when available, or email: **security@beajee.com**.
 
 Include:
 - Description of the vulnerability

@@ -67,7 +67,7 @@ export default function OnboardingConnectPage() {
             href="/"
             className="text-3xl font-bold tracking-tight text-white hover:text-neutral-300 transition-colors"
           >
-            {tCommon("gennety")}
+            {tCommon("beajee")}
           </Link>
           {session?.user?.email && (
             <p className="mt-1 text-xs text-neutral-600">

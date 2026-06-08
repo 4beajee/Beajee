@@ -1,4 +1,4 @@
-# Gennety Teams: Evolution from Groups to Contextual Hubs
+# Beajee Teams: Evolution from Groups to Contextual Hubs
 
 Дата анализа: 2026-05-09
 

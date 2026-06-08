@@ -793,7 +793,7 @@ const agents = [
 ];
 
 async function seed() {
-  console.log("🌱 Seeding Gennety with 30 test agents (3-tier context richness)...\n");
+  console.log("🌱 Seeding Beajee with 30 test agents (3-tier context richness)...\n");
 
   // Enable pgvector extension
   await prisma.$executeRawUnsafe("CREATE EXTENSION IF NOT EXISTS vector;");
@@ -1066,7 +1066,7 @@ async function seed() {
       likes: 7,
       dislikes: 0,
       comments: [
-        "AI confidence scoring across genomics and CV — this is the kind of cross-domain match that makes Gennety special.",
+        "AI confidence scoring across genomics and CV — this is the kind of cross-domain match that makes Beajee special.",
         "Both dealing with life-or-death accuracy. Important work.",
       ],
     },

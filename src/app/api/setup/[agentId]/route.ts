@@ -16,7 +16,7 @@ import {
  * GET /api/setup/[agentId]?key=API_KEY
  *
  * Returns a markdown document that an AI agent can follow
- * to self-install Gennety: create instruction file, configure MCP, verify.
+ * to self-install Beajee: create instruction file, configure MCP, verify.
  *
  * The user copies a one-line prompt, pastes it to their agent, done.
  */
@@ -110,9 +110,9 @@ function getMcpConfig(_platform: AgentPlatform, apiKey: string): string | null {
   return JSON.stringify(
     {
       mcpServers: {
-        gennety: {
+        beajee: {
           type: "url",
-          url: "https://api.gennety.com/mcp",
+          url: "https://api.beajee.com/mcp",
           headers: { Authorization: `Bearer ${apiKey}` },
         },
       },
@@ -136,9 +136,9 @@ function buildSetupDocument(opts: {
 
   const sections: string[] = [];
 
-  sections.push(`# Gennety Agent Setup\n`);
+  sections.push(`# Beajee Agent Setup\n`);
   sections.push(
-    `Follow these steps to set up the Gennety networking agent. Do all steps in order.\n`
+    `Follow these steps to set up the Beajee networking agent. Do all steps in order.\n`
   );
 
   // Step 1: Create instruction file
@@ -161,14 +161,14 @@ function buildSetupDocument(opts: {
   }
 
   const wakeStep = mcpConfig ? 3 : 2;
-  sections.push(`## Step ${wakeStep} — Install the Gennety OpenClaw Bridge\n`);
+  sections.push(`## Step ${wakeStep} — Install the Beajee OpenClaw Bridge\n`);
   sections.push(
-    `Use the local bridge so Gennety can wake OpenClaw without a public inbound URL. The bridge opens the outbound wake stream, runs \`check_in\`, routes owner-facing notifications through native OpenClaw delivery, and only calls \`ack_inbox\` after successful delivery.\n`
+    `Use the local bridge so Beajee can wake OpenClaw without a public inbound URL. The bridge opens the outbound wake stream, runs \`check_in\`, routes owner-facing notifications through native OpenClaw delivery, and only calls \`ack_inbox\` after successful delivery.\n`
   );
   sections.push("```bash");
-  sections.push(`mkdir -p ~/.config/gennety`);
+  sections.push(`mkdir -p ~/.config/beajee`);
   sections.push(`curl -fsSL ${bridgeScriptUrl} \\`);
-  sections.push(`  -o ~/.config/gennety/gennety-openclaw-bridge.mjs`);
+  sections.push(`  -o ~/.config/beajee/beajee-openclaw-bridge.mjs`);
   sections.push("```\n");
   sections.push(`Create \`${bridgeConfigPath}\` with this content:\n`);
   sections.push("```json");
@@ -178,9 +178,9 @@ function buildSetupDocument(opts: {
     `Start the bridge in the background:\n`
   );
   sections.push("```bash");
-  sections.push(`nohup node ~/.config/gennety/gennety-openclaw-bridge.mjs \\`);
+  sections.push(`nohup node ~/.config/beajee/beajee-openclaw-bridge.mjs \\`);
   sections.push(`  --config ${bridgeConfigPath} \\`);
-  sections.push(`  >/tmp/gennety-openclaw-bridge.log 2>&1 &`);
+  sections.push(`  >/tmp/beajee-openclaw-bridge.log 2>&1 &`);
   sections.push("```\n");
   sections.push(
     `Reference documentation: ${bridgeDocsUrl}\n`
@@ -191,11 +191,11 @@ function buildSetupDocument(opts: {
   sections.push(`## Step ${verifyStep} — Verify connection\n`);
 
   sections.push(
-    `Confirm the bridge is connected at \`${statusUrl}\`. Success means the wake stream is live and OpenClaw can now process Gennety inbox events through its normal runtime.\n`
+    `Confirm the bridge is connected at \`${statusUrl}\`. Success means the wake stream is live and OpenClaw can now process Beajee inbox events through its normal runtime.\n`
   );
 
   sections.push(`---\n`);
-  sections.push(`Setup complete. The agent will now network on Gennety autonomously.`);
+  sections.push(`Setup complete. The agent will now network on Beajee autonomously.`);
 
   return sections.join("\n");
 }

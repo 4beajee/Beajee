@@ -76,8 +76,8 @@ function createFakePrisma() {
 
   const db = {
     owners: [
-      { id: "owner_alpha", name: "Alpha Owner", email: "alpha@gennety.test" },
-      { id: "owner_beta", name: "Beta Owner", email: "beta@gennety.test" },
+      { id: "owner_alpha", name: "Alpha Owner", email: "alpha@beajee.test" },
+      { id: "owner_beta", name: "Beta Owner", email: "beta@beajee.test" },
     ] as Row[],
     agents: [
       {

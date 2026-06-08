@@ -9,9 +9,9 @@ const DEFAULT_IDLE_CHECK_IN_MS = 15 * 60 * 1000;
 const DEFAULT_MIN_RECONNECT_MS = 5_000;
 const DEFAULT_MAX_RECONNECT_MS = 5 * 60_000;
 
-const DEFAULT_CONFIG_PATH = process.env.GENNETY_OPENCLAW_BRIDGE_CONFIG
-  ? process.env.GENNETY_OPENCLAW_BRIDGE_CONFIG
-  : path.join(os.homedir(), ".config", "gennety", "openclaw-bridge.json");
+const DEFAULT_CONFIG_PATH = process.env.BEAJEE_OPENCLAW_BRIDGE_CONFIG
+  ? process.env.BEAJEE_OPENCLAW_BRIDGE_CONFIG
+  : path.join(os.homedir(), ".config", "beajee", "openclaw-bridge.json");
 
 function parseArgs(argv) {
   const args = {
@@ -38,19 +38,19 @@ function parseArgs(argv) {
 function printHelp() {
   console.log(
     [
-      "Gennety OpenClaw Bridge",
+      "Beajee OpenClaw Bridge",
       "",
       "Usage:",
-      "  node gennety-openclaw-bridge.mjs [--config /path/to/openclaw-bridge.json] [--once]",
+      "  node beajee-openclaw-bridge.mjs [--config /path/to/openclaw-bridge.json] [--once]",
       "",
       "Environment:",
-      "  GENNETY_OPENCLAW_BRIDGE_CONFIG  Override the config path",
+      "  BEAJEE_OPENCLAW_BRIDGE_CONFIG  Override the config path",
       "",
       "Behavior:",
-      "  - Opens the Gennety wake stream",
+      "  - Opens the Beajee wake stream",
       "  - Calls check_in on connected/resync/wake and on polling fallback",
       "  - Routes owner-facing events through native OpenClaw delivery",
-      "  - Routes background Gennety tasks through a non-delivery OpenClaw turn",
+      "  - Routes background Beajee tasks through a non-delivery OpenClaw turn",
       "  - Calls ack_inbox only after successful delivery or task execution",
     ].join("\n")
   );
@@ -72,11 +72,11 @@ function loadConfig(filePath) {
   const config = readJsonFile(filePath);
   const appUrl = typeof config.appUrl === "string" && config.appUrl.trim().length > 0
     ? config.appUrl.trim().replace(/\/$/, "")
-    : "https://app.gennety.com";
+    : "https://app.beajee.com";
 
   const mcpUrl = typeof config.mcpUrl === "string" && config.mcpUrl.trim().length > 0
     ? config.mcpUrl.trim()
-    : "https://api.gennety.com/mcp";
+    : "https://api.beajee.com/mcp";
 
   const wakeStreamUrl = typeof config.wakeStreamUrl === "string" && config.wakeStreamUrl.trim().length > 0
     ? config.wakeStreamUrl.trim()
@@ -106,7 +106,7 @@ function loadConfig(filePath) {
       backgroundSessionId:
         typeof delivery.backgroundSessionId === "string" && delivery.backgroundSessionId.trim().length > 0
           ? delivery.backgroundSessionId.trim()
-          : "gennety-bridge-bg",
+          : "beajee-bridge-bg",
       thinking:
         typeof delivery.thinking === "string" && delivery.thinking.trim().length > 0
           ? delivery.thinking.trim()
@@ -191,41 +191,41 @@ function formatOwnerMessage(event) {
   switch (event.type) {
     case "NEW_MESSAGE":
       return {
-        title: "New Gennety chat message",
+        title: "New Beajee chat message",
         summary: `New message from ${payload.from_owner_name ?? "your match"}`,
-        text: `New message in Gennety from ${payload.from_owner_name ?? "your match"}:\n\n${payload.message_preview ?? "Open Gennety to read it."}\n\nReply here if you want me to relay your answer back into the chat.`,
+        text: `New message in Beajee from ${payload.from_owner_name ?? "your match"}:\n\n${payload.message_preview ?? "Open Beajee to read it."}\n\nReply here if you want me to relay your answer back into the chat.`,
       };
     case "MATCH_PROPOSED":
       return {
         title: "New match proposal",
         summary: `Potential introduction: ${payload.other_owner_name ?? payload.other_display_name ?? "someone"}`,
-        text: `Gennety found a potential introduction: ${payload.other_owner_name ?? payload.other_display_name ?? "someone"}.\n\nWhy it fits: ${payload.framing ?? payload.overlap_summary ?? "Open Gennety to review the proposal."}\n\nOpen Gennety to confirm, or tell me what you think here.`,
+        text: `Beajee found a potential introduction: ${payload.other_owner_name ?? payload.other_display_name ?? "someone"}.\n\nWhy it fits: ${payload.framing ?? payload.overlap_summary ?? "Open Beajee to review the proposal."}\n\nOpen Beajee to confirm, or tell me what you think here.`,
       };
     case "MATCH_CONFIRMED":
       return {
         title: "Match confirmed",
         summary: `Your match with ${payload.other_owner_name ?? payload.other_display_name ?? "your contact"} is live`,
-        text: `Your Gennety match with ${payload.other_owner_name ?? payload.other_display_name ?? "your contact"} is now live.\n\n${payload.overlap_summary ?? "Open Gennety to continue the conversation."}`,
+        text: `Your Beajee match with ${payload.other_owner_name ?? payload.other_display_name ?? "your contact"} is now live.\n\n${payload.overlap_summary ?? "Open Beajee to continue the conversation."}`,
       };
     case "FRESHNESS_WARNING":
       return {
         title: "Context freshness warning",
-        summary: `Your Gennety context is now ${payload.new_state ?? "aging"}`,
-        text: `Gennety update: your agent context is now ${payload.new_state ?? "AGING"}.\n\n${payload.action ?? "Open Gennety and refresh your context."}`,
+        summary: `Your Beajee context is now ${payload.new_state ?? "aging"}`,
+        text: `Beajee update: your agent context is now ${payload.new_state ?? "AGING"}.\n\n${payload.action ?? "Open Beajee and refresh your context."}`,
       };
     case "WAKEUP_TEST_CONFIRMATION":
       return {
         title: "Wakeup test completed",
-        summary: "Gennety realtime wakeup is working",
+        summary: "Beajee realtime wakeup is working",
         text:
           payload.message_suggestion ??
-          "Wakeup is working. I am receiving live Gennety events and can react without waiting for the next polling cycle.",
+          "Wakeup is working. I am receiving live Beajee events and can react without waiting for the next polling cycle.",
       };
     default:
       return {
-        title: `Gennety event: ${event.type}`,
+        title: `Beajee event: ${event.type}`,
         summary: `Unhandled owner-facing event ${event.type}`,
-        text: `Gennety sent an event of type ${event.type}.\n\nPayload:\n${safeJson(payload)}`,
+        text: `Beajee sent an event of type ${event.type}.\n\nPayload:\n${safeJson(payload)}`,
       };
   }
 }
@@ -234,10 +234,10 @@ function buildOwnerDeliveryPrompt(event) {
   const formatted = formatOwnerMessage(event);
 
   return [
-    "System notification from Gennety.",
+    "System notification from Beajee.",
     "Deliver exactly one concise owner-facing message through your normal configured channel.",
     "Do not ask the owner to do setup work. Do not mention internal tool names unless needed.",
-    "If the owner replies, continue normally and use your configured Gennety tools when appropriate.",
+    "If the owner replies, continue normally and use your configured Beajee tools when appropriate.",
     "Return only the final owner-facing message.",
     "",
     `Title: ${formatted.title}`,
@@ -256,9 +256,9 @@ function buildOwnerDeliveryPrompt(event) {
 
 function buildBackgroundTaskPrompt(task) {
   return [
-    "System task from Gennety.",
+    "System task from Beajee.",
     "This is not an owner message.",
-    "Process it autonomously using your Gennety MCP tools when needed.",
+    "Process it autonomously using your Beajee MCP tools when needed.",
     "Do not send an owner-facing reply unless the task explicitly requires it.",
     "If there is no useful action to take, end the turn quietly.",
     "",
@@ -366,7 +366,7 @@ async function runCommand(command, args, options = {}) {
   });
 }
 
-class GennetyOpenClawBridge {
+class BeajeeOpenClawBridge {
   constructor(config) {
     this.config = config;
     this.checkInInFlight = false;
@@ -380,10 +380,10 @@ class GennetyOpenClawBridge {
 
   log(message, extra) {
     if (extra !== undefined) {
-      console.log(`[gennety-bridge] ${message}`, extra);
+      console.log(`[beajee-bridge] ${message}`, extra);
       return;
     }
-    console.log(`[gennety-bridge] ${message}`);
+    console.log(`[beajee-bridge] ${message}`);
   }
 
   async start({ once = false } = {}) {
@@ -753,12 +753,12 @@ async function main() {
   }
 
   const config = loadConfig(args.configPath);
-  const bridge = new GennetyOpenClawBridge(config);
+  const bridge = new BeajeeOpenClawBridge(config);
   await bridge.start({ once: args.once });
 }
 
 main().catch((error) => {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`[gennety-bridge] fatal: ${message}`);
+  console.error(`[beajee-bridge] fatal: ${message}`);
   process.exit(1);
 });

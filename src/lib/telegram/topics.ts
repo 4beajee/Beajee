@@ -215,7 +215,7 @@ export async function sendOwnerTopicMessage(args: {
     const definition = TOPIC_DEFINITIONS.find((item) => item.key === args.topic);
     await sendTelegramMessageToChat({
       chatId: owner.telegramId,
-      text: `<b>${escapeTelegramHtml(definition?.fallbackHeader ?? "Gennety")}</b>\n${args.text}`,
+      text: `<b>${escapeTelegramHtml(definition?.fallbackHeader ?? "Beajee")}</b>\n${args.text}`,
       replyMarkup: args.replyMarkup,
     });
     return { sent: true, mode: "dm" };

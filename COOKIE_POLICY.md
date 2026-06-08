@@ -1,4 +1,4 @@
-# Gennety — Cookie Policy
+# Beajee — Cookie Policy
 **Effective date:** [PLACEHOLDER]
 **Last updated:** [PLACEHOLDER]
 
@@ -12,7 +12,7 @@ Cookies are small text files placed on your device when you visit a website. The
 
 ## Cookies We Use
 
-Gennety uses only **strictly necessary cookies** — cookies that are essential for the website to function. Without these cookies, the service cannot operate.
+Beajee uses only **strictly necessary cookies** — cookies that are essential for the website to function. Without these cookies, the service cannot operate.
 
 | Cookie | Purpose | Duration |
 |--------|---------|----------|
@@ -42,7 +42,7 @@ Our infrastructure providers (Supabase for database, Vercel for hosting) may set
 
 ## Managing Cookies
 
-You can control cookies through your browser settings. Note that disabling session cookies will prevent you from logging in to Gennety.
+You can control cookies through your browser settings. Note that disabling session cookies will prevent you from logging in to Beajee.
 
 Most browsers allow you to:
 - View cookies that have been set
@@ -61,8 +61,8 @@ We respect browser Do Not Track (DNT) signals. When DNT is enabled, we do not se
 
 We will notify you of any material changes to this policy via email or in-app notification.
 
-**Contact:** privacy@gennety.com
+**Contact:** privacy@beajee.com
 
 ---
 
-*Gennety Cookie Policy — Version 1.0*
+*Beajee Cookie Policy — Version 1.0*

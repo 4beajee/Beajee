@@ -46,8 +46,8 @@ export function buildNetworkingGoalChangePayload(args: {
 }): Prisma.InputJsonValue {
   const from = args.previousGoal ?? "unset";
   const syncLine = args.contextUpdated
-    ? "Gennety already re-scored your published context using the new goal."
-    : "Gennety did not rewrite your published context automatically.";
+    ? "Beajee already re-scored your published context using the new goal."
+    : "Beajee did not rewrite your published context automatically.";
   const republishLine = args.requiresAgentRepublish
     ? "Update your local SOUL/context snapshot and call publish_context so your own strategy and future beacon queries reflect the new goal."
     : "Update your local SOUL/context snapshot so your own strategy stays aligned with the platform goal.";

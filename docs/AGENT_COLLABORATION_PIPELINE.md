@@ -2,10 +2,10 @@
 
 Status: authoritative future Team Framework spec.
 Cross-references:
-- [MODEL_ROUTING.md](file:///Users/pro/Desktop/Gennety/docs/MODEL_ROUTING.md) (model selection and cost tracking)
-- [TEAM_FRAMEWORK.md](file:///Users/pro/Desktop/Gennety/docs/TEAM_FRAMEWORK.md) (AgentInstruction parameters, dynamic autonomy)
-- [TELEGRAM_INTEGRATION.md](file:///Users/pro/Desktop/Gennety/docs/TELEGRAM_INTEGRATION.md) (Block E - Team Space notifications)
-- [CONTEXTUAL_HUBS_TECHNICAL_PLAN.md](file:///Users/pro/Desktop/Gennety/docs/CONTEXTUAL_HUBS_TECHNICAL_PLAN.md) (Contextual Hub schema)
+- [MODEL_ROUTING.md](file:///Users/pro/Desktop/Beajee/docs/MODEL_ROUTING.md) (model selection and cost tracking)
+- [TEAM_FRAMEWORK.md](file:///Users/pro/Desktop/Beajee/docs/TEAM_FRAMEWORK.md) (AgentInstruction parameters, dynamic autonomy)
+- [TELEGRAM_INTEGRATION.md](file:///Users/pro/Desktop/Beajee/docs/TELEGRAM_INTEGRATION.md) (Block E - Team Space notifications)
+- [CONTEXTUAL_HUBS_TECHNICAL_PLAN.md](file:///Users/pro/Desktop/Beajee/docs/CONTEXTUAL_HUBS_TECHNICAL_PLAN.md) (Contextual Hub schema)
 
 ---
 
@@ -152,7 +152,7 @@ Assigns an existing task to another agent.
     requestedBy: string; // The delegating Agent ID
   }
   ```
-* **Constraint Check**: Checks if the delegating agent has appropriate Autonomy Phase rights (configured in `AgentRoleConfig`, see [TEAM_FRAMEWORK.md](file:///Users/pro/Desktop/Gennety/docs/TEAM_FRAMEWORK.md)). If in Phase 1, delegation fails immediately.
+* **Constraint Check**: Checks if the delegating agent has appropriate Autonomy Phase rights (configured in `AgentRoleConfig`, see [TEAM_FRAMEWORK.md](file:///Users/pro/Desktop/Beajee/docs/TEAM_FRAMEWORK.md)). If in Phase 1, delegation fails immediately.
 
 ### 4.4 `request_approval`
 Explicit request for human verification of a task.
@@ -172,6 +172,6 @@ Explicit request for human verification of a task.
 
 The weekly strategy engine (`src/lib/services/community-strategy.ts`) is upgraded to use these models:
 1. **Data Ingestion**: The system reads all `TeamActivityLog` rows created during the week.
-2. **Debate Stage**: Agents representing team members use `resolveModel("strategy_participant")` to evaluate their own progress (refer to `AgentSelfAssessment` in [TEAM_FRAMEWORK.md](file:///Users/pro/Desktop/Gennety/docs/TEAM_FRAMEWORK.md)).
+2. **Debate Stage**: Agents representing team members use `resolveModel("strategy_participant")` to evaluate their own progress (refer to `AgentSelfAssessment` in [TEAM_FRAMEWORK.md](file:///Users/pro/Desktop/Beajee/docs/TEAM_FRAMEWORK.md)).
 3. **Synthesis & Judging**: A Judge Agent uses `resolveModel("strategy_judge")` to review logs, verify claims, resolve conflicts, and output `CommunityActionProposal` objects.
 4. **Action Proposal**: Generated proposals are mapped as `AgentTask` entries flagged with `requiresHitl = true` for owner sign-off.

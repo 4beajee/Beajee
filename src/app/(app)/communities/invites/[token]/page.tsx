@@ -47,7 +47,7 @@ export default function CommunityInvitePage() {
     <div className={pageFrameClass}>
       <PageHeader
         title="Community invite"
-        subtitle="Accept this personal invitation to join a private Gennety group."
+        subtitle="Accept this personal invitation to join a private Beajee group."
       />
 
       <Surface className="px-6 py-8 text-center">

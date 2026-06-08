@@ -2,15 +2,15 @@
 
 Status: authoritative future Corporate Layer integration spec.
 Cross-references:
-- [MODEL_ROUTING.md](file:///Users/pro/Desktop/Gennety/docs/MODEL_ROUTING.md) (model tasks for parsing conversation contexts)
-- [CONTEXT_HUB_CONNECTORS.md](file:///Users/pro/Desktop/Gennety/docs/CONTEXT_HUB_CONNECTORS.md) (AES-256-GCM token encryption standard)
-- [AGENT_COLLABORATION_PIPELINE.md](file:///Users/pro/Desktop/Gennety/docs/AGENT_COLLABORATION_PIPELINE.md) (Human-in-the-Loop approval events, `AgentTask` transitions)
+- [MODEL_ROUTING.md](file:///Users/pro/Desktop/Beajee/docs/MODEL_ROUTING.md) (model tasks for parsing conversation contexts)
+- [CONTEXT_HUB_CONNECTORS.md](file:///Users/pro/Desktop/Beajee/docs/CONTEXT_HUB_CONNECTORS.md) (AES-256-GCM token encryption standard)
+- [AGENT_COLLABORATION_PIPELINE.md](file:///Users/pro/Desktop/Beajee/docs/AGENT_COLLABORATION_PIPELINE.md) (Human-in-the-Loop approval events, `AgentTask` transitions)
 
 ---
 
 ## 1. Goal and Concepts
 
-To enable enterprise team adoption, Gennety must integrate directly into corporate environments. The corporate layer acts as a bridge, allowing agents and human managers to coordinate within the channels they already use. 
+To enable enterprise team adoption, Beajee must integrate directly into corporate environments. The corporate layer acts as a bridge, allowing agents and human managers to coordinate within the channels they already use.
 
 This specification covers:
 1. **Slack integration**: Interactive App Home dashboard, Block Kit notification routing, and interactive task approval buttons.
@@ -60,7 +60,7 @@ The App Home displays an interactive view generated using Slack Block Kit JSON:
 
 ### 3.2 Block Kit Notification & Interactive Approvals
 When a critical operation requires human sign-off (e.g., `requiresHitl = true` in task pipeline):
-1. Gennety posts a structured Block Kit message to the configured Slack administration channel:
+1. Beajee posts a structured Block Kit message to the configured Slack administration channel:
    ```json
    {
      "blocks": [
@@ -92,20 +92,20 @@ When a critical operation requires human sign-off (e.g., `requiresHitl = true` i
    }
    ```
 2. The Owner clicks "Approve". Slack sends an interactive payload to `/api/webhooks/slack/actions`.
-3. Gennety verifies the Slack signature, decrypts the workspace token, maps the Slack user to an `Owner` ID, updates `AgentTask.status` to `ASSIGNED`, and posts a success confirmation back to Slack.
+3. Beajee verifies the Slack signature, decrypts the workspace token, maps the Slack user to an `Owner` ID, updates `AgentTask.status` to `ASSIGNED`, and posts a success confirmation back to Slack.
 
 ### 3.3 Slash Commands
-* `/gennety-search [query]`: Invokes cosine-similarity search on `CommunityKnowledgeChunk` (filtered by the user's workspace roles) and returns matching bullet points.
-* `/gennety-task`: Lists all active tasks assigned to agents within the community.
+* `/beajee-search [query]`: Invokes cosine-similarity search on `CommunityKnowledgeChunk` (filtered by the user's workspace roles) and returns matching bullet points.
+* `/beajee-task`: Lists all active tasks assigned to agents within the community.
 
 ---
 
 ## 4. Jira & Confluence Integration Blueprint
 
 ### 4.1 Jira Forge Context Panel
-Gennety exposes a custom Forge panel in Jira Issue Details:
-1. When an issue page is loaded, Jira Forge requests the Gennety context match endpoint: `/api/jira/issue-context`.
-2. Gennety extracts ticket title/description, calls `resolveModel("hub_search_answer")` to retrieve related items in the Context Hub, and lists suggested documentation or resolution paths.
+Beajee exposes a custom Forge panel in Jira Issue Details:
+1. When an issue page is loaded, Jira Forge requests the Beajee context match endpoint: `/api/jira/issue-context`.
+2. Beajee extracts ticket title/description, calls `resolveModel("hub_search_answer")` to retrieve related items in the Context Hub, and lists suggested documentation or resolution paths.
 
 ### 4.2 Ticket Event Webhook
 Updates to Jira issues (Status transition, comments) send webhooks to `/api/webhooks/jira/events`. These events are normalized and appended to `TeamActivityLog` under the `"task"` category.

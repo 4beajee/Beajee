@@ -477,7 +477,7 @@ export async function runCommunityStrategySession(communityId: string, scheduled
 
     await recordComputeUsage({
       category: "COMMUNITY_STRATEGY",
-      provider: "gennety",
+      provider: "beajee",
       model: "deterministic-judge-v1",
       operation: "community_strategy_session",
       communityId,

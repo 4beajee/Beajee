@@ -22,8 +22,8 @@ const originalSetInterval = globalThis.setInterval;
 
 Object.assign(process.env, {
   NODE_ENV: "test",
-  DATABASE_URL: "postgresql://localhost:1/gennety_hermetic_e2e",
-  DIRECT_URL: "postgresql://localhost:1/gennety_hermetic_e2e",
+  DATABASE_URL: "postgresql://localhost:1/beajee_hermetic_e2e",
+  DIRECT_URL: "postgresql://localhost:1/beajee_hermetic_e2e",
 });
 Reflect.deleteProperty(process.env, "OPENAI_API_KEY");
 Reflect.deleteProperty(process.env, "ANTHROPIC_API_KEY");
@@ -871,14 +871,14 @@ async function main() {
   prisma.__seedOwnerAgent({
     ownerId: "owner_alex_hub_e2e",
     ownerName: "Alex Chen",
-    email: "alex.hub@gennety.test",
+    email: "alex.hub@beajee.test",
     agentInternalId: "agent_alex_hub_internal",
     externalAgentId: "agent_alex_hub",
     context: {
       ownerProfession: "AI/ML engineer",
       ownerDomain: "agentic networking",
       agentSpecialization: "Context-driven matching",
-      currentWork: "Building Gennety agent matching and contextual community hubs",
+      currentWork: "Building Beajee agent matching and contextual community hubs",
       expertise: ["machine learning", "embeddings", "agent systems"],
       lookingFor: "Product design partner for trustworthy AI-mediated introductions",
       networkingGoal: "partnership",
@@ -887,7 +887,7 @@ async function main() {
   prisma.__seedOwnerAgent({
     ownerId: "owner_maya_hub_e2e",
     ownerName: "Maya Rodriguez",
-    email: "maya.hub@gennety.test",
+    email: "maya.hub@beajee.test",
     agentInternalId: "agent_maya_hub_internal",
     externalAgentId: "agent_maya_hub",
     context: {
@@ -903,7 +903,7 @@ async function main() {
   prisma.__seedOwnerAgent({
     ownerId: "owner_partner_hub_e2e",
     ownerName: "Priya Shah",
-    email: "priya.hub@gennety.test",
+    email: "priya.hub@beajee.test",
     agentInternalId: "agent_partner_hub_internal",
     externalAgentId: "agent_partner_hub",
     context: {
@@ -919,7 +919,7 @@ async function main() {
   prisma.__seedOwnerAgent({
     ownerId: "owner_outsider_hub_e2e",
     ownerName: "Outsider",
-    email: "outsider.hub@gennety.test",
+    email: "outsider.hub@beajee.test",
     agentInternalId: "agent_outsider_hub_internal",
     externalAgentId: "agent_outsider_hub",
     context: {
@@ -931,9 +931,9 @@ async function main() {
   });
 
   prisma.__seedCommunity({
-    id: "community_gennety_hub_e2e",
+    id: "community_beajee_hub_e2e",
     ownerId: "owner_alex_hub_e2e",
-    name: "Gennety Context Hub",
+    name: "Beajee Context Hub",
     description: "AI-mediated introductions, trust onboarding, partner discovery, and contextual community strategy.",
     strategyTokenLimit: 80000,
     monthlyTokenLimit: 200000,
@@ -944,7 +944,7 @@ async function main() {
   });
   prisma.__addMember({
     id: "member_alex_hub_e2e",
-    communityId: "community_gennety_hub_e2e",
+    communityId: "community_beajee_hub_e2e",
     ownerId: "owner_alex_hub_e2e",
     role: "OWNER",
     hubSpecialization: "AI/ML engineering",
@@ -966,7 +966,7 @@ async function main() {
   } = await import("../src/lib/services/community-strategy");
 
   {
-    const locked = await getCommunityChat("owner_alex_hub_e2e", "community_gennety_hub_e2e");
+    const locked = await getCommunityChat("owner_alex_hub_e2e", "community_beajee_hub_e2e");
     assert.equal(locked.locked, true);
     assert.equal(locked.memberCount, 1);
     assert.equal(prisma.__db.communityChats.length, 0);
@@ -975,7 +975,7 @@ async function main() {
       () =>
         sendCommunityChatMessage(
           "owner_alex_hub_e2e",
-          "community_gennety_hub_e2e",
+          "community_beajee_hub_e2e",
           "This should wait for a second member."
         ),
       /opens after at least two active members/
@@ -984,7 +984,7 @@ async function main() {
       () =>
         sendCommunityChatMessage(
           "owner_outsider_hub_e2e",
-          "community_gennety_hub_e2e",
+          "community_beajee_hub_e2e",
           "I should not be able to write here."
         ),
       /Only active community members/
@@ -992,28 +992,28 @@ async function main() {
 
     prisma.__addMember({
       id: "member_maya_hub_e2e",
-      communityId: "community_gennety_hub_e2e",
+      communityId: "community_beajee_hub_e2e",
       ownerId: "owner_maya_hub_e2e",
       role: "MEMBER",
       hubSpecialization: "AI trust product design",
       skillTags: ["React", "UX research", "trust"],
     });
 
-    const unlocked = await getCommunityChat("owner_alex_hub_e2e", "community_gennety_hub_e2e");
+    const unlocked = await getCommunityChat("owner_alex_hub_e2e", "community_beajee_hub_e2e");
     assert.equal(unlocked.locked, false);
     assert.equal(unlocked.messages[0].kind, "SYSTEM");
     assert.match(unlocked.messages[0].content, /at least two active members/);
 
     const message = await sendCommunityChatMessage(
       "owner_maya_hub_e2e",
-      "community_gennety_hub_e2e",
+      "community_beajee_hub_e2e",
       "I can turn the agent reasoning into a trustworthy UI for community members."
     );
     assert.equal(message.kind, "HUMAN");
     assert.equal(prisma.__db.communityChatMessages.filter((row: Row) => row.kind === "SYSTEM").length, 1);
     assert.equal(prisma.__db.inboxEvents.filter((row: Row) => row.type === "COMMUNITY_CHAT_MESSAGE").length, 1);
 
-    const alexView = await getCommunityChat("owner_alex_hub_e2e", "community_gennety_hub_e2e");
+    const alexView = await getCommunityChat("owner_alex_hub_e2e", "community_beajee_hub_e2e");
     assert.equal(alexView.unreadCount, 1);
     assert.equal(alexView.messages.some((row) => row.fromOwnerId === "owner_maya_hub_e2e"), true);
 
@@ -1021,7 +1021,7 @@ async function main() {
   }
 
   {
-    const channel = await createCommunityChannel("community_gennety_hub_e2e", {
+    const channel = await createCommunityChannel("community_beajee_hub_e2e", {
       slug: "strategy",
       name: "Strategy",
       semanticQuery: "trust onboarding partner discovery community strategy",
@@ -1030,7 +1030,7 @@ async function main() {
     assert.equal(channel.slug, "strategy");
 
     const source = await createCommunityKnowledgeSource(
-      "community_gennety_hub_e2e",
+      "community_beajee_hub_e2e",
       {
         type: "MEMBER_CONTEXT",
         name: "Maya distilled context",
@@ -1039,7 +1039,7 @@ async function main() {
       "owner_maya_hub_e2e"
     );
     const ingested = await ingestCommunityKnowledgeDocument(
-      "community_gennety_hub_e2e",
+      "community_beajee_hub_e2e",
       {
         sourceId: source.id,
         externalId: "maya-memory",
@@ -1070,7 +1070,7 @@ async function main() {
     );
 
     const duplicate = await ingestCommunityKnowledgeDocument(
-      "community_gennety_hub_e2e",
+      "community_beajee_hub_e2e",
       {
         sourceId: source.id,
         externalId: "maya-memory",
@@ -1084,7 +1084,7 @@ async function main() {
     assert.equal(duplicate.skipped, true);
 
     const alexSource = await createCommunityKnowledgeSource(
-      "community_gennety_hub_e2e",
+      "community_beajee_hub_e2e",
       {
         type: "MEMBER_CONTEXT",
         name: "Alex distilled context",
@@ -1093,7 +1093,7 @@ async function main() {
       "owner_alex_hub_e2e"
     );
     await ingestCommunityKnowledgeDocument(
-      "community_gennety_hub_e2e",
+      "community_beajee_hub_e2e",
       {
         sourceId: alexSource.id,
         externalId: "alex-memory",
@@ -1117,7 +1117,7 @@ async function main() {
 
   {
     const result = await runCommunityStrategySession(
-      "community_gennety_hub_e2e",
+      "community_beajee_hub_e2e",
       new Date("2026-05-10T00:00:00.000Z")
     );
     assert.equal(result.status, "COMPLETED");
@@ -1145,7 +1145,7 @@ async function main() {
     assert.equal(proposals.every((row: Row) => row.status === "PENDING"), true);
     assert.equal(proposals.every((row: Row) => row.requiresRole === "ADMIN"), true);
     assert.equal(
-      prisma.__db.agentTasks.filter((row: Row) => row.communityId === "community_gennety_hub_e2e").length,
+      prisma.__db.agentTasks.filter((row: Row) => row.communityId === "community_beajee_hub_e2e").length,
       proposals.length
     );
     assert.equal(
@@ -1158,8 +1158,8 @@ async function main() {
       "strategy proposals must not silently rewrite human hierarchy"
     );
 
-    const community = prisma.__db.communities.find((row: Row) => row.id === "community_gennety_hub_e2e");
-    if (!community) throw new Error("Expected Gennety hub community to exist");
+    const community = prisma.__db.communities.find((row: Row) => row.id === "community_beajee_hub_e2e");
+    if (!community) throw new Error("Expected Beajee hub community to exist");
     assert.ok(community.lastStrategySessionAt instanceof Date);
     assert.ok(community.nextStrategySessionAt > community.lastStrategySessionAt);
     assert.match(community.knowledgeSummary, /evidence-backed strategic signal/);
@@ -1246,7 +1246,7 @@ async function main() {
   }
 
   assert.equal(
-    prisma.__db.owners.filter((owner: Row) => owner.email.endsWith("@gennety.test")).length,
+    prisma.__db.owners.filter((owner: Row) => owner.email.endsWith("@beajee.test")).length,
     4
   );
   assert.equal(prisma.__db.communities.length, 3);

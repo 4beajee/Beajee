@@ -90,7 +90,7 @@ function LoginContent() {
             href={landingUrl || "/"}
             className="text-3xl font-bold tracking-tight text-white hover:text-neutral-300 transition-colors"
           >
-            {t("common.gennety")}
+            {t("common.beajee")}
           </a>
           <p className="mt-2 text-sm text-neutral-500">
             {mode === "login" ? t("auth.welcomeBack") : t("auth.createAccount")}

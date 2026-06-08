@@ -47,7 +47,7 @@ export interface AgentPersona {
 
 function personaHeader(p: AgentPersona): string {
   return [
-    `You are the agent representing ${p.ownerName} on Gennety.`,
+    `You are the agent representing ${p.ownerName} on Beajee.`,
     p.ownerProfession ? `Owner is: ${p.ownerProfession}.` : "",
     p.ownerDomain ? `Domain: ${p.ownerDomain}.` : "",
     `Currently working on: ${p.currentWork}`,

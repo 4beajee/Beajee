@@ -449,7 +449,7 @@ function Nav() {
     <nav className="sticky top-0 z-40 backdrop-blur-xl bg-[#050505]/80 border-b border-[#1a1a1a]">
       <div className="flex items-center justify-between px-6 h-16 max-w-5xl mx-auto">
         <Link href="/" className="text-lg font-semibold text-white">
-          {t("common.gennety")}
+          {t("common.beajee")}
         </Link>
         <div className="flex items-center gap-6">
           <Link

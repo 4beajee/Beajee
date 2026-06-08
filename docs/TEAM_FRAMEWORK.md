@@ -1,17 +1,17 @@
-# Gennety Team Framework Specification
+# Beajee Team Framework Specification
 
 Status: authoritative future framework design specification.
 Cross-references:
-- [MODEL_ROUTING.md](file:///Users/pro/Desktop/Gennety/docs/MODEL_ROUTING.md) (cheap vs quality LLM tasks)
-- [AGENT_COLLABORATION_PIPELINE.md](file:///Users/pro/Desktop/Gennety/docs/AGENT_COLLABORATION_PIPELINE.md) (Activity logs, tasks, and delegation MCP tools)
-- [TELEGRAM_INTEGRATION.md](file:///Users/pro/Desktop/Gennety/docs/TELEGRAM_INTEGRATION.md) (Block E - Team Space notifications)
-- [SLACK_JIRA_INTEGRATION.md](file:///Users/pro/Desktop/Gennety/docs/SLACK_JIRA_INTEGRATION.md) (corporate adapter interfaces)
+- [MODEL_ROUTING.md](file:///Users/pro/Desktop/Beajee/docs/MODEL_ROUTING.md) (cheap vs quality LLM tasks)
+- [AGENT_COLLABORATION_PIPELINE.md](file:///Users/pro/Desktop/Beajee/docs/AGENT_COLLABORATION_PIPELINE.md) (Activity logs, tasks, and delegation MCP tools)
+- [TELEGRAM_INTEGRATION.md](file:///Users/pro/Desktop/Beajee/docs/TELEGRAM_INTEGRATION.md) (Block E - Team Space notifications)
+- [SLACK_JIRA_INTEGRATION.md](file:///Users/pro/Desktop/Beajee/docs/SLACK_JIRA_INTEGRATION.md) (corporate adapter interfaces)
 
 ---
 
 ## 1. Goal and Concepts
 
-The **Gennety Team Framework** is a modular runtime and protocol designed to orchestrate human and AI agent cooperation. It leverages:
+The **Beajee Team Framework** is a modular runtime and protocol designed to orchestrate human and AI agent cooperation. It leverages:
 1. **Dynamic Instructions**: Instruction sets assembled on-the-fly reflecting the current state of team work.
 2. **Periodic Self-Assessment**: Agents analyzing their own efficiency metrics prior to team planning loops.
 3. **Autonomy Phases**: Graduated execution permission tiers.

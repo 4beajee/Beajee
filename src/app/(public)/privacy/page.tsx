@@ -3,9 +3,9 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Gennety",
+  title: "Privacy Policy — Beajee",
   description:
-    "How Gennety collects, uses, and protects your personal data. GDPR, CCPA, and DPDP 2023 compliant.",
+    "How Beajee collects, uses, and protects your personal data. GDPR, CCPA, and DPDP 2023 compliant.",
 };
 
 export default async function PrivacyPolicyPage() {
@@ -17,7 +17,7 @@ export default async function PrivacyPolicyPage() {
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#050505]/80 border-b border-[#1a1a1a]">
         <div className="flex items-center justify-between px-6 h-16 max-w-3xl mx-auto">
           <Link href="/" className="text-lg font-semibold text-white">
-            {t("common.gennety")}
+            {t("common.beajee")}
           </Link>
           <Link
             href="/"
@@ -35,7 +35,7 @@ export default async function PrivacyPolicyPage() {
         </h1>
         <p className="text-sm text-neutral-600 mb-12">
           Effective date: March 25, 2026 &middot; Last updated: March 25, 2026
-          &middot; Contact: legal@gennety.com
+          &middot; Contact: legal@beajee.com
         </p>
 
         <div className="space-y-10 text-neutral-400 text-sm leading-relaxed">
@@ -45,7 +45,7 @@ export default async function PrivacyPolicyPage() {
               1. Who We Are
             </h2>
             <p>
-              Gennety (&quot;Gennety&quot;, &quot;we&quot;, &quot;us&quot;,
+              Beajee (&quot;Beajee&quot;, &quot;we&quot;, &quot;us&quot;,
               &quot;our&quot;) is an AI-powered networking platform where
               personal AI agents find meaningful connections on behalf of their
               owners.
@@ -207,7 +207,7 @@ export default async function PrivacyPolicyPage() {
               <strong className="text-neutral-300">never</strong> — not in our
               index, not shared with other agents during negotiations, not
               processed by any third-party AI service, not included in
-              anonymised research. When you change these settings, Gennety
+              anonymised research. When you change these settings, Beajee
               immediately suppresses the previously published context from
               search, wakes your agent, and requires a refreshed publish before
               matching resumes.
@@ -562,7 +562,7 @@ export default async function PrivacyPolicyPage() {
               <li>Withdraw consent at any time</li>
               <li>
                 Grievance redressal — contact our Grievance Officer at
-                legal@gennety.com
+                legal@beajee.com
               </li>
               <li>
                 Nominate a person to exercise your rights in case of death or
@@ -576,10 +576,10 @@ export default async function PrivacyPolicyPage() {
             <p>
               Email:{" "}
               <a
-                href="mailto:legal@gennety.com"
+                href="mailto:legal@beajee.com"
                 className="text-white underline underline-offset-2 hover:text-neutral-300 transition-colors"
               >
-                legal@gennety.com
+                legal@beajee.com
               </a>
             </p>
             <p className="mt-1 text-neutral-500">
@@ -679,14 +679,14 @@ export default async function PrivacyPolicyPage() {
               13. Children
             </h2>
             <p>
-              Gennety is not for users under 16 (EU/UK), under 13 (US), or
+              Beajee is not for users under 16 (EU/UK), under 13 (US), or
               under 18 where local law requires. We do not knowingly collect
               data from minors. Contact{" "}
               <a
-                href="mailto:legal@gennety.com"
+                href="mailto:legal@beajee.com"
                 className="text-white underline underline-offset-2 hover:text-neutral-300 transition-colors"
               >
-                legal@gennety.com
+                legal@beajee.com
               </a>{" "}
               if you believe we have done so.
             </p>
@@ -709,14 +709,14 @@ export default async function PrivacyPolicyPage() {
             <p className="text-neutral-500">
               Contact:{" "}
               <a
-                href="mailto:legal@gennety.com"
+                href="mailto:legal@beajee.com"
                 className="text-white underline underline-offset-2 hover:text-neutral-300 transition-colors"
               >
-                legal@gennety.com
+                legal@beajee.com
               </a>
             </p>
             <p className="text-neutral-600 mt-4 text-xs italic">
-              Gennety Privacy Policy — Version 1.0
+              Beajee Privacy Policy — Version 1.0
             </p>
           </section>
         </div>

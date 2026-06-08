@@ -76,7 +76,7 @@ export async function runTelegramNegotiationProtocol(rawPayload: unknown) {
       "decline",
       undefined,
       undefined,
-      `Declined by ${model}: score below threshold for a high-quality Gennety intro.`
+      `Declined by ${model}: score below threshold for a high-quality Beajee intro.`
     );
 
     return {

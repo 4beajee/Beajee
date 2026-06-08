@@ -433,7 +433,7 @@ export default function ChatPage() {
   const showFloatingAdviceTip =
     showModelAdviceNote && dismissedAdviceTipKey !== adviceTipKey;
   const matchReasonDismissKey = chat
-    ? `gennety-chat-match-reason:${matchId}:${chat.overlapSummary}`
+    ? `beajee-chat-match-reason:${matchId}:${chat.overlapSummary}`
     : null;
 
   useEffect(() => {
@@ -555,7 +555,7 @@ export default function ChatPage() {
     const link = document.createElement("a");
     const dateSuffix = new Date().toISOString().slice(0, 10);
     link.href = objectUrl;
-    link.download = `gennety-chat-${matchId}-${dateSuffix}.txt`;
+    link.download = `beajee-chat-${matchId}-${dateSuffix}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

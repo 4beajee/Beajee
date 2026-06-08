@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 
 const POLL_INTERVAL = 15_000; // 15 seconds
-const TITLE_BASE = "Gennety";
+const TITLE_BASE = "Beajee";
 
 export function useUnreadMessages() {
   const { status } = useSession();
@@ -145,10 +145,10 @@ export function useUnreadMessages() {
             Notification.permission === "granted"
           ) {
             const diff = newCount - prev;
-            new Notification("Gennety", {
+            new Notification("Beajee", {
               body: `You have ${diff} new message${diff > 1 ? "s" : ""}`,
               icon: "/icon-192.png",
-              tag: "gennety-unread", // Collapse multiple notifications
+              tag: "beajee-unread", // Collapse multiple notifications
             });
           }
         }

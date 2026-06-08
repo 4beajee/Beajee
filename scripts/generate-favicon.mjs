@@ -2,7 +2,7 @@ import sharp from "sharp";
 import { readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
 
-const INPUT = resolve("gennety icon.jpg");
+const INPUT = resolve("beajee icon.jpg");
 const sizes = {
   "public/icon.png": 512,
   "public/apple-icon.png": 180,

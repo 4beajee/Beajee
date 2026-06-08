@@ -2,7 +2,7 @@
  * Monitoring & data-collection tests — run with:
  *   npx tsx tests/monitoring.test.ts
  *
- * These tests answer one question: "Does Gennety really poll every agent
+ * These tests answer one question: "Does Beajee really poll every agent
  * for active requests on a fixed cadence, and does it record the data?"
  *
  * Strategy: hermetic — no DB, no network. We verify:

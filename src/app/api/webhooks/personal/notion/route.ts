@@ -13,14 +13,14 @@ import { normalizeNotionPersonalWebhook } from "@/lib/connectors/personal/notion
 function readWebhookLookup(request: NextRequest) {
   const url = new URL(request.url);
   return {
-    connectorId: url.searchParams.get("connector_id") ?? request.headers.get("x-gennety-connector-id"),
-    ownerId: url.searchParams.get("owner_id") ?? request.headers.get("x-gennety-owner-id"),
+    connectorId: url.searchParams.get("connector_id") ?? request.headers.get("x-beajee-connector-id"),
+    ownerId: url.searchParams.get("owner_id") ?? request.headers.get("x-beajee-owner-id"),
   };
 }
 
 function isVerifiedNotionWebhook(request: NextRequest, bodyText: string, secret: string | null) {
   return (
-    verifySharedWebhookSecret(request.headers.get("x-gennety-webhook-secret"), secret) ||
+    verifySharedWebhookSecret(request.headers.get("x-beajee-webhook-secret"), secret) ||
     verifySha256WebhookSignature({
       secret,
       body: bodyText,

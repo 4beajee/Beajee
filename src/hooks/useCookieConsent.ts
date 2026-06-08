@@ -68,7 +68,7 @@ function getStoredConsent(): StoredConsent | null {
 
 function getConsentSource(): "website" | "app" {
   if (typeof window === "undefined") return "website";
-  return window.location.hostname === "app.gennety.com" ? "app" : "website";
+  return window.location.hostname === "app.beajee.com" ? "app" : "website";
 }
 
 function getPageUrl(): string | null {

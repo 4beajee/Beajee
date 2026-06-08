@@ -1,10 +1,10 @@
 # Support
 
-Gennety is an active MVP. The fastest way to get help depends on the type of request.
+Beajee is an active MVP. The fastest way to get help depends on the type of request.
 
 ## Questions
 
-Use [GitHub Discussions](https://github.com/Gennety/Gennety/discussions) for:
+Use [GitHub Discussions](https://github.com/Beajee/Beajee/discussions) for:
 
 - Local development questions
 - Architecture discussion
@@ -13,7 +13,7 @@ Use [GitHub Discussions](https://github.com/Gennety/Gennety/discussions) for:
 
 ## Bugs
 
-Use [GitHub Issues](https://github.com/Gennety/Gennety/issues) for reproducible bugs. Include:
+Use [GitHub Issues](https://github.com/Beajee/Beajee/issues) for reproducible bugs. Include:
 
 - Steps to reproduce
 - Expected behavior

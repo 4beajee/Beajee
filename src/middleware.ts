@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 
 const APP_HOST = process.env.NEXT_PUBLIC_APP_URL
   ? new URL(process.env.NEXT_PUBLIC_APP_URL).host
-  : null; // e.g. "app.gennety.com"
+  : null; // e.g. "app.beajee.com"
 
 const LANDING_URL = process.env.NEXT_PUBLIC_LANDING_URL ?? "";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
@@ -84,7 +84,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (APP_HOST && !isLocalDev && host !== APP_HOST && isAppRoute(pathname)) {
-    // Someone hit gennety.com/login or gennety.com/matches → redirect to app subdomain
+    // Someone hit beajee.com/login or beajee.com/matches → redirect to app subdomain
     return NextResponse.redirect(new URL(pathname + request.nextUrl.search, APP_URL));
   }
 
@@ -93,7 +93,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (APP_HOST && LANDING_URL && !isLocalDev && host === APP_HOST && isLandingRoute(pathname)) {
-    // Someone hit app.gennety.com/privacy or public agent docs → redirect to landing
+    // Someone hit app.beajee.com/privacy or public agent docs → redirect to landing
     return NextResponse.redirect(new URL(pathname + request.nextUrl.search, LANDING_URL));
   }
 

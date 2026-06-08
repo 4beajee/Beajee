@@ -3,8 +3,8 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy — Gennety",
-  description: "How Gennety uses cookies and your privacy choices.",
+  title: "Cookie Policy — Beajee",
+  description: "How Beajee uses cookies and your privacy choices.",
 };
 
 export default async function CookiePolicyPage() {
@@ -16,7 +16,7 @@ export default async function CookiePolicyPage() {
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#050505]/80 border-b border-[#1a1a1a]">
         <div className="flex items-center justify-between px-6 h-16 max-w-3xl mx-auto">
           <Link href="/" className="text-lg font-semibold text-white">
-            {t("common.gennety")}
+            {t("common.beajee")}
           </Link>
           <Link
             href="/"
@@ -50,7 +50,7 @@ export default async function CookiePolicyPage() {
           <section>
             <h2 className="text-lg font-medium text-white mb-3">Cookies We Use</h2>
             <p className="mb-4">
-              Gennety uses only <strong className="text-neutral-300">strictly necessary cookies</strong> —
+              Beajee uses only <strong className="text-neutral-300">strictly necessary cookies</strong> —
               cookies that are essential for the website to function. Without these cookies,
               the service cannot operate.
             </p>
@@ -118,7 +118,7 @@ export default async function CookiePolicyPage() {
             <h2 className="text-lg font-medium text-white mb-3">Managing Cookies</h2>
             <p className="mb-3">
               You can control cookies through your browser settings. Note that disabling
-              session cookies will prevent you from logging in to Gennety.
+              session cookies will prevent you from logging in to Beajee.
             </p>
             <p>Most browsers allow you to:</p>
             <ul className="list-disc list-inside mt-2 space-y-1 text-neutral-500">
@@ -152,14 +152,14 @@ export default async function CookiePolicyPage() {
             <p className="text-neutral-500">
               Contact:{" "}
               <a
-                href="mailto:legal@gennety.com"
+                href="mailto:legal@beajee.com"
                 className="text-white underline underline-offset-2 hover:text-neutral-300 transition-colors"
               >
-                legal@gennety.com
+                legal@beajee.com
               </a>
             </p>
             <p className="text-neutral-600 mt-4 text-xs italic">
-              Gennety Cookie Policy — Version 1.0
+              Beajee Cookie Policy — Version 1.0
             </p>
           </section>
         </div>
