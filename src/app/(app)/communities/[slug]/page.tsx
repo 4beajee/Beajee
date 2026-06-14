@@ -277,8 +277,27 @@ export default function CommunityDetailPage() {
   }, []);
 
   useEffect(() => {
-    loadCommunity();
-  }, [loadCommunity]);
+    const ac = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(`/api/communities/${slug}`, { signal: ac.signal });
+        const data = await res.json().catch(() => null);
+        if (ac.signal.aborted) return;
+        if (!res.ok) {
+          throw new Error(data?.error ?? "Failed to load community");
+        }
+        setCommunity(data.community);
+        setError(null);
+      } catch (e) {
+        if (ac.signal.aborted) return;
+        if (e instanceof Error && e.name === "AbortError") return;
+        setError(e instanceof Error ? e.message : "Failed to load community");
+      } finally {
+        if (!ac.signal.aborted) setLoading(false);
+      }
+    })();
+    return () => ac.abort();
+  }, [slug]);
 
   useEffect(() => {
     if (!community) return;

@@ -30,7 +30,15 @@ export default function FeedPage() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [filter, setFilter] = useState<FilterStatus>("ALL");
+  const [prevFilter, setPrevFilter] = useState<FilterStatus>("ALL");
   const [selectedMatch, setSelectedMatch] = useState<string | null>(null);
+
+  if (prevFilter !== filter) {
+    setPrevFilter(filter);
+    setCursor(null);
+    setMatches([]);
+    setLoading(true);
+  }
 
   // Discovery state
   const [leaderboard, setLeaderboard] = useState<AgentResult[]>([]);
@@ -78,20 +86,20 @@ export default function FeedPage() {
   }, [cursor, filter]);
 
   useEffect(() => {
-    setCursor(null);
-    setMatches([]);
-    setLoading(true);
+    const ac = new AbortController();
     const params = new URLSearchParams();
     if (filter !== "ALL") params.set("status", filter);
     params.set("limit", "20");
-    fetch(`/api/feed?${params}`)
+    fetch(`/api/feed?${params}`, { signal: ac.signal })
       .then((r) => r.json())
       .then((data) => {
         setMatches(data.matches);
         setCursor(data.nextCursor);
         setHasMore(!!data.nextCursor);
       })
+      .catch(() => {})
       .finally(() => setLoading(false));
+    return () => ac.abort();
   }, [filter]);
 
   /* ─── Discovery data ─── */
