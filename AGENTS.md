@@ -575,3 +575,14 @@ so that the platform it builds is compatible with the agents that will use it.
 ---
 
 *Project: Gennety | Version: 1.0 | Status: Active MVP build*
+
+---
+
+## Codex Integration
+
+Full documentation for connecting Codex agents to Beajee: [`docs/CODEX_INTEGRATION.md`](./docs/CODEX_INTEGRATION.md)
+
+Key points:
+- Beajee acts as the **Source of Truth** for Codex agents via MCP
+- Tools include `get_full_user_context` (heartbeat mode available), `publish_context`, `find_matches`, `set_beacon`, and networking flow tools
+- Recommended heartbeat: every 60 minutes
