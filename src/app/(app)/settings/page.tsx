@@ -144,8 +144,27 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (sessionStatus !== "authenticated") return;
-    loadSettings();
-  }, [sessionStatus, loadSettings]);
+    const ac = new AbortController();
+    (async () => {
+      try {
+        const r = await fetch("/api/settings", { signal: ac.signal });
+        const data = await r.json().catch(() => null);
+        if (ac.signal.aborted) return;
+        if (!r.ok) {
+          throw new Error(data?.error ?? "Failed to load settings");
+        }
+        setSettings(data);
+        setError(null);
+      } catch (e) {
+        if (ac.signal.aborted) return;
+        if (e instanceof Error && e.name === "AbortError") return;
+        setError(e instanceof Error ? e.message : "Failed to load settings");
+      } finally {
+        if (!ac.signal.aborted) setLoading(false);
+      }
+    })();
+    return () => ac.abort();
+  }, [sessionStatus]);
 
   if (sessionStatus === "loading" || loading) {
     return (
@@ -936,9 +955,11 @@ function InstantWakeSection({
 }) {
   const { saving, saved, err, save } = useSave();
   const [baseUrl, setBaseUrl] = useState(() => normalizeWakeBaseUrl(settings.webhookUrl));
+  const [prevWebhookUrl, setPrevWebhookUrl] = useState(settings.webhookUrl);
   const [token, setToken] = useState("");
   const [showToken, setShowToken] = useState(false);
   const [manualOpen, setManualOpen] = useState(settings.wakeWebhookEnabled);
+  const [prevWakeEnabled, setPrevWakeEnabled] = useState(settings.wakeWebhookEnabled);
   const [testing, setTesting] = useState(false);
   const [testMessage, setTestMessage] = useState<string | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
@@ -951,15 +972,17 @@ function InstantWakeSection({
   const [promptError, setPromptError] = useState<string | null>(null);
   const [promptCopied, setPromptCopied] = useState(false);
 
-  useEffect(() => {
+  if (prevWebhookUrl !== settings.webhookUrl) {
+    setPrevWebhookUrl(settings.webhookUrl);
     setBaseUrl(normalizeWakeBaseUrl(settings.webhookUrl));
-  }, [settings.webhookUrl]);
+  }
 
-  useEffect(() => {
+  if (prevWakeEnabled !== settings.wakeWebhookEnabled) {
+    setPrevWakeEnabled(settings.wakeWebhookEnabled);
     if (settings.wakeWebhookEnabled) {
       setManualOpen(true);
     }
-  }, [settings.wakeWebhookEnabled]);
+  }
 
   const desiredUrl = buildWakeWebhookUrl(baseUrl);
   const dirty = desiredUrl !== settings.webhookUrl || token.length > 0;
@@ -1125,8 +1148,29 @@ function InstantWakeSection({
   }, []);
 
   useEffect(() => {
-    void loadPrompt();
-  }, [loadPrompt]);
+    const ac = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch("/api/onboarding/openclaw-prompt?mode=instant-wake", {
+          signal: ac.signal,
+        });
+        const data = await res.json().catch(() => null);
+        if (ac.signal.aborted) return;
+        if (!res.ok) {
+          throw new Error(data?.error ?? "Failed to load setup prompt");
+        }
+        setPrompt(data.prompt);
+        setPromptError(null);
+      } catch (e) {
+        if (ac.signal.aborted) return;
+        if (e instanceof Error && e.name === "AbortError") return;
+        setPromptError(e instanceof Error ? e.message : "Failed to load setup prompt");
+      } finally {
+        if (!ac.signal.aborted) setPromptLoading(false);
+      }
+    })();
+    return () => ac.abort();
+  }, []);
 
   const handleCopyPrompt = async () => {
     const text = prompt ?? (await loadPrompt());

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Stats = {
   config: { enabled: boolean; maxAgents: number; dailyBudgetUsd: number; model: string };
@@ -42,44 +42,83 @@ export default function DemoAdminPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const saved = typeof window !== "undefined" ? sessionStorage.getItem("demo_admin_secret") : null;
-    if (saved) setSecret(saved);
-  }, []);
+  const hydratedSecretRef = useRef<boolean | null>(null);
+  if (hydratedSecretRef.current == null) {
+    hydratedSecretRef.current = true;
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("demo_admin_secret");
+      if (saved) setSecret(saved);
+    }
+  }
 
   const headers = useCallback(
     () => ({ Authorization: `Bearer ${secret}`, "Content-Type": "application/json" }),
     [secret]
   );
 
-  const load = useCallback(async () => {
-    if (!secret) return;
-    setBusy(true);
-    setMessage(null);
-    try {
+  const fetchAdminData = useCallback(
+    async (signal?: AbortSignal): Promise<{ stats: Stats; logs: LogRow[] }> => {
       const [s, l] = await Promise.all([
-        fetch("/api/admin/demo/stats", { headers: headers() }),
-        fetch(`/api/admin/demo/logs?limit=100${onlyErrors ? "&onlyErrors=1" : ""}`, { headers: headers() }),
+        fetch("/api/admin/demo/stats", { headers: headers(), signal }),
+        fetch(`/api/admin/demo/logs?limit=100${onlyErrors ? "&onlyErrors=1" : ""}`, {
+          headers: headers(),
+          signal,
+        }),
       ]);
       if (!s.ok) throw new Error(`stats: ${s.status}`);
       if (!l.ok) throw new Error(`logs: ${l.status}`);
-      setStats(await s.json());
-      const logsJson = (await l.json()) as { logs: LogRow[] };
-      setLogs(logsJson.logs);
+      const [statsData, logsJson] = (await Promise.all([s.json(), l.json()])) as [
+        Stats,
+        { logs: LogRow[] },
+      ];
+      return { stats: statsData, logs: logsJson.logs };
+    },
+    [headers, onlyErrors]
+  );
+
+  const load = useCallback(async () => {
+    if (!secret) return;
+    setBusy(true);
+    try {
+      const result = await fetchAdminData();
+      setStats(result.stats);
+      setLogs(result.logs);
+      setMessage(null);
       sessionStorage.setItem("demo_admin_secret", secret);
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : String(e));
+      if (!(e instanceof Error && e.name === "AbortError")) {
+        setMessage(e instanceof Error ? e.message : String(e));
+      }
     } finally {
       setBusy(false);
     }
-  }, [secret, headers, onlyErrors]);
+  }, [fetchAdminData, secret]);
 
   useEffect(() => {
     if (!secret) return;
-    load();
-    const t = setInterval(load, 15_000);
-    return () => clearInterval(t);
-  }, [secret, load]);
+    const ac = new AbortController();
+    const runPoll = () => {
+      fetchAdminData(ac.signal)
+        .then((result) => {
+          if (ac.signal.aborted) return;
+          setStats(result.stats);
+          setLogs(result.logs);
+          setMessage(null);
+          sessionStorage.setItem("demo_admin_secret", secret);
+        })
+        .catch((e) => {
+          if (ac.signal.aborted) return;
+          if (e instanceof Error && e.name === "AbortError") return;
+          setMessage(e instanceof Error ? e.message : String(e));
+        });
+    };
+    runPoll();
+    const t = setInterval(runPoll, 15_000);
+    return () => {
+      ac.abort();
+      clearInterval(t);
+    };
+  }, [secret, fetchAdminData]);
 
   const pause = async (demoAgentId: string, paused: boolean) => {
     const res = await fetch("/api/admin/demo/pause", {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 const REPORT_CATEGORIES = [
@@ -16,7 +16,6 @@ const REPORT_CATEGORIES = [
 type ReportCategory = (typeof REPORT_CATEGORIES)[number];
 
 interface ChatReportDialogProps {
-  open: boolean;
   chatId: string | null;
   targetName: string | null;
   onClose: () => void;
@@ -59,7 +58,6 @@ function FlagIcon({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 export function ChatReportDialog({
-  open,
   chatId,
   targetName,
   onClose,
@@ -75,18 +73,6 @@ export function ChatReportDialog({
     () => !!chatId && details.trim().length >= 12 && !submitting,
     [chatId, details, submitting]
   );
-
-  useEffect(() => {
-    if (!open) return;
-
-    setCategory("SPAM_OR_SCAM");
-    setDetails("");
-    setSubmitting(false);
-    setSubmitted(false);
-    setError(null);
-  }, [open]);
-
-  if (!open) return null;
 
   async function submitReport() {
     if (!canSubmit || !chatId) return;

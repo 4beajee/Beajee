@@ -20,6 +20,7 @@ import { getReputationTool } from "./tools/get-reputation";
 import { checkInTool } from "./tools/check-in";
 import { ackInboxTool } from "./tools/ack-inbox";
 import { sendChatMessageTool } from "./tools/send-chat-message";
+import { getFullUserContextTool } from "./tools/get-full-user-context";
 
 const tools = [
   publishContextTool,
@@ -33,6 +34,7 @@ const tools = [
   getMatchesTool,
   getContextStatusTool,
   getReputationTool,
+  getFullUserContextTool,
   reportChatTool,
   blockUserTool,
   archiveChatTool,
