@@ -12,10 +12,77 @@ export const getFullUserContextTool = {
         type: "string",
         description: "Your agent ID (e.g. agent_arlan_001)",
       },
+      since_timestamp: {
+        type: "string",
+        description: "Optional ISO timestamp. If provided, returns only changes since this time (heartbeat/diff mode). If omitted, returns the full profile.",
+      },
     },
     required: ["agent_id"],
   },
-  handler: async (args: { agent_id: string }) => {
+  handler: async (args: { agent_id: string; since_timestamp?: string }) => {
+    // --- Heartbeat mode: return only changes since since_timestamp ---
+    if (args.since_timestamp) {
+      const since = new Date(args.since_timestamp);
+      const agent = await prisma.agent.findUnique({
+        where: { agentId: args.agent_id },
+        include: { owner: true, context: true },
+      });
+      if (!agent) {
+        return { content: [{ type: "text" as const, text: JSON.stringify({ error: "Agent not found: " + args.agent_id }) }], isError: true };
+      }
+
+      const [newInboxEvents, updatedMatchesAsA, updatedMatchesAsB] = await Promise.all([
+        prisma.inboxEvent.findMany({
+          where: { agentId: agent.id, createdAt: { gte: since } },
+          orderBy: { createdAt: "desc" },
+        }),
+        prisma.match.findMany({
+          where: { agentAId: agent.id },
+          include: { negotiationLogs: { orderBy: { createdAt: "desc" }, take: 1 } },
+        }),
+        prisma.match.findMany({
+          where: { agentBId: agent.id },
+          include: { negotiationLogs: { orderBy: { createdAt: "desc" }, take: 1 } },
+        }),
+      ]);
+
+      const isRecent = (m: typeof updatedMatchesAsA[number]) => {
+        const lastChange = m.matchedAt || m.proposedAt || m.createdAt;
+        return lastChange >= since;
+      };
+      const updatedMatches = [...updatedMatchesAsA.filter(isRecent), ...updatedMatchesAsB.filter(isRecent)];
+      const hasChanges = newInboxEvents.length > 0 || updatedMatches.length > 0;
+
+      // Build compact needsAttention for heartbeat
+      const needsAttention: string[] = [];
+      if (newInboxEvents.length > 0) needsAttention.push(`${newInboxEvents.length} new inbox event(s) since last check.`);
+      if (updatedMatches.length > 0) needsAttention.push(`${updatedMatches.length} match(es) updated since last check.`);
+
+      let profileSnapshot = null;
+      if (hasChanges && agent.context) {
+        profileSnapshot = {
+          owner: { id: agent.owner.id, name: agent.owner.name, networkingGoal: agent.owner.networkingGoal },
+          agent: { agentId: agent.agentId, displayName: agent.displayName, searchPaused: agent.searchPaused },
+          context: { freshnessState: agent.context.freshnessState, lastSignificantUpdateAt: agent.context.lastSignificantUpdateAt },
+        };
+      }
+
+      return {
+        content: [{
+          type: "text" as const,
+          text: JSON.stringify({
+            hasChanges,
+            newInboxEvents: newInboxEvents.map(e => ({ id: e.id, type: e.type, referenceId: e.referenceId, createdAt: e.createdAt })),
+            updatedMatches: updatedMatches.map(m => ({ matchId: m.id, status: m.status, lastActivity: m.matchedAt || m.proposedAt || m.createdAt })),
+            needsAttention,
+            profileSnapshot,
+          }, null, 2),
+        }],
+      };
+    }
+
+    // --- Full profile mode (unchanged) ---
+
     const agent = await prisma.agent.findUnique({
       where: { agentId: args.agent_id },
       include: {
