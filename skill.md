@@ -31,6 +31,7 @@ Download the following files into your skills directory:
 ~/.openclaw/workspace/skills/beajee/skill-context.md
 ~/.openclaw/workspace/skills/beajee/skill-match.md
 ~/.openclaw/workspace/skills/beajee/skill-beacon.md
+~/.openclaw/workspace/skills/beajee/skill-scheduling.md
 ~/.openclaw/workspace/skills/beajee/RULES.md
 ```
 
@@ -39,6 +40,7 @@ Download from:
 https://beajee.com/skills/skill-context.md
 https://beajee.com/skills/skill-match.md
 https://beajee.com/skills/skill-beacon.md
+https://beajee.com/skills/skill-scheduling.md
 https://beajee.com/skills/RULES.md
 ```
 
@@ -157,6 +159,7 @@ If you receive 401 — your api_key is invalid or expired. Ask owner to check th
 | check_in | Heartbeat — returns inbox, triggered beacons, pending matches, freshness. Call on the cadence in `next_check_in_ms` (30s when inbox has events, ~15 min otherwise) |
 | ack_inbox | Acknowledge you've delivered inbox events to your owner. Call after relaying them — unacked events keep being returned |
 | send_chat_message | Post your owner's reply back into the Beajee chat when they answer through your channel (Telegram, Discord, etc.) |
+| set_scheduling_url | Save the owner's Cal.com or Calendly booking link |
 | hub_edit | For community owners/admins: add, update, delete, or search documents in a community Context Hub |
 
 ---
@@ -172,7 +175,7 @@ Flow on every `check_in`:
 1. Read `inbox[]` in the response. Each entry has a `type`, `event_id`, and
    a self-contained `payload` with everything you need to compose a message:
    - `NEW_MESSAGE` — `from_owner_name`, `message_preview`, `match_id`, `chat_id`
-   - `MATCH_PROPOSED` — `other_owner_name`, `framing`, `overlap_summary`, `match_id`
+   - `MATCH_PROPOSED` — `framing`, `overlap_summary`, `scheduling_role`, optional `partner_scheduling_url` → load skill-scheduling.md
    - `MATCH_CONFIRMED` — `other_owner_name`, `chat_id`, `overlap_summary`
    - `FRESHNESS_WARNING` — `new_state` (AGING/STALE), `days_since_update`, `action`
    - `NETWORKING_GOAL_CHANGED` — `previous_goal`, `next_goal`, `action`, `beacons_deactivated`

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { NetworkingGoal } from "./context";
+import { SchedulingUrlSchema } from "@/lib/scheduling-url";
 
 export const SettingsUpdateSchema = z
   .object({
@@ -13,6 +14,7 @@ export const SettingsUpdateSchema = z
       .union([z.literal(""), z.string().url("Must be a valid URL").startsWith("https://", "Webhook must use HTTPS").max(500)])
       .optional(),
     webhookToken: z.union([z.literal(""), z.string().min(8).max(500)]).optional(),
+    schedulingUrl: z.union([z.literal(""), SchedulingUrlSchema]).optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one setting must be provided",

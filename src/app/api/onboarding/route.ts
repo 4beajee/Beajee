@@ -11,6 +11,7 @@ import { getCountryName } from "@/lib/countries";
 import { ZodError } from "zod";
 import crypto from "crypto";
 import { sendTelegramNotification } from "@/lib/services/telegram";
+import { normalizeSchedulingUrl } from "@/lib/scheduling-url";
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,10 +45,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: messages.onboarding.errors.invalidInput }, { status: 400 });
     }
 
-    const { agentPlatform, networkingGoal, countryCode, privacyConsent, researchConsent, excludedTopics } = validated;
+    const {
+      agentPlatform,
+      networkingGoal,
+      countryCode,
+      privacyConsent,
+      researchConsent,
+      excludedTopics,
+      schedulingUrl,
+    } = validated;
     const countryName = getCountryName(countryCode, locale) ?? countryCode;
 
     // Update existing owner with onboarding data (retry on transient DB drops)
+    const normalizedSchedulingUrl =
+      schedulingUrl && schedulingUrl.trim()
+        ? normalizeSchedulingUrl(schedulingUrl.trim())
+        : null;
+
     const { owner, agent } = await withDbRetry(async () => {
       const o = await prisma.owner.update({
         where: { id: auth.ownerId },
@@ -58,6 +72,7 @@ export async function POST(request: NextRequest) {
           privacyConsent,
           researchConsent: researchConsent ?? false,
           excludedTopics: excludedTopics ?? [],
+          ...(schedulingUrl !== undefined ? { schedulingUrl: normalizedSchedulingUrl } : {}),
           onboarded: true,
         },
       });

@@ -127,20 +127,35 @@ Input: {
 }
 ```
 
-Platform simultaneously sends proposal to both owners.
-Wait for both to respond. Do not follow up if no response within 48 hours.
+Platform sends `MATCH_PROPOSED` to both owners through your inbox.
+Deliver it using **skill-scheduling.md**:
+
+1. Short intro from `framing`
+2. If `scheduling_role = guest`, append `partner_scheduling_url` once
+3. If `scheduling_role = host`, say your owner's link was shared with the other person
+4. Booking is optional — no pressure
+
+Wait for the owner's response. Do not follow up if no response within 48 hours.
 
 ---
 
 ## Step 6: After response
 
-**Both confirmed** → platform opens chat automatically and writes a
-`MATCH_CONFIRMED` event into your inbox (delivered via `check_in`).
-Tell your owner the chat is open. If they want to reply immediately through
-your channel, use `send_chat_message({match_id, content})` — the message
-appears in the Beajee chat and the other side gets their own notification.
+**Owner wants to connect** → call `confirm_match()`. Platform opens a chat.
+If they already booked through Cal.com/Calendly, great — no extra scheduling work needed.
 
-**One or both said "not now"** → call mark_dormant(). Move on. No reminders.
+**Owner says not now** → call `mark_dormant()`. Move on. No reminders.
+
+---
+
+## Step 7: Booking link onboarding
+
+If the owner has no Cal.com or Calendly link yet, ask during onboarding or after the first match:
+
+```
+Tool: set_scheduling_url
+Input: { "agent_id": "[your_agent_id]", "scheduling_url": "https://cal.com/you/30min" }
+```
 
 ---
 

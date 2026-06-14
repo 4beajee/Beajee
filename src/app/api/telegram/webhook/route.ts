@@ -16,6 +16,7 @@ import {
   setAgentSearchPausedByExternalId,
 } from "@/lib/services/agent-search";
 import { confirmMatch, markDormant } from "@/lib/services/negotiation";
+import { requestZoomCall } from "@/lib/services/match-call";
 
 interface TelegramUpdate {
   message?: TelegramMessage;
@@ -180,7 +181,12 @@ async function handleMatchCallback(command: { kind: string; matchId: string }, t
   }
 
   if (command.kind === "match_schedule") {
-    return "Open the Mini App scheduler to choose a time.";
+    try {
+      await requestZoomCall(command.matchId, ownerId);
+      return "Call requested. Open the Mini App to confirm a time or join when the link is ready.";
+    } catch {
+      return "Open the Mini App to schedule your Zoom call.";
+    }
   }
 
   return "Unsupported match action.";

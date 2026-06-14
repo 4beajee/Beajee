@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ScheduleCallButton } from "@/components/schedule-call-button";
 
 type TelegramWebApp = {
   initData?: string;
@@ -14,22 +15,13 @@ type TelegramWindow = Window & {
   };
 };
 
-const tabs = [
-  { id: "onboarding", label: "Onboarding" },
-  { id: "matches", label: "Matches" },
-  { id: "chat", label: "Agent Chat" },
-  { id: "dialogue", label: "Dialogue" },
-  { id: "team", label: "Team Space" },
-  { id: "strategy", label: "Strategy" },
-] as const;
-
-type TabId = (typeof tabs)[number]["id"];
-
 interface AuthState {
+  token: string;
   owner?: {
     id: string;
     name: string | null;
     onboarded: boolean;
+    schedulingUrl: string | null;
   };
   telegram?: {
     id: string;
@@ -37,15 +29,32 @@ interface AuthState {
   };
 }
 
+interface TelegramMatch {
+  matchId: string;
+  status: string;
+  framingForMe: string;
+  otherOwnerName: string | null;
+  schedulingRole: "guest" | "host" | null;
+  partnerSchedulingUrl: string | null;
+  partnerSchedulingProvider: string | null;
+  schedulingHostName: string | null;
+}
+
 function PanelShell({ children }: { children: React.ReactNode }) {
-  return <section className="min-h-[360px] rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">{children}</section>;
+  return (
+    <section className="min-h-[280px] rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+      {children}
+    </section>
+  );
 }
 
 export default function TelegramMiniAppPage() {
-  const [activeTab, setActiveTab] = useState<TabId>("matches");
   const [auth, setAuth] = useState<AuthState | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [schedulingUrl, setSchedulingUrl] = useState("");
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [matches, setMatches] = useState<TelegramMatch[]>([]);
 
   useEffect(() => {
     const webApp = (window as TelegramWindow).Telegram?.WebApp;
@@ -70,6 +79,7 @@ export default function TelegramMiniAppPage() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error ?? "Telegram auth failed");
         setAuth(data);
+        setSchedulingUrl(data.owner?.schedulingUrl ?? "");
       })
       .catch((error) => {
         setAuthError(error instanceof Error ? error.message : String(error));
@@ -77,11 +87,54 @@ export default function TelegramMiniAppPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (!auth?.token) return;
+
+    fetch("/api/telegram/matches", {
+      headers: { Authorization: `Bearer ${auth.token}` },
+    })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error ?? "Failed to load matches");
+        setMatches(data.matches ?? []);
+      })
+      .catch(() => setMatches([]));
+  }, [auth?.token]);
+
   const ownerLabel = useMemo(() => {
     if (loading) return "Connecting";
     if (auth?.owner) return auth.owner.name ?? auth.telegram?.username ?? "Telegram owner";
     return "Not connected";
   }, [auth, loading]);
+
+  const saveSchedulingUrl = async () => {
+    if (!auth?.token) return;
+    setSaveMessage(null);
+
+    const response = await fetch("/api/telegram/profile", {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${auth.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ schedulingUrl }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      setSaveMessage(data.error ?? "Could not save scheduling link");
+      return;
+    }
+
+    setAuth((current) =>
+      current?.owner
+        ? {
+            ...current,
+            owner: { ...current.owner, schedulingUrl: data.schedulingUrl },
+          }
+        : current
+    );
+    setSaveMessage("Saved");
+  };
 
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-950">
@@ -102,102 +155,73 @@ export default function TelegramMiniAppPage() {
           </div>
         )}
 
-        <nav className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`h-10 rounded-md border px-2 text-sm font-medium transition ${
-                activeTab === tab.id
-                  ? "border-zinc-950 bg-zinc-950 text-white"
-                  : "border-zinc-200 bg-white text-zinc-700"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-
-        {activeTab === "onboarding" && (
-          <PanelShell>
-            <div className="grid gap-3">
-              <input className="h-11 rounded-md border border-zinc-200 px-3" placeholder="Name" />
-              <input className="h-11 rounded-md border border-zinc-200 px-3" placeholder="Professional domain" />
-              <select className="h-11 rounded-md border border-zinc-200 px-3">
-                <option>Find a collaborator</option>
-                <option>Find a business partner</option>
-                <option>Find a mentor</option>
-                <option>Find a peer</option>
-              </select>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" className="h-4 w-4" />
-                Allow agent context for networking
-              </label>
-            </div>
-          </PanelShell>
-        )}
-
-        {activeTab === "matches" && (
-          <PanelShell>
-            <div className="grid gap-3">
-              <article className="rounded-md border border-zinc-200 p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-base font-semibold">No active match cards</h2>
-                  <span className="text-xs text-zinc-500">Live</span>
-                </div>
-                <p className="mt-2 text-sm text-zinc-600">
-                  Match Cards sent by agents will appear here with Start Chat, Agent Dialogue, Schedule Call, and Skip actions.
-                </p>
-              </article>
-            </div>
-          </PanelShell>
-        )}
-
-        {activeTab === "chat" && (
-          <PanelShell>
-            <div className="flex h-full min-h-[300px] flex-col gap-3">
-              <div className="flex-1 rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-500">
-                Agent messages will sync here.
-              </div>
-              <div className="flex gap-2">
-                <input className="h-11 flex-1 rounded-md border border-zinc-200 px-3" placeholder="Message your agent" />
-                <button className="h-11 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white">Send</button>
-              </div>
-            </div>
-          </PanelShell>
-        )}
-
-        {activeTab === "dialogue" && (
-          <PanelShell>
-            <ol className="grid gap-3 text-sm">
-              <li className="rounded-md border border-zinc-200 p-3">Agent negotiation transcripts will appear after a proposal.</li>
-              <li className="rounded-md border border-zinc-200 p-3">Each step is sourced from NegotiationLog.</li>
-            </ol>
-          </PanelShell>
-        )}
-
-        {activeTab === "team" && (
-          <PanelShell>
-            <div className="grid gap-3">
-              <input className="h-11 rounded-md border border-zinc-200 px-3" placeholder="Search Context Hub" />
-              <div className="rounded-md border border-zinc-200 p-3 text-sm text-zinc-600">
-                Team tasks and activity alerts route through the Team Space Telegram topic when team mode is enabled.
-              </div>
-            </div>
-          </PanelShell>
-        )}
-
-        {activeTab === "strategy" && (
-          <PanelShell>
-            <div className="rounded-md border border-zinc-200 p-3">
-              <h2 className="text-base font-semibold">Strategy Summary</h2>
-              <p className="mt-2 text-sm text-zinc-600">
-                Weekly strategy reports will show judge findings, accepted claims, counter-evidence, and next actions.
+        <PanelShell>
+          <div className="grid gap-3">
+            <div>
+              <h2 className="text-base font-semibold">Booking link</h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Add your Cal.com or Calendly page. When you match, only the other person receives
+                your link so one meeting gets booked.
               </p>
             </div>
-          </PanelShell>
-        )}
+            <input
+              className="h-11 rounded-xl border border-zinc-200 px-3 text-sm"
+              type="url"
+              value={schedulingUrl}
+              onChange={(e) => setSchedulingUrl(e.target.value)}
+              placeholder="https://cal.com/you/30min"
+            />
+            <button
+              type="button"
+              onClick={saveSchedulingUrl}
+              className="h-11 rounded-xl bg-zinc-950 px-4 text-sm font-medium text-white"
+            >
+              Save booking link
+            </button>
+            {saveMessage && <p className="text-sm text-zinc-600">{saveMessage}</p>}
+          </div>
+        </PanelShell>
+
+        <PanelShell>
+          <div className="grid gap-4">
+            <div>
+              <h2 className="text-base font-semibold">Matches</h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                When your agent finds a fit, you get the intro here. If you are the guest, book a
+                time below.
+              </p>
+            </div>
+
+            {matches.length === 0 ? (
+              <p className="text-sm text-zinc-500">No active matches yet.</p>
+            ) : (
+              matches.map((match) => (
+                <article key={match.matchId} className="rounded-xl border border-zinc-200 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold">{match.otherOwnerName ?? "New match"}</h3>
+                    <span className="text-xs uppercase tracking-wide text-zinc-500">{match.status}</span>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-zinc-700">{match.framingForMe}</p>
+                  {match.schedulingRole === "guest" && match.partnerSchedulingUrl ? (
+                    <div className="mt-3">
+                      <ScheduleCallButton
+                        url={match.partnerSchedulingUrl}
+                        providerLabel={match.partnerSchedulingProvider}
+                        hostName={match.schedulingHostName}
+                        variant="inline"
+                      />
+                    </div>
+                  ) : null}
+                  {match.schedulingRole === "host" ? (
+                    <p className="mt-3 text-xs text-zinc-500">
+                      Your booking link was shared with {match.otherOwnerName ?? "your match"}.
+                    </p>
+                  ) : null}
+                </article>
+              ))
+            )}
+          </div>
+        </PanelShell>
       </div>
     </main>
   );

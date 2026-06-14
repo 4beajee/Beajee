@@ -95,6 +95,7 @@ interface Settings {
   wakeStreamLastDisconnectedAt: string | null;
   wakeStreamLastError: string | null;
   wakeDeliveryMode: "stream" | "webhook" | "polling";
+  schedulingUrl: string | null;
   privacySync: {
     pending: boolean;
     searchPaused: boolean;
@@ -191,6 +192,11 @@ export default function SettingsPage() {
       <NetworkingGoalSection
         goal={settings.networkingGoal}
         onUpdate={(v) => setSettings({ ...settings, networkingGoal: v })}
+      />
+
+      <SchedulingUrlSection
+        schedulingUrl={settings.schedulingUrl}
+        onUpdate={(v) => setSettings({ ...settings, schedulingUrl: v })}
       />
 
       <LanguageSection />
@@ -643,6 +649,50 @@ function ResearchConsentSection({
           <SaveStatus saving={saving} saved={saved} err={err} />
         </div>
       )}
+    </Section>
+  );
+}
+
+/* ── P1: Scheduling link ── */
+
+function SchedulingUrlSection({
+  schedulingUrl,
+  onUpdate,
+}: {
+  schedulingUrl: string | null;
+  onUpdate: (v: string | null) => void;
+}) {
+  const t = useTranslations();
+  const { saving, saved, err, save } = useSave();
+  const [value, setValue] = useState(schedulingUrl ?? "");
+
+  useEffect(() => {
+    setValue(schedulingUrl ?? "");
+  }, [schedulingUrl]);
+
+  const submit = async () => {
+    const result = await save("/api/settings", {
+      schedulingUrl: value.trim(),
+    });
+    if (result) onUpdate(value.trim() || null);
+  };
+
+  return (
+    <Section title={t("settings.schedulingTitle")}>
+      <p className={cx(sectionDescriptionClass, "mb-4")}>{t("settings.schedulingDesc")}</p>
+      <input
+        className={INPUT}
+        type="url"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="https://cal.com/you/30min"
+      />
+      <div className="mt-3 flex items-center gap-3">
+        <button type="button" onClick={submit} disabled={saving} className={PRIMARY_BUTTON_SM}>
+          {t("settings.saveChanges")}
+        </button>
+        <SaveStatus saving={saving} saved={saved} err={err} />
+      </div>
     </Section>
   );
 }

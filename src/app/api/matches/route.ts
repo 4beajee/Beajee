@@ -6,6 +6,7 @@ import { MatchActionSchema } from "@/types/match-action";
 import { ZodError } from "zod";
 import { confirmMatch, markDormant } from "@/lib/services/negotiation";
 import { getPrivacySyncStatus } from "@/lib/services/privacy-sync";
+import { detectSchedulingProvider, schedulingProviderLabel } from "@/lib/scheduling-url";
 
 // GET /api/matches — get all proposed/matched/dormant matches for an owner (requires auth)
 export async function GET() {
@@ -57,6 +58,30 @@ export async function GET() {
     const confirmedByOther = isAgentA ? m.confirmedByB : m.confirmedByA;
     const initiatedByMe = m.initiatorAgentId === owner.agent!.id;
 
+    let schedulingRole: "guest" | "host" | null = null;
+    let partnerSchedulingUrl: string | null = null;
+    let partnerSchedulingProvider: string | null = null;
+    let schedulingHostName: string | null = null;
+
+    if (m.schedulingHostOwnerId && m.schedulingGuestOwnerId) {
+      const hostOwner =
+        m.agentA.owner.id === m.schedulingHostOwnerId ? m.agentA.owner : m.agentB.owner;
+
+      if (ownerId === m.schedulingGuestOwnerId) {
+        schedulingRole = "guest";
+        partnerSchedulingUrl = hostOwner.schedulingUrl;
+        schedulingHostName = hostOwner.name;
+        if (partnerSchedulingUrl) {
+          partnerSchedulingProvider = schedulingProviderLabel(
+            detectSchedulingProvider(partnerSchedulingUrl)
+          );
+        }
+      } else if (ownerId === m.schedulingHostOwnerId) {
+        schedulingRole = "host";
+        schedulingHostName = hostOwner.name;
+      }
+    }
+
     return {
       matchId: m.id,
       status: m.status,
@@ -74,6 +99,10 @@ export async function GET() {
       chatId: m.chat?.id ?? null,
       proposedAt: m.proposedAt,
       matchedAt: m.matchedAt,
+      schedulingRole,
+      partnerSchedulingUrl,
+      partnerSchedulingProvider,
+      schedulingHostName,
     };
   });
 
@@ -81,6 +110,7 @@ export async function GET() {
     matches: result,
     freshnessState: agentContext?.freshnessState ?? null,
     privacySync,
+    schedulingUrl: owner.schedulingUrl,
   });
 }
 

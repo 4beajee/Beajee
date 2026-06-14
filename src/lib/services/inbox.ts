@@ -20,7 +20,10 @@ export type InboxEventType =
   | "TEAM_ACTIVITY"
   | "TEAM_BLOCKER_LOGGED"
   | "TEAM_TASK_ASSIGNED"
-  | "TEAM_TASK_APPROVAL_REQUESTED";
+  | "TEAM_TASK_APPROVAL_REQUESTED"
+  | "CALL_TIME_PROPOSED"
+  | "CALL_TIME_CONFIRMED"
+  | "ZOOM_LINK_READY";
 
 interface CreateArgs {
   ownerId: string;

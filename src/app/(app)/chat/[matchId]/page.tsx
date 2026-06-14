@@ -6,12 +6,15 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { ChatReportDialog } from "@/components/chat-report-dialog";
+
 import { useUnread } from "@/contexts/unread-context";
 import { useTranslations } from "next-intl";
 import { MODEL_ADVICE_PRESETS } from "@/lib/model-advice";
 
 const POLL_INTERVAL = 5_000;
 const MAX_TEXTAREA_HEIGHT = 132;
+// Model advice feature is hidden for now. Flip to `true` to bring it back.
+const MODEL_ADVICE_ENABLED = false;
 
 interface Message {
   id: string;
@@ -466,6 +469,14 @@ export default function ChatPage() {
     return msg.kind === "HUMAN";
   }
 
+  function isZoomCallMessage(msg: Message) {
+    return (
+      msg.kind === "ZOOM_CALL_LINK" ||
+      msg.kind === "ZOOM_CALL_PROPOSAL" ||
+      msg.kind === "ZOOM_CALL_CONFIRMED"
+    );
+  }
+
   function isMyMessage(msg: Message) {
     return msg.fromOwner === ownerId;
   }
@@ -858,7 +869,7 @@ export default function ChatPage() {
         )}
 
         <div className="relative flex-1 min-h-0">
-          {showFloatingAdviceTip && (
+          {MODEL_ADVICE_ENABLED && showFloatingAdviceTip && (
             <div className="pointer-events-none absolute inset-x-0 top-4 z-20 hidden justify-end px-2 sm:px-4 lg:flex">
               <ModelAdviceChatNote
                 dismissLabel={t("chat.modelAdvice.dismissTip")}
@@ -868,11 +879,13 @@ export default function ChatPage() {
             </div>
           )}
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-end px-2 sm:px-4 lg:hidden">
-            <div className="pointer-events-auto w-full max-w-[22rem]">
-              <ModelAdvicePanel {...modelAdvicePanelProps} />
+          {MODEL_ADVICE_ENABLED && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-end px-2 sm:px-4 lg:hidden">
+              <div className="pointer-events-auto w-full max-w-[22rem]">
+                <ModelAdvicePanel {...modelAdvicePanelProps} />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex h-full flex-col overflow-y-auto py-4 no-scrollbar">
           {hasActiveSearch && filteredMessages.length === 0 ? (
@@ -923,6 +936,24 @@ export default function ChatPage() {
                       >
                         {formatTime(message.createdAt)}
                       </span>
+                    </div>
+                  );
+                }
+
+                if (isZoomCallMessage(message)) {
+                  return (
+                    <div
+                      key={message.id}
+                      className="self-center max-w-[92%] rounded-2xl border border-sky-400/15 bg-sky-950/30 px-4 py-3 text-sm text-sky-50"
+                    >
+                      <span className="mb-1 block text-[11px] uppercase tracking-wide text-sky-300/80">
+                        {message.kind === "ZOOM_CALL_LINK"
+                          ? t("zoomCall.chatLink")
+                          : message.kind === "ZOOM_CALL_PROPOSAL"
+                          ? t("zoomCall.chatProposal")
+                          : t("zoomCall.chatConfirmed")}
+                      </span>
+                      <p className="m-0 whitespace-pre-wrap">{message.content}</p>
                     </div>
                   );
                 }
@@ -1072,7 +1103,7 @@ export default function ChatPage() {
           </button>
         </div>
       </section>
-      {sidebarSlot
+      {MODEL_ADVICE_ENABLED && sidebarSlot
         ? createPortal(<ModelAdvicePanel {...modelAdvicePanelProps} />, sidebarSlot)
         : null}
       <ChatReportDialog

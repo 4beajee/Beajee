@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { createChatWithOpeningMessages } from "@/lib/services/chat";
+
 import { recordEvent } from "@/lib/services/reputation";
 import { createInboxEvent } from "@/lib/services/inbox";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
@@ -7,9 +8,10 @@ import { areNetworkingGoalsCompatible } from "@/lib/networking-goal";
 import type { NetworkingGoal } from "@/types/context";
 import { recordAnalyticsEvent } from "@/lib/analytics-tracking";
 import {
-  sendTelegramMatchCard,
-  sendTelegramNegotiationStarted,
-} from "@/lib/telegram/match-card";
+  buildSchedulingDeliveryPayload,
+  resolveInitiatorAndRecipient,
+  resolveSchedulingRoles,
+} from "@/lib/services/scheduling-match";
 
 /**
  * NegotiationFSM — state machine for agent-to-agent match negotiation
@@ -164,21 +166,6 @@ export async function initiateNegotiation(
     urgency: "high",
   }).catch((error) => {
     console.error("[negotiation] Failed to signal target agent:", error);
-  });
-
-  Promise.all([
-    sendTelegramNegotiationStarted({
-      ownerId: agentA.owner.id,
-      otherOwnerName: agentB.owner.name,
-      otherAgentDisplayName: agentB.displayName,
-    }),
-    sendTelegramNegotiationStarted({
-      ownerId: agentB.owner.id,
-      otherOwnerName: agentA.owner.name,
-      otherAgentDisplayName: agentA.displayName,
-    }),
-  ]).catch((error) => {
-    console.error("[negotiation] Telegram negotiation notification failed:", error);
   });
 
   return {
@@ -393,11 +380,20 @@ export async function proposeMatch(matchId: string) {
     );
   }
 
+  const schedulingParties = resolveInitiatorAndRecipient({
+    agentA: match.agentA,
+    agentB: match.agentB,
+    initiatorAgentId: match.initiatorAgentId,
+  });
+  const schedulingRoles = resolveSchedulingRoles(schedulingParties);
+
   await prisma.match.update({
     where: { id: matchId },
     data: {
       status: "PROPOSED",
       proposedAt: new Date(),
+      schedulingHostOwnerId: schedulingRoles?.hostOwner.id ?? null,
+      schedulingGuestOwnerId: schedulingRoles?.guestOwner.id ?? null,
     },
   });
 
@@ -450,6 +446,15 @@ export async function proposeMatch(matchId: string) {
   const ownerA = match.agentA.owner;
   const ownerB = match.agentB.owner;
 
+  const ownerAScheduling = buildSchedulingDeliveryPayload({
+    ownerId: ownerA.id,
+    roles: schedulingRoles,
+  });
+  const ownerBScheduling = buildSchedulingDeliveryPayload({
+    ownerId: ownerB.id,
+    roles: schedulingRoles,
+  });
+
   await Promise.all([
     createInboxEvent({
       ownerId: ownerA.id,
@@ -464,6 +469,8 @@ export async function proposeMatch(matchId: string) {
         framing: match.framingForA,
         overlap_summary: match.overlapSummary,
         proposed_at: new Date().toISOString(),
+        next_action: "deliver_intro_and_optional_booking_link",
+        ...ownerAScheduling,
       },
     }),
     createInboxEvent({
@@ -479,6 +486,8 @@ export async function proposeMatch(matchId: string) {
         framing: match.framingForB,
         overlap_summary: match.overlapSummary,
         proposed_at: new Date().toISOString(),
+        next_action: "deliver_intro_and_optional_booking_link",
+        ...ownerBScheduling,
       },
     }),
   ]).catch((err) => console.error("[inbox] Match proposal events failed:", err));
@@ -497,29 +506,6 @@ export async function proposeMatch(matchId: string) {
     referenceId: matchId,
     urgency: "high",
   }).catch((error) => console.error("[negotiation] Failed to signal agent B:", error));
-
-  Promise.all([
-    sendTelegramMatchCard({
-      ownerId: ownerA.id,
-      matchId,
-      otherOwnerName: ownerB.name,
-      otherAgentDisplayName: match.agentB.displayName,
-      framing: match.framingForA,
-      overlapSummary: match.overlapSummary,
-      similarity: match.matchSimilarity,
-    }),
-    sendTelegramMatchCard({
-      ownerId: ownerB.id,
-      matchId,
-      otherOwnerName: ownerA.name,
-      otherAgentDisplayName: match.agentA.displayName,
-      framing: match.framingForB,
-      overlapSummary: match.overlapSummary,
-      similarity: match.matchSimilarity,
-    }),
-  ]).catch((error) => {
-    console.error("[negotiation] Telegram match card delivery failed:", error);
-  });
 
   return {
     matchId,

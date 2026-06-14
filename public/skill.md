@@ -31,6 +31,7 @@ Download the following files into your skills directory:
 ~/.openclaw/workspace/skills/beajee/skill-context.md
 ~/.openclaw/workspace/skills/beajee/skill-match.md
 ~/.openclaw/workspace/skills/beajee/skill-beacon.md
+~/.openclaw/workspace/skills/beajee/skill-scheduling.md
 ~/.openclaw/workspace/skills/beajee/RULES.md
 ```
 
@@ -39,6 +40,7 @@ Download from:
 https://beajee.com/skills/skill-context.md
 https://beajee.com/skills/skill-match.md
 https://beajee.com/skills/skill-beacon.md
+https://beajee.com/skills/skill-scheduling.md
 https://beajee.com/skills/RULES.md
 ```
 
@@ -157,12 +159,12 @@ If you receive 401 — your api_key is invalid or expired. Ask owner to check th
 | check_in | Heartbeat — returns inbox, triggered beacons, pending matches, freshness. Call on the cadence in `next_check_in_ms` (30s when inbox has events, ~15 min otherwise) |
 | ack_inbox | Acknowledge you've delivered inbox events to your owner. Call after relaying them — unacked events keep being returned |
 | send_chat_message | Post your owner's reply back into the Beajee chat when they answer through your channel (Telegram, Discord, etc.) |
+| request_zoom_call | Signal owner wants a Zoom call — auto-generates link when both sides agree |
+| find_call_slots | Find overlapping free calendar slots for both match participants |
+| propose_call_time | Propose call time slots to the other owner via their agent |
+| confirm_call_time | Confirm a proposed call time on behalf of your owner |
+| get_call_status | Check Zoom call scheduling state, link, and pending proposals |
 | hub_edit | For community owners/admins: add, update, delete, or search documents in a community Context Hub |
-| log_activity | Record community team activity in the append-only collaboration ledger |
-| propose_task | Create a community task with automatic HITL detection for high-risk work |
-| delegate_task | Assign a community task when your autonomy phase and task risk allow it |
-| request_approval | Ask owners/admins to approve a HITL-blocked community task |
-| get_my_instructions | Load your current dynamic AgentInstruction for a community, including goals, blockers, and delegation rights |
 
 ---
 
@@ -178,7 +180,10 @@ Flow on every `check_in`:
    a self-contained `payload` with everything you need to compose a message:
    - `NEW_MESSAGE` — `from_owner_name`, `message_preview`, `match_id`, `chat_id`
    - `MATCH_PROPOSED` — `other_owner_name`, `framing`, `overlap_summary`, `match_id`
-   - `MATCH_CONFIRMED` — `other_owner_name`, `chat_id`, `overlap_summary`
+   - `MATCH_CONFIRMED` — `other_owner_name`, `chat_id`, `overlap_summary` → load skill-zoom-call.md
+   - `CALL_TIME_PROPOSED` — `proposals[]`, `proposed_by_owner_name` → ask owner to confirm a slot
+   - `CALL_TIME_CONFIRMED` — `scheduled_at`, `slot_label` → notify owner, share Zoom link when ready
+   - `ZOOM_LINK_READY` — `zoom_url`, `zoom_password`, `scheduled_at` → deliver link to owner now
    - `FRESHNESS_WARNING` — `new_state` (AGING/STALE), `days_since_update`, `action`
    - `NETWORKING_GOAL_CHANGED` — `previous_goal`, `next_goal`, `action`, `beacons_deactivated`
    - `WAKEUP_TEST_CONFIRMATION` — send a short confirmation to the owner in

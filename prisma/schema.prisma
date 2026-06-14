@@ -24,6 +24,7 @@ model Owner {
   researchConsent Boolean   @default(false) @map("research_consent") // Purpose B — separate GDPR basis
   excludedTopics  String[]  @default([]) @map("excluded_topics")
   agentPlatform   String?   @map("agent_platform") // "open_claw" | "nemo_claw" | "zero_claw" | "nano_claw"
+  schedulingUrl   String?   @map("scheduling_url") // Cal.com or Calendly booking page
   telegramId      String?   @unique @map("telegram_id")
   onboarded       Boolean   @default(false)
 
@@ -304,17 +305,77 @@ model Match {
   confirmedByB Boolean     @default(false) @map("confirmed_by_b")
   isPublic     Boolean     @default(true) @map("is_public")
 
+  // Who shares their Cal.com/Calendly link vs who receives it to book one slot.
+  schedulingHostOwnerId  String? @map("scheduling_host_owner_id")
+  schedulingGuestOwnerId String? @map("scheduling_guest_owner_id")
+
   createdAt  DateTime  @default(now()) @map("created_at")
   proposedAt DateTime? @map("proposed_at")
   matchedAt  DateTime? @map("matched_at")
 
   chat            Chat?
+  call            MatchCall?
   negotiationLogs NegotiationLog[]
   reactions       MatchReaction[]
   comments        MatchComment[]
 
   @@unique([agentAId, agentBId])
   @@map("matches")
+}
+
+model MatchCall {
+  id                String          @id @default(cuid())
+  matchId           String          @unique @map("match_id")
+  match             Match           @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  status            MatchCallStatus @default(IDLE)
+  zoomUrl           String?         @map("zoom_url")
+  zoomMeetingId     String?         @map("zoom_meeting_id")
+  zoomPassword      String?         @map("zoom_password")
+  scheduledAt       DateTime?       @map("scheduled_at")
+  durationMinutes   Int             @default(30) @map("duration_minutes")
+  wantsCallByA      Boolean         @default(false) @map("wants_call_by_a")
+  wantsCallByB      Boolean         @default(false) @map("wants_call_by_b")
+  proposedByOwnerId String?         @map("proposed_by_owner_id")
+  confirmedAt       DateTime?       @map("confirmed_at")
+  linkGeneratedAt   DateTime?       @map("link_generated_at")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  proposals MatchCallProposal[]
+
+  @@map("match_calls")
+}
+
+model MatchCallProposal {
+  id                String                    @id @default(cuid())
+  matchCallId       String                    @map("match_call_id")
+  matchCall         MatchCall                 @relation(fields: [matchCallId], references: [id], onDelete: Cascade)
+  proposedByOwnerId String                    @map("proposed_by_owner_id")
+  slotStart         DateTime                  @map("slot_start")
+  slotEnd           DateTime                  @map("slot_end")
+  status            MatchCallProposalStatus   @default(PENDING)
+  confirmedAt       DateTime?                 @map("confirmed_at")
+  createdAt         DateTime                  @default(now()) @map("created_at")
+
+  @@index([matchCallId, status])
+  @@map("match_call_proposals")
+}
+
+enum MatchCallStatus {
+  IDLE
+  SCHEDULING
+  TIME_PROPOSED
+  CONFIRMED
+  LINK_READY
+  COMPLETED
+  CANCELLED
+}
+
+enum MatchCallProposalStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
 }
 
 enum MatchStatus {
@@ -390,6 +451,9 @@ enum MessageKind {
   MODEL_ADVICE_STATUS
   MODEL_ADVICE_AGENT
   MODEL_ADVICE_RESULT
+  ZOOM_CALL_LINK
+  ZOOM_CALL_PROPOSAL
+  ZOOM_CALL_CONFIRMED
 }
 
 model Message {

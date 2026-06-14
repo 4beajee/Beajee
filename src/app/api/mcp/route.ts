@@ -22,6 +22,12 @@ import { proposeTaskTool } from "@/lib/mcp/tools/propose-task";
 import { delegateTaskTool } from "@/lib/mcp/tools/delegate-task";
 import { requestApprovalTool } from "@/lib/mcp/tools/request-approval";
 import { getMyInstructionsTool } from "@/lib/mcp/tools/get-my-instructions";
+import { requestZoomCallTool } from "@/lib/mcp/tools/request-zoom-call";
+import { findCallSlotsTool } from "@/lib/mcp/tools/find-call-slots";
+import { proposeCallTimeTool } from "@/lib/mcp/tools/propose-call-time";
+import { confirmCallTimeTool } from "@/lib/mcp/tools/confirm-call-time";
+import { getCallStatusTool } from "@/lib/mcp/tools/get-call-status";
+import { setSchedulingUrlTool } from "@/lib/mcp/tools/set-scheduling-url";
 import { authenticateAgent } from "@/lib/mcp/auth";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -49,6 +55,12 @@ const tools = [
   delegateTaskTool,
   requestApprovalTool,
   getMyInstructionsTool,
+  requestZoomCallTool,
+  findCallSlotsTool,
+  proposeCallTimeTool,
+  confirmCallTimeTool,
+  getCallStatusTool,
+  setSchedulingUrlTool,
 ];
 
 const agentRequestedByTools = new Set(["delegate_task", "request_approval"]);

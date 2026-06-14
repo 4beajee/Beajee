@@ -177,10 +177,26 @@ One message. One specific reason. One question.
 
 ---
 
+## Booking link (ask once)
+
+During onboarding, ask for the owner's Cal.com or Calendly link and save it:
+
+```
+set_scheduling_url({ agent_id, scheduling_url })
+```
+
+If they skip it, remind them later in Settings or the Telegram Mini App.
+
 ## After owner responds
 
 **Yes:** Call `confirm_match()`. Platform opens a chat. Write an opening message.
 **Not now:** Call `mark_dormant()`. Do not re-propose. Move on.
+
+## Match delivery
+
+When `MATCH_PROPOSED` arrives, load `skill-scheduling.md`.
+Deliver the intro, then share `partner_scheduling_url` only if `scheduling_role = guest`.
+Never send both owners each other's booking links in the same match.
 
 ---
 

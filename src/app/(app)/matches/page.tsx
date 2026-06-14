@@ -17,6 +17,7 @@ import {
   tabBaseClass,
   tabIdleClass,
 } from "@/components/ui/app-chrome";
+import { ScheduleCallButton } from "@/components/schedule-call-button";
 
 interface MatchItem {
   matchId: string;
@@ -35,6 +36,10 @@ interface MatchItem {
   chatId: string | null;
   proposedAt: string | null;
   matchedAt: string | null;
+  schedulingRole?: "guest" | "host" | null;
+  partnerSchedulingUrl?: string | null;
+  partnerSchedulingProvider?: string | null;
+  schedulingHostName?: string | null;
 }
 
 export default function MatchesPage() {
@@ -211,6 +216,22 @@ export default function MatchesPage() {
                 </div>
               )}
           </div>
+
+          {match.schedulingRole === "guest" && match.partnerSchedulingUrl && (
+            <div className="mt-5">
+              <ScheduleCallButton
+                url={match.partnerSchedulingUrl}
+                providerLabel={match.partnerSchedulingProvider}
+                hostName={match.schedulingHostName}
+                variant="primary"
+              />
+            </div>
+          )}
+          {match.schedulingRole === "host" && (
+            <p className="mt-5 text-xs text-neutral-500">
+              {t("matches.schedulingHostHint")}
+            </p>
+          )}
 
           <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-white/[0.05] pt-4">
             {match.status === "MATCHED" && match.chatId && (

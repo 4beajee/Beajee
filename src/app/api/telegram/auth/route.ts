@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
         image: issued.owner.image,
         onboarded: issued.owner.onboarded,
         telegramId: issued.owner.telegramId,
+        schedulingUrl: issued.owner.schedulingUrl,
       },
       telegram: {
         id: verified.telegramId,

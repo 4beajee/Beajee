@@ -136,11 +136,25 @@ Wait for both to respond. Do not follow up if no response within 48 hours.
 
 **Both confirmed** → platform opens chat automatically and writes a
 `MATCH_CONFIRMED` event into your inbox (delivered via `check_in`).
-Tell your owner the chat is open. If they want to reply immediately through
-your channel, use `send_chat_message({match_id, content})` — the message
-appears in the Beajee chat and the other side gets their own notification.
+Tell your owner the chat is open. The **end goal of every match is a Zoom call** —
+load `skill-zoom-call.md` and ask if they want to schedule one.
+If they want to reply immediately through your channel, use
+`send_chat_message({match_id, content})` — the message appears in the Beajee chat
+and the other side gets their own notification.
 
 **One or both said "not now"** → call mark_dormant(). Move on. No reminders.
+
+---
+
+## Step 7: Schedule the Zoom call
+
+After both owners confirm, unload this skill and load **skill-zoom-call.md**.
+
+Quick path:
+1. Ask owner if they want a call → `request_zoom_call({match_id})`
+2. If calendar connected → `find_call_slots({match_id})` → `propose_call_time({match_id, slots})`
+3. When the other side proposes times → `confirm_call_time({match_id, proposal_id})`
+4. When both want a call → platform auto-sends Zoom link via `ZOOM_LINK_READY` inbox event
 
 ---
 

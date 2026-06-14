@@ -12,6 +12,8 @@ const tests = [
   "tests/hub-edit.test.ts",
   "tests/personal-connectors.test.ts",
   "tests/telegram-intelligram.test.ts",
+  "tests/scheduling-match.test.ts",
+  "tests/match-call.test.ts",
   "tests/agent-collaboration-pipeline.test.ts",
   "tests/corporate-connectors.test.ts",
   "tests/team-framework.test.ts",

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { NetworkingGoal } from "./context";
 import { isSupportedCountryCode } from "@/lib/countries";
+import { SchedulingUrlSchema } from "@/lib/scheduling-url";
 
 export const AgentPlatform = z.enum([
   "open_claw",
@@ -42,6 +43,7 @@ export const OnboardingSchema = z.object({
   }),
   researchConsent: z.boolean().optional(),
   excludedTopics: z.array(z.string().max(100)).max(20).optional(),
+  schedulingUrl: z.union([z.literal(""), SchedulingUrlSchema]).optional(),
 });
 
 export type OnboardingInput = z.infer<typeof OnboardingSchema>;

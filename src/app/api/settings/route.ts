@@ -66,6 +66,7 @@ export async function GET() {
       wakeStreamLastError: owner.agent?.wakeStreamLastError ?? null,
       wakeDeliveryMode,
       privacySync,
+      schedulingUrl: owner.schedulingUrl,
     });
   } catch (error) {
     return safeErrorResponse(error, "Failed to load settings");
@@ -117,6 +118,9 @@ export async function PATCH(request: NextRequest) {
     const ownerUpdate: Record<string, unknown> = {};
     if (validated.excludedTopics !== undefined) ownerUpdate.excludedTopics = validated.excludedTopics;
     if (validated.networkingGoal !== undefined) ownerUpdate.networkingGoal = validated.networkingGoal;
+    if (validated.schedulingUrl !== undefined) {
+      ownerUpdate.schedulingUrl = validated.schedulingUrl === "" ? null : validated.schedulingUrl;
+    }
 
     // Research consent — also write ConsentLog
     if (validated.researchConsent !== undefined) {

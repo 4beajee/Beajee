@@ -26,6 +26,12 @@ import { proposeTaskTool } from "./tools/propose-task";
 import { delegateTaskTool } from "./tools/delegate-task";
 import { requestApprovalTool } from "./tools/request-approval";
 import { getMyInstructionsTool } from "./tools/get-my-instructions";
+import { requestZoomCallTool } from "./tools/request-zoom-call";
+import { findCallSlotsTool } from "./tools/find-call-slots";
+import { proposeCallTimeTool } from "./tools/propose-call-time";
+import { confirmCallTimeTool } from "./tools/confirm-call-time";
+import { getCallStatusTool } from "./tools/get-call-status";
+import { setSchedulingUrlTool } from "./tools/set-scheduling-url";
 
 const tools = [
   publishContextTool,
@@ -51,6 +57,12 @@ const tools = [
   delegateTaskTool,
   requestApprovalTool,
   getMyInstructionsTool,
+  requestZoomCallTool,
+  findCallSlotsTool,
+  proposeCallTimeTool,
+  confirmCallTimeTool,
+  getCallStatusTool,
+  setSchedulingUrlTool,
 ];
 
 export function createMcpServer() {

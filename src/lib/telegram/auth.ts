@@ -176,6 +176,7 @@ export async function issueUnifiedToken(verified: VerifiedTelegramInitData) {
       image: true,
       onboarded: true,
       telegramId: true,
+      schedulingUrl: true,
     },
   });
 
@@ -198,6 +199,47 @@ export async function issueUnifiedToken(verified: VerifiedTelegramInitData) {
     token: `${unsigned}.${base64Url(signature)}`,
     expiresAt: new Date(payload.exp * 1000),
     owner,
+  };
+}
+
+export function verifyUnifiedToken(token: string) {
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    throw new TelegramAuthError("Telegram session token is invalid", 401);
+  }
+
+  const [headerPart, payloadPart, signaturePart] = parts;
+  const unsigned = `${headerPart}.${payloadPart}`;
+  const expected = crypto.createHmac("sha256", getJwtSecret()).update(unsigned).digest();
+  const actual = Buffer.from(signaturePart.replace(/-/g, "+").replace(/_/g, "/"), "base64");
+
+  if (expected.length !== actual.length || !crypto.timingSafeEqual(expected, actual)) {
+    throw new TelegramAuthError("Telegram session token signature is invalid", 401);
+  }
+
+  let payload: {
+    aud?: string;
+    ownerId?: string;
+    exp?: number;
+  };
+  try {
+    payload = JSON.parse(Buffer.from(payloadPart, "base64url").toString("utf8"));
+  } catch {
+    throw new TelegramAuthError("Telegram session token payload is invalid", 401);
+  }
+
+  if (payload.aud !== "beajee.telegram-mini-app" || !payload.ownerId) {
+    throw new TelegramAuthError("Telegram session token audience is invalid", 401);
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (!payload.exp || payload.exp < now) {
+    throw new TelegramAuthError("Telegram session token is expired", 401);
+  }
+
+  return {
+    ownerId: payload.ownerId,
+    expiresAt: new Date(payload.exp * 1000),
   };
 }
 
