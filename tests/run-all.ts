@@ -5,6 +5,7 @@ const tests = [
   "tests/agent-wake.test.ts",
   "tests/agent-wake-stream.test.ts",
   "tests/agent-search-pause.test.ts",
+  "tests/agent-prompt-generator.test.ts",
   "tests/telegram-intelligram.test.ts",
   "tests/consent.test.ts",
   "tests/match-confirmation.test.ts",

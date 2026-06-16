@@ -7,6 +7,7 @@ import {
   generateAgentOnboardingPrompt,
   generateAgentWakePrompt,
 } from "@/lib/onboarding/agent-prompt-generator";
+import { getPlatformUrls } from "@/lib/platform-urls";
 import { getAgentPlatformMeta, supportsWakePrompt } from "@/lib/onboarding/agent-platform";
 import { AgentPlatform } from "@/types/onboarding";
 import { loadMessages } from "@/i18n/messages";
@@ -131,6 +132,8 @@ export async function GET(request: NextRequest) {
       locale,
     });
 
+    const urls = getPlatformUrls();
+
     return NextResponse.json({
       prompt,
       mode: "setup",
@@ -138,8 +141,8 @@ export async function GET(request: NextRequest) {
       runtime_class: meta.runtimeClass,
       features: meta.features,
       agent_id: agent.agentId,
-      mcp_endpoint: "https://api.gennety.com/mcp",
-      skill_url: "https://gennety.com/skill.md",
+      mcp_endpoint: urls.mcpEndpoint,
+      skill_url: urls.skillUrl,
     });
   } catch (error) {
     const locale = resolveLocale({

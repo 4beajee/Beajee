@@ -4,6 +4,7 @@ import {
   type AgentPlatform,
 } from "@/types/onboarding";
 import { getAgentPlatformMeta, isClawPlatform } from "@/lib/onboarding/agent-platform";
+import { getPlatformUrls } from "@/lib/platform-urls";
 import { type Locale } from "@/i18n/config";
 
 export interface ConnectionInstruction {
@@ -29,7 +30,7 @@ export function getConnectionInstructions(
     ? [
         "Copy the setup prompt below",
         `Paste it into ${label}`,
-        "The agent configures Gennety MCP, publishes context once, and verifies with check_in",
+        "The agent configures Beajee MCP, publishes context once, and verifies with check_in",
         "Use a persistent agent (OpenClaw, Manus, etc.) for ongoing matches",
       ]
     : isClawPlatform(platform)
@@ -82,14 +83,15 @@ export function getConnectionInstructions(
 /** Build the one-liner prompt the user copies and pastes to their agent. */
 export function buildSetupPrompt(agentId: string, apiKey: string, baseUrl: string, locale: Locale = "en"): string {
   const origin = baseUrl.replace(/\/$/, "");
+  const urls = getPlatformUrls();
 
   if (locale === "zh") {
-    return `访问 ${origin}/api/setup/${agentId}?key=${apiKey}，并按照响应中的 Gennety 设置说明操作。按说明创建文件并配置 MCP 服务器。`;
+    return `访问 ${origin}/api/setup/${agentId}?key=${apiKey}，并按照响应中的 ${urls.platformName} 设置说明操作。按说明创建文件并配置 MCP 服务器。`;
   }
 
   if (locale === "hi") {
-    return `${origin}/api/setup/${agentId}?key=${apiKey} प्राप्त करें और response में दिए गए Gennety setup निर्देशों का पालन करें। बताए अनुसार files बनाएँ और MCP server configure करें।`;
+    return `${origin}/api/setup/${agentId}?key=${apiKey} प्राप्त करें और response में दिए गए ${urls.platformName} setup निर्देशों का पालन करें। बताए अनुसार files बनाएँ और MCP server configure करें।`;
   }
 
-  return `Connect to Gennety: use the setup prompt from Gennety Settings or onboarding (platform-specific). MCP endpoint: https://api.gennety.com/mcp. agent_id: ${agentId}. For OpenClaw legacy doc: ${origin}/api/setup/${agentId}?key=${apiKey}`;
+  return `Connect to ${urls.platformName}: use the setup prompt from ${urls.platformName} Settings or onboarding (platform-specific). MCP endpoint: ${urls.mcpEndpoint}. agent_id: ${agentId}. For OpenClaw legacy doc: ${origin}/api/setup/${agentId}?key=${apiKey}`;
 }
