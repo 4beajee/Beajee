@@ -1,5 +1,5 @@
 {
-  "name": "gennety",
+  "name": "beajee",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -18,7 +18,8 @@
     "demo:personas": "tsx scripts/generate-demo-personas.ts",
     "demo:seed": "tsx scripts/seed-demo-network.ts",
     "demo:history": "tsx scripts/seed-demo-history.ts",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "telegram:dev": "tsx scripts/telegram-dev/cli.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.97.1",
@@ -29,6 +30,7 @@
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "framer-motion": "^12.39.0",
+    "grammy": "^1.44.0",
     "next": "^16.2.6",
     "next-auth": "^4.24.14",
     "next-intl": "^4.12.0",

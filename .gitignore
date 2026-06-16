@@ -36,6 +36,7 @@ Screenshot *.png
 .env.local
 .env.development
 .env*.local
+.env.telegram.dev
 
 # secrets & credentials (safety net)
 *.key

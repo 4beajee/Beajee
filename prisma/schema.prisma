@@ -23,7 +23,9 @@ model Owner {
   privacyConsent  Boolean   @default(false) @map("privacy_consent")
   researchConsent Boolean   @default(false) @map("research_consent") // Purpose B — separate GDPR basis
   excludedTopics  String[]  @default([]) @map("excluded_topics")
-  agentPlatform   String?   @map("agent_platform") // "open_claw" | "nemo_claw" | "zero_claw" | "nano_claw"
+  agentPlatform   String?   @map("agent_platform") // open_claw | hermes | nemo_claw | codex | claude_code | ...
+  schedulingUrl   String?   @map("scheduling_url")
+  telegramId      String?   @unique @map("telegram_id")
   onboarded       Boolean   @default(false)
 
   // Demo network — simulated accounts driven by the server-side responder.
@@ -45,9 +47,32 @@ model Owner {
   communityInvitesReceived CommunityInvite[] @relation("CommunityInviteInvitee")
   communityChatMessages    CommunityChatMessage[] @relation("CommunityChatMessageAuthor")
   communityChatReads       CommunityChatRead[]
+  telegramTopics           TelegramTopic[]
 
   @@index([isDemo])
   @@map("owners")
+}
+
+model TelegramTopic {
+  id              String            @id @default(cuid())
+  ownerId         String            @map("owner_id")
+  owner           Owner             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  chatId          String            @map("chat_id")
+  topicType       TelegramTopicType @map("topic_type")
+  messageThreadId Int               @map("message_thread_id")
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  @@unique([ownerId, topicType])
+  @@index([chatId])
+  @@map("telegram_topics")
+}
+
+enum TelegramTopicType {
+  MATCHES    @map("matches")
+  DATES      @map("dates")
+  SETTINGS   @map("settings")
+  AGENT_LOG  @map("agent_log")
+  TEAM_SPACE @map("team_space")
 }
 
 model Account {
@@ -451,6 +476,7 @@ model Community {
   judgeIterationLimit        Int                        @default(3) @map("judge_iteration_limit")
   strategyLockUntil          DateTime?                  @map("strategy_lock_until")
   roleChangesRequireApproval Boolean                    @default(true) @map("role_changes_require_approval")
+  teamMode                   Boolean                    @default(false) @map("team_mode")
   createdAt                  DateTime                   @default(now()) @map("created_at")
   updatedAt                  DateTime                   @updatedAt @map("updated_at")
 

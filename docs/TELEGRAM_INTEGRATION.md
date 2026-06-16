@@ -1,11 +1,11 @@
 # Telegram Integration
 
-> Gennety operates as a **first-class Telegram Mini App**, not just a web redirect.
+> Beajee operates as a **first-class Telegram Mini App**, not just a web redirect.
 
 ## Architecture Overview
 
 ```
-User (Telegram) → Mini App (Full Screen, no header bar) → Gennety Backend → Agent Runtime
+User (Telegram) → Mini App (Full Screen, no header bar) → Beajee backend → Agent Runtime
                                                                   ↓
                                                    Bot-to-Bot Communication API
                                                    (Telegram Bot API 10.0, May 2026)
@@ -14,7 +14,7 @@ User (Telegram) → Mini App (Full Screen, no header bar) → Gennety Backend �
 The integration uses three layers:
 1. **Telegram Bot** — receives events, sends notifications, handles inline actions.
 2. **Mini App** — full Next.js UI embedded inside Telegram via Full Screen Mini Apps (no top chrome, launched via `Telegram.WebApp.expand()`).
-3. **Backend Intermediary** — authenticates Telegram users, bridges Telegram identity with Gennety accounts via a unified token.
+3. **Backend Intermediary** — authenticates Telegram users, bridges Telegram identity with Beajee accounts via a unified token.
 
 ---
 
@@ -25,10 +25,10 @@ User opens Telegram bot
   → Welcome message + "Start" button
   → Mini App opens FULL SCREEN (no header bar, Telegram.WebApp.expand())
   → Onboarding wizard (profile, photo, preferences — same as web)
-  → Final question: "How do you want to use Gennety?"
+  → Final question: "How do you want to use Beajee?"
       A) Web platform  →  email registration, redirect to web
       B) Stay in Telegram  →  Telegram account linked, Mini App is primary surface
-  → Unified token issued (links Telegram ID ↔ Gennety account)
+  → Unified token issued (links Telegram ID ↔ Beajee account)
 ```
 
 **Key rules:**
@@ -62,7 +62,7 @@ Agent sends all notifications to the relevant topic via `message_thread_id`. Use
 
 Telegram Bot API 10.0 (May 2026) introduced native **Bot-to-Bot Communication**: bots can send structured messages directly to other bots by username.
 
-**How Gennety uses it:**
+**How Beajee uses it:**
 - Agent A (user A) sends a structured negotiation payload to Agent B (user B) via Bot-to-Bot API.
 - Agent B evaluates the request autonomously: accepts, rejects, or requests clarification.
 - Result surfaces in both users' Match topics + Mini App feed.

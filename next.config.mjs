@@ -5,7 +5,7 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  allowedDevOrigins: ['gennety.local', 'app.gennety.local'],
+  allowedDevOrigins: ['gennety.local', 'app.gennety.local', '*.ngrok-free.app', '*.ngrok-free.dev'],
   serverExternalPackages: ['@prisma/client', 'sharp'],
   async headers() {
     return [

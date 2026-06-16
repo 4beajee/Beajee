@@ -5,6 +5,15 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import type { AgentPlatformFeatures } from "@/lib/onboarding/agent-platform";
+import { PLATFORM_LABELS, type AgentPlatform } from "@/types/onboarding";
+
+interface AgentPromptResponse {
+  prompt: string;
+  agent_id: string;
+  platform: string;
+  features: AgentPlatformFeatures;
+}
 
 export default function OnboardingConnectPage() {
   const { data: session } = useSession();
@@ -13,22 +22,25 @@ export default function OnboardingConnectPage() {
   const tCommon = useTranslations("common");
   const [prompt, setPrompt] = useState<string | null>(null);
   const [agentId, setAgentId] = useState<string | null>(null);
+  const [platformLabel, setPlatformLabel] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    fetch("/api/onboarding/openclaw-prompt")
+    fetch("/api/onboarding/agent-prompt?mode=setup")
       .then(async (res) => {
         if (!res.ok) {
           const data = await res.json().catch(() => null);
           throw new Error(data?.error ?? t("failedToLoadPrompt"));
         }
-        return res.json();
+        return res.json() as Promise<AgentPromptResponse & { platform: string }>;
       })
       .then((data) => {
         setPrompt(data.prompt);
         setAgentId(data.agent_id);
+        const platform = data.platform as AgentPlatform;
+        setPlatformLabel(PLATFORM_LABELS[platform] ?? data.platform);
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : t("failedToLoadPrompt"));
@@ -84,6 +96,11 @@ export default function OnboardingConnectPage() {
           <p className="mt-2 text-sm text-neutral-400">
             {t("copyPromptDesc")}
           </p>
+          {platformLabel && (
+            <p className="mt-2 text-xs text-neutral-500">
+              {t("connectingWith", { platform: platformLabel })}
+            </p>
+          )}
         </div>
 
         {/* Loading */}
@@ -138,31 +155,16 @@ export default function OnboardingConnectPage() {
               </button>
             </div>
 
-            {/* Alternative agents */}
             <div className="border-t border-neutral-800 pt-6 text-center">
               <p className="text-xs text-neutral-600 mb-3">
-                {t("preferManual")}
+                {t("wrongAgent")}
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <span className="text-xs text-neutral-500 hover:text-neutral-300 cursor-default transition-colors">
-                  Claude Desktop
-                </span>
-                <span className="text-neutral-800">·</span>
-                <span className="text-xs text-neutral-500 hover:text-neutral-300 cursor-default transition-colors">
-                  Manus AI
-                </span>
-                <span className="text-neutral-800">·</span>
-                <span className="text-xs text-neutral-500 hover:text-neutral-300 cursor-default transition-colors">
-                  {t("otherAgent")}
-                </span>
-                <span className="text-neutral-800">·</span>
-                <Link
-                  href="/onboarding"
-                  className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
-                >
-                  {t("preferManual")}
-                </Link>
-              </div>
+              <Link
+                href="/onboarding"
+                className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+              >
+                {t("changeAgent")}
+              </Link>
             </div>
           </>
         )}

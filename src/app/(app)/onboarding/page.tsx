@@ -7,6 +7,12 @@ import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { getCountryOptions, matchesCountryQuery } from "@/lib/countries";
 import {
+  getAgentPlatformMeta,
+  isClawPlatform,
+  ONBOARDING_AGENT_PLATFORMS,
+} from "@/lib/onboarding/agent-platform";
+import { PLATFORM_FILE_NAMES, type AgentPlatform } from "@/types/onboarding";
+import {
   codePanelClass,
   cx,
   inputClass,
@@ -17,13 +23,20 @@ import {
   subtleButtonSmallClass,
 } from "@/components/ui/app-chrome";
 
-type Step = "use_openclaw" | "install" | "thesis" | "goal" | "country" | "consent" | "sensitive" | "research" | "complete";
+type Step =
+  | "agent_select"
+  | "use_openclaw"
+  | "install"
+  | "thesis"
+  | "goal"
+  | "country"
+  | "consent"
+  | "sensitive"
+  | "research"
+  | "complete";
 type Goal = "partnership" | "collaboration" | "mentor" | "peer";
 type OS = "unix" | "windows";
 type OpenClawStatus = "using" | "installed_later" | null;
-
-const AGENT_PLATFORM = "open_claw";
-const FILE_NAME = "SOUL.md";
 const ONBOARDING_TITLE = "text-xl font-semibold text-white mb-3 text-center";
 const ONBOARDING_TITLE_TIGHT = "text-xl font-semibold text-white mb-2 text-center";
 const ONBOARDING_DESC = "text-sm leading-6 text-neutral-400";
@@ -171,7 +184,8 @@ export default function OnboardingPage() {
   const { data: session } = useSession();
   const t = useTranslations();
   const locale = useLocale();
-  const [step, setStep] = useState<Step>("use_openclaw");
+  const [step, setStep] = useState<Step>("agent_select");
+  const [selectedPlatform, setSelectedPlatform] = useState<AgentPlatform | null>(null);
   const [openClawStatus, setOpenClawStatus] = useState<OpenClawStatus>(null);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null);
@@ -231,7 +245,20 @@ export default function OnboardingPage() {
     ? countryOptions.find((country) => country.code === selectedCountryCode) ?? null
     : null;
 
-  const fileName = FILE_NAME;
+  const platformMeta = selectedPlatform ? getAgentPlatformMeta(selectedPlatform) : null;
+  const fileName = selectedPlatform
+    ? PLATFORM_FILE_NAMES[selectedPlatform]
+    : "SOUL.md";
+  const showSoulDownload = platformMeta?.features.showSoulDownload ?? true;
+
+  const handlePlatformContinue = () => {
+    if (!selectedPlatform) return;
+    if (isClawPlatform(selectedPlatform)) {
+      setStep("use_openclaw");
+      return;
+    }
+    setStep("thesis");
+  };
 
   const handleGoalSelect = (goal: Goal) => {
     setSelectedGoal(goal);
@@ -263,7 +290,7 @@ export default function OnboardingPage() {
 
     try {
       const body = {
-        agentPlatform: AGENT_PLATFORM,
+        agentPlatform: selectedPlatform ?? "open_claw",
         networkingGoal: selectedGoal,
         countryCode: selectedCountryCode,
         privacyConsent: true,
@@ -342,7 +369,8 @@ export default function OnboardingPage() {
 
   const TOTAL_STEPS = 7;
   const stepNumber =
-    step === "use_openclaw" ? 1
+    step === "agent_select" ? 1
+      : step === "use_openclaw" ? 1
       : step === "install" ? 1
       : step === "thesis" ? 2
       : step === "goal" ? 3
@@ -387,6 +415,75 @@ export default function OnboardingPage() {
           </div>
         )}
 
+        {/* Step 1: Agent platform */}
+        {step === "agent_select" && (
+          <div>
+            <h2 className={ONBOARDING_TITLE}>
+              {t("onboarding.agentSelectTitle")}
+            </h2>
+            <p className={cx(ONBOARDING_DESC, "mb-6 text-center")}>
+              {t("onboarding.agentSelectDesc")}
+            </p>
+
+            <div className="space-y-3">
+              {ONBOARDING_AGENT_PLATFORMS.map((platform) => {
+                const meta = getAgentPlatformMeta(platform);
+                const isSelected = selectedPlatform === platform;
+
+                return (
+                  <button
+                    key={platform}
+                    onClick={() => setSelectedPlatform(platform)}
+                    className={`${ONBOARDING_OPTION} flex items-center justify-between gap-3 ${
+                      isSelected
+                        ? "bg-white/[0.07] text-white ring-white/[0.18]"
+                        : ONBOARDING_OPTION_IDLE
+                    }`}
+                  >
+                    <span className="font-medium text-white">{meta.label}</span>
+                    <span
+                      className={cx(
+                        "h-4 w-4 shrink-0 rounded-full ring-1 ring-inset transition-colors",
+                        isSelected
+                          ? "bg-white ring-white/40"
+                          : "bg-transparent ring-white/20"
+                      )}
+                      aria-hidden
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            {selectedPlatform && (() => {
+              const meta = getAgentPlatformMeta(selectedPlatform);
+              if (meta.features.requiresMacSilicon) {
+                return (
+                  <p className="mt-4 text-center text-xs text-amber-300/90">
+                    {t("onboarding.agentSelectPlatformNote")}
+                  </p>
+                );
+              }
+              if (meta.features.isSetupHelperOnly) {
+                return (
+                  <p className="mt-4 text-center text-xs text-sky-200/90">
+                    {t("onboarding.agentSelectSetupHelperNote")}
+                  </p>
+                );
+              }
+              return null;
+            })()}
+
+            <button
+              onClick={handlePlatformContinue}
+              disabled={!selectedPlatform}
+              className={cx(ONBOARDING_PRIMARY, "mt-6 disabled:cursor-not-allowed")}
+            >
+              {t("common.continue")}
+            </button>
+          </div>
+        )}
+
         {/* Step 1a: Do you use OpenClaw? */}
         {step === "use_openclaw" && (
           <div>
@@ -413,6 +510,13 @@ export default function OnboardingPage() {
                 {t("onboarding.noNotYet")}
               </button>
             </div>
+
+            <button
+              onClick={() => setStep("agent_select")}
+              className={ONBOARDING_BACK}
+            >
+              {t("common.back")}
+            </button>
           </div>
         )}
 
@@ -640,6 +744,12 @@ export default function OnboardingPage() {
               >
                 {t("common.back")}
               </button>
+              <button
+                onClick={() => setStep("agent_select")}
+                className={ONBOARDING_BACK}
+              >
+                {t("onboarding.changeAgent")}
+              </button>
             </div>
           </div>
         )}
@@ -728,7 +838,15 @@ export default function OnboardingPage() {
                 </button>
 
                 <button
-                  onClick={() => setStep(openClawStatus === "installed_later" ? "install" : "use_openclaw")}
+                  onClick={() =>
+                    setStep(
+                      openClawStatus === "installed_later"
+                        ? "install"
+                        : isClawPlatform(selectedPlatform ?? "open_claw")
+                          ? "use_openclaw"
+                          : "agent_select"
+                    )
+                  }
                   className="inline-flex min-h-9 items-center justify-center rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-400 transition-colors hover:bg-white/[0.035] hover:text-white"
                 >
                   {t("common.back")}
@@ -1125,7 +1243,7 @@ export default function OnboardingPage() {
                 onClick={() => setShowManual(!showManual)}
                 className="flex min-h-9 w-full items-center justify-between rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-400 transition-colors hover:bg-white/[0.035] hover:text-white"
               >
-                <span>{t("onboarding.preferManual")}</span>
+                <span>{showSoulDownload ? t("onboarding.preferManual") : t("onboarding.showCredentials")}</span>
                 <svg
                   className={`w-3.5 h-3.5 transition-transform ${showManual ? "rotate-180" : ""}`}
                   fill="none"
@@ -1138,12 +1256,14 @@ export default function OnboardingPage() {
 
               {showManual && (
                 <div className="mt-3 space-y-2">
-                  <button
-                    onClick={handleDownloadFile}
-                    className={subtleButtonClass}
-                  >
-                    {t("onboarding.downloadFile", { fileName })}
-                  </button>
+                  {showSoulDownload && (
+                    <button
+                      onClick={handleDownloadFile}
+                      className={subtleButtonClass}
+                    >
+                      {t("onboarding.downloadFile", { fileName })}
+                    </button>
+                  )}
                   <div className="space-y-2 rounded-xl bg-neutral-900/50 p-3 ring-1 ring-inset ring-white/[0.06]">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs text-neutral-500">{t("onboarding.agentId")}</span>

@@ -4,31 +4,63 @@ import { isSupportedCountryCode } from "@/lib/countries";
 
 export const AgentPlatform = z.enum([
   "open_claw",
+  "hermes",
   "nemo_claw",
   "zero_claw",
   "nano_claw",
+  "codex",
+  "claude_code",
+  "manus",
+  "folk",
+  "perplexity_computer",
+  "perplexity_personal_computer",
+  "other_mcp",
 ]);
 export type AgentPlatform = z.infer<typeof AgentPlatform>;
 
 export const PLATFORM_FILE_NAMES: Record<AgentPlatform, string> = {
   open_claw: "SOUL.md",
+  hermes: "AGENTS.md",
   nemo_claw: "SOUL.md",
   zero_claw: "SOUL.md",
   nano_claw: "SOUL.md",
+  codex: "GENNETY.md",
+  claude_code: "CLAUDE.md",
+  manus: "GENNETY.md",
+  folk: "GENNETY.md",
+  perplexity_computer: "GENNETY.md",
+  perplexity_personal_computer: "GENNETY.md",
+  other_mcp: "GENNETY.md",
 };
 
 export const PLATFORM_TEMPLATE_FILES: Record<AgentPlatform, string> = {
   open_claw: "open-claw.md",
+  hermes: "open-claw.md",
   nemo_claw: "open-claw.md",
   zero_claw: "open-claw.md",
   nano_claw: "open-claw.md",
+  codex: "open-claw.md",
+  claude_code: "open-claw.md",
+  manus: "open-claw.md",
+  folk: "open-claw.md",
+  perplexity_computer: "open-claw.md",
+  perplexity_personal_computer: "open-claw.md",
+  other_mcp: "open-claw.md",
 };
 
 export const PLATFORM_LABELS: Record<AgentPlatform, string> = {
-  open_claw: "Open Claw",
+  open_claw: "OpenClaw",
+  hermes: "Hermes Agent",
   nemo_claw: "Nemo Claw",
   zero_claw: "Zero Claw",
   nano_claw: "Nano-Claw",
+  codex: "OpenAI Codex",
+  claude_code: "Claude Code",
+  manus: "Manus",
+  folk: "Folk",
+  perplexity_computer: "Perplexity Computer",
+  perplexity_personal_computer: "Perplexity Personal Computer",
+  other_mcp: "Other MCP agent",
 };
 
 export const OnboardingSchema = z.object({

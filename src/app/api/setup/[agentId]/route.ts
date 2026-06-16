@@ -11,6 +11,8 @@ import {
   buildOpenClawBridgeConfig,
   getOpenClawBridgePaths,
 } from "@/lib/onboarding/openclaw-bridge";
+import { getAgentPlatformMeta, isClawPlatform } from "@/lib/onboarding/agent-platform";
+import { generateAgentOnboardingPrompt } from "@/lib/onboarding/agent-prompt-generator";
 
 /**
  * GET /api/setup/[agentId]?key=API_KEY
@@ -88,6 +90,30 @@ export async function GET(
   // Build MCP config snippet per platform
   const mcpConfig = getMcpConfig(platform, agent.apiKey);
 
+  const meta = getAgentPlatformMeta(platform);
+
+  if (!isClawPlatform(platform)) {
+    const setupDoc = buildCloudSetupDocument({
+      platform,
+      prompt: generateAgentOnboardingPrompt({
+        platform,
+        agentId: agent.agentId,
+        apiKey: agent.apiKey,
+        ownerName: agent.owner.name ?? undefined,
+        networkingGoal:
+          (agent.owner.networkingGoal as "partnership" | "collaboration" | "mentor" | "peer") ??
+          "collaboration",
+      }),
+      mcpConfig,
+    });
+    return new NextResponse(setupDoc, {
+      headers: {
+        "Content-Type": "text/markdown; charset=utf-8",
+        "Cache-Control": "no-store",
+      },
+    });
+  }
+
   // Build the setup document
   const setupDoc = buildSetupDocument({
     fileName,
@@ -95,6 +121,7 @@ export async function GET(
     mcpConfig,
     agentId: agent.agentId,
     apiKey: agent.apiKey,
+    includeBridge: meta.features.showBridgeSetup,
   });
 
   return new NextResponse(setupDoc, {
@@ -122,14 +149,35 @@ function getMcpConfig(_platform: AgentPlatform, apiKey: string): string | null {
   );
 }
 
+function buildCloudSetupDocument(opts: {
+  platform: AgentPlatform;
+  prompt: string;
+  mcpConfig: string | null;
+}): string {
+  const label = opts.platform.replace(/_/g, " ");
+  const sections = [
+    `# Gennety setup (${label})\n`,
+    `Follow the platform-specific prompt below. Do not install the OpenClaw bridge unless you are on OpenClaw.\n`,
+    "## Setup prompt\n",
+    opts.prompt,
+    "\n",
+  ];
+  if (opts.mcpConfig) {
+    sections.push("## MCP configuration reference\n", "```json", opts.mcpConfig, "```\n");
+  }
+  sections.push("---\n", "Call `check_in` after MCP is configured to verify the connection.\n");
+  return sections.join("\n");
+}
+
 function buildSetupDocument(opts: {
   fileName: string;
   fileContent: string;
   mcpConfig: string | null;
   agentId: string;
   apiKey: string;
+  includeBridge: boolean;
 }): string {
-  const { fileName, fileContent, mcpConfig, agentId, apiKey } = opts;
+  const { fileName, fileContent, mcpConfig, agentId, apiKey, includeBridge } = opts;
   const { appOrigin, bridgeConfigPath, bridgeDocsUrl, bridgeScriptUrl } = getOpenClawBridgePaths();
   const bridgeConfig = buildOpenClawBridgeConfig({ agentId, apiKey });
   const statusUrl = `${appOrigin}/api/setup/${agentId}/wake`;
@@ -160,39 +208,44 @@ function buildSetupDocument(opts: {
     sections.push("```\n");
   }
 
-  const wakeStep = mcpConfig ? 3 : 2;
-  sections.push(`## Step ${wakeStep} — Install the Gennety OpenClaw Bridge\n`);
-  sections.push(
-    `Use the local bridge so Gennety can wake OpenClaw without a public inbound URL. The bridge opens the outbound wake stream, runs \`check_in\`, routes owner-facing notifications through native OpenClaw delivery, and only calls \`ack_inbox\` after successful delivery.\n`
-  );
-  sections.push("```bash");
-  sections.push(`mkdir -p ~/.config/gennety`);
-  sections.push(`curl -fsSL ${bridgeScriptUrl} \\`);
-  sections.push(`  -o ~/.config/gennety/gennety-openclaw-bridge.mjs`);
-  sections.push("```\n");
-  sections.push(`Create \`${bridgeConfigPath}\` with this content:\n`);
-  sections.push("```json");
-  sections.push(bridgeConfig);
-  sections.push("```\n");
-  sections.push(
-    `Start the bridge in the background:\n`
-  );
-  sections.push("```bash");
-  sections.push(`nohup node ~/.config/gennety/gennety-openclaw-bridge.mjs \\`);
-  sections.push(`  --config ${bridgeConfigPath} \\`);
-  sections.push(`  >/tmp/gennety-openclaw-bridge.log 2>&1 &`);
-  sections.push("```\n");
-  sections.push(
-    `Reference documentation: ${bridgeDocsUrl}\n`
-  );
+  let verifyStep = mcpConfig ? 3 : 2;
 
-  // Step 4: Verify
-  const verifyStep = wakeStep + 1;
+  if (includeBridge) {
+    const wakeStep = verifyStep;
+    verifyStep = wakeStep + 1;
+    sections.push(`## Step ${wakeStep} — Install the Gennety OpenClaw Bridge\n`);
+    sections.push(
+      `Use the local bridge so Gennety can wake OpenClaw without a public inbound URL. The bridge opens the outbound wake stream, runs \`check_in\`, routes owner-facing notifications through native OpenClaw delivery, and only calls \`ack_inbox\` after successful delivery.\n`
+    );
+    sections.push("```bash");
+    sections.push(`mkdir -p ~/.config/gennety`);
+    sections.push(`curl -fsSL ${bridgeScriptUrl} \\`);
+    sections.push(`  -o ~/.config/gennety/gennety-openclaw-bridge.mjs`);
+    sections.push("```\n");
+    sections.push(`Create \`${bridgeConfigPath}\` with this content:\n`);
+    sections.push("```json");
+    sections.push(bridgeConfig);
+    sections.push("```\n");
+    sections.push(`Start the bridge in the background:\n`);
+    sections.push("```bash");
+    sections.push(`nohup node ~/.config/gennety/gennety-openclaw-bridge.mjs \\`);
+    sections.push(`  --config ${bridgeConfigPath} \\`);
+    sections.push(`  >/tmp/gennety-openclaw-bridge.log 2>&1 &`);
+    sections.push("```\n");
+    sections.push(`Reference documentation: ${bridgeDocsUrl}\n`);
+  }
+
   sections.push(`## Step ${verifyStep} — Verify connection\n`);
 
-  sections.push(
-    `Confirm the bridge is connected at \`${statusUrl}\`. Success means the wake stream is live and OpenClaw can now process Gennety inbox events through its normal runtime.\n`
-  );
+  if (includeBridge) {
+    sections.push(
+      `Confirm the bridge is connected at \`${statusUrl}\`. Success means the wake stream is live and OpenClaw can now process Gennety inbox events through its normal runtime.\n`
+    );
+  } else {
+    sections.push(
+      `Call MCP \`check_in({ agent_id: "${agentId}" })\` and confirm you receive a valid response.\n`
+    );
+  }
 
   sections.push(`---\n`);
   sections.push(`Setup complete. The agent will now network on Gennety autonomously.`);

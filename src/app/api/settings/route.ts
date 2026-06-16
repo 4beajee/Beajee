@@ -9,6 +9,10 @@ import { setAgentSearchPaused } from "@/lib/services/agent-search";
 import { SettingsUpdateSchema } from "@/types/settings";
 import { getWakeWebhookUrlError } from "@/lib/wake-webhook";
 import { getWakeStreamConnectionCount, hasLiveWakeStream } from "@/lib/services/agent-wake-stream";
+import { getAgentPlatformMeta } from "@/lib/onboarding/agent-platform";
+import { migrateAgentPlatform } from "@/lib/services/agent-platform-migration";
+import { AgentPlatform } from "@/types/onboarding";
+import { resolveLocale } from "@/i18n/config";
 import { ZodError } from "zod";
 
 // GET /api/settings — load current settings for the authenticated owner
@@ -34,11 +38,17 @@ export async function GET() {
     const privacySync = owner.agent ? await getPrivacySyncStatus(owner.agent.id) : null;
     const wakeStreamConnected = owner.agent ? hasLiveWakeStream(owner.agent.id) : false;
     const wakeStreamConnectionCount = owner.agent ? getWakeStreamConnectionCount(owner.agent.id) : 0;
+    const platformKey =
+      owner.agentPlatform && AgentPlatform.safeParse(owner.agentPlatform).success
+        ? (owner.agentPlatform as AgentPlatform)
+        : "open_claw";
+    const platformMeta = getAgentPlatformMeta(platformKey);
+
     const wakeDeliveryMode = wakeStreamConnected
       ? "stream"
       : owner.agent?.wakeWebhookEnabled
       ? "webhook"
-      : "polling";
+      : platformMeta.features.expectedDeliveryMode;
 
     return NextResponse.json({
       // P0
@@ -52,6 +62,10 @@ export async function GET() {
       networkingGoal: owner.networkingGoal,
       agentId: owner.agent?.agentId ?? null,
       agentPlatform: owner.agentPlatform,
+      agentPlatformLabel: platformMeta.label,
+      agentRuntimeClass: platformMeta.runtimeClass,
+      agentPlatformFeatures: platformMeta.features,
+      agentLastActiveAt: owner.agent?.lastActiveAt?.toISOString() ?? null,
       wakeWebhookEnabled: owner.agent?.wakeWebhookEnabled ?? false,
       webhookUrl: owner.agent?.webhookUrl ?? "",
       webhookTokenSet: !!owner.agent?.webhookToken,
@@ -167,6 +181,24 @@ export async function PATCH(request: NextRequest) {
         ownerId: auth.ownerId,
         previousGoal: (previousOwner.networkingGoal as "partnership" | "collaboration" | "mentor" | "peer" | null) ?? null,
         nextGoal: validated.networkingGoal,
+      });
+    }
+
+    if (validated.agentPlatform !== undefined) {
+      const locale = resolveLocale({
+        cookie: request.headers.get("cookie"),
+        acceptLanguage: request.headers.get("accept-language"),
+      });
+      const baseUrl =
+        request.headers.get("x-forwarded-proto") && request.headers.get("host")
+          ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get("host")}`
+          : process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
+      await migrateAgentPlatform({
+        ownerId: auth.ownerId,
+        nextPlatform: validated.agentPlatform,
+        baseUrl,
+        locale,
       });
     }
 

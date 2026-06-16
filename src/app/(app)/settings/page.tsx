@@ -6,6 +6,16 @@ import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { locales, localeNames, type Locale } from "@/i18n/config";
 import {
+  getAgentPlatformMeta,
+  ONBOARDING_AGENT_PLATFORMS,
+  type AgentPlatformFeatures,
+} from "@/lib/onboarding/agent-platform";
+import {
+  PLATFORM_FILE_NAMES,
+  PLATFORM_LABELS,
+  type AgentPlatform,
+} from "@/types/onboarding";
+import {
   LiveStatusDot,
   PageHeader,
   codePanelClass,
@@ -43,13 +53,6 @@ const SENSITIVE_CATEGORY_KEYS: { value: string; labelKey: string }[] = [
   { value: "Psychological topics", labelKey: "sensitiveTopics.psychological" },
 ];
 
-const PLATFORM_LABELS: Record<string, string> = {
-  open_claw: "Open Claw",
-  nemo_claw: "Nemo Claw",
-  zero_claw: "Zero Claw",
-  nano_claw: "Nano-Claw",
-};
-
 const WAKE_PATH = "/hooks/wake";
 const SECTION_SHELL = sectionShellClass;
 const SECTION_TITLE = sectionTitleClass;
@@ -82,6 +85,10 @@ interface Settings {
   networkingGoal: string | null;
   agentId: string | null;
   agentPlatform: string | null;
+  agentPlatformLabel: string | null;
+  agentRuntimeClass: string | null;
+  agentPlatformFeatures: AgentPlatformFeatures | null;
+  agentLastActiveAt: string | null;
   wakeWebhookEnabled: boolean;
   webhookUrl: string;
   webhookTokenSet: boolean;
@@ -120,6 +127,8 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [setupPromptReloadKey, setSetupPromptReloadKey] = useState(0);
+  const [platformChangeNotice, setPlatformChangeNotice] = useState<string | null>(null);
 
   const loadSettings = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!silent) {
@@ -189,8 +198,33 @@ export default function SettingsPage() {
       {/* P0 Sections */}
       <AgentStatusSection
         active={settings.agentActive}
+        platformLabel={settings.agentPlatformLabel}
+        lastActiveAt={settings.agentLastActiveAt}
+        deliveryMode={settings.wakeDeliveryMode}
         onUpdate={(v) => setSettings({ ...settings, agentActive: v })}
       />
+
+      {settings.agentPlatform && (
+        <ChangeAgentPlatformSection
+          currentPlatform={settings.agentPlatform as AgentPlatform}
+          currentPlatformLabel={settings.agentPlatformLabel}
+          onChanged={async () => {
+            setPlatformChangeNotice(t("settings.changeAgentSuccess"));
+            setSetupPromptReloadKey((key) => key + 1);
+            await loadSettings({ silent: true });
+            document.getElementById("setup-prompt-section")?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+        />
+      )}
+
+      {platformChangeNotice && (
+        <p className="rounded-xl bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200 ring-1 ring-inset ring-emerald-500/20">
+          {platformChangeNotice}
+        </p>
+      )}
 
       {settings.hasPassword && <ChangePasswordSection />}
 
@@ -218,16 +252,27 @@ export default function SettingsPage() {
         <RegenerateKeySection agentId={settings.agentId} />
       )}
 
-      {settings.agentId && settings.agentPlatform && (
-        <DownloadSoulSection agentId={settings.agentId} platform={settings.agentPlatform} />
-      )}
+      {settings.agentId &&
+        settings.agentPlatform &&
+        settings.agentPlatformFeatures?.showSoulDownload && (
+          <DownloadSoulSection
+            agentId={settings.agentId}
+            platform={settings.agentPlatform}
+            platformLabel={settings.agentPlatformLabel}
+          />
+        )}
 
-      <SetupPromptSection />
+      <SetupPromptSection
+        reloadKey={setupPromptReloadKey}
+        platformLabel={settings.agentPlatformLabel}
+        isSetupHelperOnly={settings.agentPlatformFeatures?.isSetupHelperOnly ?? false}
+      />
 
-      {settings.agentId && (
+      {settings.agentId && settings.agentPlatformFeatures?.showWakeSetup && (
         <AdvancedSection>
           <InstantWakeSection
             settings={settings}
+            platformLabel={settings.agentPlatformLabel}
             onUpdate={(patch) => setSettings({ ...settings, ...patch })}
             onRefresh={() => loadSettings({ silent: true })}
           />
@@ -339,7 +384,131 @@ function ToggleSwitch({
 
 /* ── P0: Agent Status ── */
 
-function AgentStatusSection({ active, onUpdate }: { active: boolean; onUpdate: (v: boolean) => void }) {
+function ChangeAgentPlatformSection({
+  currentPlatform,
+  currentPlatformLabel,
+  onChanged,
+}: {
+  currentPlatform: AgentPlatform;
+  currentPlatformLabel: string | null;
+  onChanged: () => void | Promise<void>;
+}) {
+  const t = useTranslations();
+  const [open, setOpen] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<AgentPlatform | null>(null);
+  const { saving, saved, err, save } = useSave();
+
+  const handleConfirm = async () => {
+    if (!selectedPlatform) return;
+    if (selectedPlatform === currentPlatform) {
+      return;
+    }
+    const result = await save("/api/settings", { agentPlatform: selectedPlatform });
+    if (result) {
+      setOpen(false);
+      setSelectedPlatform(null);
+      await onChanged();
+    }
+  };
+
+  return (
+    <Section title={t("settings.changeAgent")}>
+      <p className={cx(sectionDescriptionClass, "mb-4")}>{t("settings.changeAgentDesc")}</p>
+      {currentPlatformLabel && (
+        <p className="mb-4 text-sm text-neutral-300">
+          {t("settings.platform")}{" "}
+          <span className="text-white">{currentPlatformLabel}</span>
+        </p>
+      )}
+
+      {!open ? (
+        <button type="button" onClick={() => setOpen(true)} className={SECONDARY_BUTTON_SM}>
+          {t("settings.changeAgent")}
+        </button>
+      ) : (
+        <div className="space-y-4">
+          <p className="rounded-xl bg-amber-950/20 px-4 py-3 text-xs leading-relaxed text-amber-200 ring-1 ring-inset ring-amber-500/20">
+            {t("settings.changeAgentWarning")}
+          </p>
+
+          <div className="space-y-2">
+            {ONBOARDING_AGENT_PLATFORMS.map((platform) => {
+              const meta = getAgentPlatformMeta(platform);
+              const isSelected = selectedPlatform === platform;
+              const isCurrent = platform === currentPlatform;
+
+              return (
+                <button
+                  key={platform}
+                  type="button"
+                  disabled={isCurrent}
+                  onClick={() => setSelectedPlatform(platform)}
+                  className={cx(
+                    OPTION_BUTTON,
+                    isCurrent
+                      ? "cursor-not-allowed bg-white/[0.03] text-neutral-500 ring-white/[0.06]"
+                      : isSelected
+                        ? OPTION_ACTIVE
+                        : OPTION_IDLE
+                  )}
+                >
+                  <span className="flex items-center justify-between gap-3 text-sm">
+                    <span>{meta.label}</span>
+                    {isCurrent ? (
+                      <span className="text-xs uppercase tracking-wide text-neutral-500">
+                        {t("settings.platform")}
+                      </span>
+                    ) : null}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={!selectedPlatform || selectedPlatform === currentPlatform || saving}
+              className={PRIMARY_BUTTON_SM}
+            >
+              {selectedPlatform
+                ? t("settings.changeAgentConfirm", {
+                    platform: getAgentPlatformMeta(selectedPlatform).label,
+                  })
+                : t("settings.changeAgent")}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setSelectedPlatform(null);
+              }}
+              className={SECONDARY_BUTTON_SM}
+            >
+              {t("common.cancel")}
+            </button>
+            <SaveStatus saving={saving} saved={saved} err={err} />
+          </div>
+        </div>
+      )}
+    </Section>
+  );
+}
+
+function AgentStatusSection({
+  active,
+  platformLabel,
+  lastActiveAt,
+  deliveryMode,
+  onUpdate,
+}: {
+  active: boolean;
+  platformLabel: string | null;
+  lastActiveAt: string | null;
+  deliveryMode: Settings["wakeDeliveryMode"];
+  onUpdate: (v: boolean) => void;
+}) {
   const t = useTranslations();
   const { saving, saved, err, save } = useSave();
 
@@ -348,6 +517,10 @@ function AgentStatusSection({ active, onUpdate }: { active: boolean; onUpdate: (
     const result = await save("/api/settings", { agentActive: next });
     if (result) onUpdate(next);
   };
+
+  const lastActiveLabel = lastActiveAt
+    ? new Date(lastActiveAt).toLocaleString()
+    : null;
 
   return (
     <Section title={t("settings.agentStatus")}>
@@ -359,11 +532,24 @@ function AgentStatusSection({ active, onUpdate }: { active: boolean; onUpdate: (
             {active && <AgentSearchingIcon />}
             {active ? t("settings.activeSearching") : t("settings.paused")}
           </StatusPill>
-          <p className="mt-3 text-[13px] leading-5 text-neutral-400">
+          {platformLabel && (
+            <p className="mt-3 text-[13px] text-neutral-400">
+              {t("settings.platform")}{" "}
+              <span className="text-neutral-200">{platformLabel}</span>
+            </p>
+          )}
+          <p className="mt-2 text-[13px] leading-5 text-neutral-400">
             {active
               ? t("settings.agentActiveDesc")
               : t("settings.agentPausedDesc")}
           </p>
+          {deliveryMode === "polling" && (
+            <p className="mt-2 text-xs text-neutral-500">
+              {lastActiveLabel
+                ? t("settings.lastCheckIn", { time: lastActiveLabel })
+                : t("settings.noCheckInYet")}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <SaveStatus saving={saving} saved={saved} err={err} />
@@ -946,10 +1132,12 @@ function getInstantWakeStatus(settings: Pick<
 
 function InstantWakeSection({
   settings,
+  platformLabel,
   onUpdate,
   onRefresh,
 }: {
   settings: Settings;
+  platformLabel: string | null;
   onUpdate: (patch: Partial<Settings>) => void;
   onRefresh: () => Promise<void>;
 }) {
@@ -1131,7 +1319,7 @@ function InstantWakeSection({
     setPromptLoading(true);
     setPromptError(null);
     try {
-      const res = await fetch("/api/onboarding/openclaw-prompt?mode=instant-wake");
+      const res = await fetch("/api/onboarding/agent-prompt?mode=instant-wake");
       const data = await res.json().catch(() => null);
       if (!res.ok) {
         throw new Error(data?.error ?? "Failed to load setup prompt");
@@ -1151,7 +1339,7 @@ function InstantWakeSection({
     const ac = new AbortController();
     (async () => {
       try {
-        const res = await fetch("/api/onboarding/openclaw-prompt?mode=instant-wake", {
+        const res = await fetch("/api/onboarding/agent-prompt?mode=instant-wake", {
           signal: ac.signal,
         });
         const data = await res.json().catch(() => null);
@@ -1189,9 +1377,11 @@ function InstantWakeSection({
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-[15px] font-semibold text-white">Realtime wake-up for your agent</h3>
+          <h3 className="text-[15px] font-semibold text-white">
+            {platformLabel ? `Realtime wake-up for ${platformLabel}` : "Realtime wake-up for your agent"}
+          </h3>
           <p className={sectionDescriptionClass}>
-            OpenClaw keeps an outbound connection to Gennety, so hot events can
+            Your agent keeps an outbound connection to Gennety, so hot events can
             wake it without exposing a public URL.
           </p>
         </div>
@@ -1283,9 +1473,11 @@ function InstantWakeSection({
         </div>
 
         <div className="mt-3">
-          <p className="text-sm font-semibold text-white">OpenClaw Prompt</p>
+          <p className="text-sm font-semibold text-white">
+            {platformLabel ? `${platformLabel} wake prompt` : "Agent wake prompt"}
+          </p>
           <p className={sectionDescriptionClass}>
-            Copy this prompt and send it to your OpenClaw. It installs the
+            Copy this prompt and send it to your agent. It installs the
             Gennety bridge, keeps the outbound wake stream live, and preserves
             scheduled polling as fallback.
           </p>
@@ -1303,7 +1495,7 @@ function InstantWakeSection({
               disabled={promptLoading}
               className={`${PRIMARY_BUTTON_SM} whitespace-nowrap`}
             >
-              {promptCopied ? "Copied" : promptLoading ? "Loading..." : "Copy OpenClaw Prompt"}
+              {promptCopied ? "Copied" : promptLoading ? "Loading..." : "Copy wake prompt"}
             </button>
           </div>
         </div>
@@ -1510,15 +1702,27 @@ function LanguageSection() {
 
 /* ── P1: Download SOUL.md ── */
 
-function DownloadSoulSection({ agentId, platform }: { agentId: string; platform: string }) {
+function DownloadSoulSection({
+  agentId,
+  platform,
+  platformLabel,
+}: {
+  agentId: string;
+  platform: string;
+  platformLabel: string | null;
+}) {
   const t = useTranslations();
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileName =
+    platform in PLATFORM_FILE_NAMES
+      ? PLATFORM_FILE_NAMES[platform as keyof typeof PLATFORM_FILE_NAMES]
+      : "SOUL.md";
 
   const fetchSoulContent = async (): Promise<string> => {
     const res = await fetch(`/api/soul/${agentId}`);
-    if (!res.ok) throw new Error("Failed to fetch SOUL.md");
+    if (!res.ok) throw new Error(`Failed to fetch ${fileName}`);
     return res.text();
   };
 
@@ -1531,11 +1735,11 @@ function DownloadSoulSection({ agentId, platform }: { agentId: string; platform:
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "SOUL.md";
+      a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setError("Failed to download SOUL.md");
+      setError(t("settings.downloadFailed", { fileName }));
     } finally {
       setDownloading(false);
     }
@@ -1558,7 +1762,9 @@ function DownloadSoulSection({ agentId, platform }: { agentId: string; platform:
       <Surface className="flex flex-wrap items-center justify-between gap-3 px-4 py-4">
         <div>
           <p className="text-[13px] text-neutral-400">{t("settings.platform")}</p>
-          <p className="mt-1 text-sm text-neutral-300">{PLATFORM_LABELS[platform] ?? platform}</p>
+          <p className="mt-1 text-sm text-neutral-300">
+            {platformLabel ?? PLATFORM_LABELS[platform as keyof typeof PLATFORM_LABELS] ?? platform}
+          </p>
           {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
@@ -1574,7 +1780,7 @@ function DownloadSoulSection({ agentId, platform }: { agentId: string; platform:
             disabled={downloading}
             className={SECONDARY_BUTTON}
           >
-            {downloading ? t("settings.downloading") : t("settings.downloadSoul")}
+            {downloading ? t("settings.downloading") : t("settings.downloadFile", { fileName })}
           </button>
         </div>
       </Surface>
@@ -1584,7 +1790,15 @@ function DownloadSoulSection({ agentId, platform }: { agentId: string; platform:
 
 /* ── Setup Prompt (OpenClaw onboarding) ── */
 
-function SetupPromptSection() {
+function SetupPromptSection({
+  reloadKey = 0,
+  platformLabel,
+  isSetupHelperOnly,
+}: {
+  reloadKey?: number;
+  platformLabel: string | null;
+  isSetupHelperOnly: boolean;
+}) {
   const t = useTranslations();
   const [prompt, setPrompt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1593,9 +1807,11 @@ function SetupPromptSection() {
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setError(null);
     (async () => {
       try {
-        const res = await fetch("/api/onboarding/openclaw-prompt");
+        const res = await fetch("/api/onboarding/agent-prompt?mode=setup");
         if (!res.ok) throw new Error("Failed to load prompt");
         const data = await res.json();
         if (!cancelled) setPrompt(data.prompt);
@@ -1608,7 +1824,7 @@ function SetupPromptSection() {
     return () => {
       cancelled = true;
     };
-  }, [t]);
+  }, [t, reloadKey]);
 
   const handleCopy = async () => {
     if (!prompt) return;
@@ -1623,9 +1839,18 @@ function SetupPromptSection() {
 
   return (
     <Section title={t("settings.setupPrompt")}>
+      <div id="setup-prompt-section" />
       <p className={cx(sectionDescriptionClass, "mb-4")}>
-        {t("settings.setupPromptDesc")}
+        {platformLabel
+          ? t("settings.setupPromptDescFor", { platform: platformLabel })
+          : t("settings.setupPromptDesc")}
       </p>
+
+      {isSetupHelperOnly && (
+        <p className="mb-4 rounded-xl bg-sky-950/20 px-4 py-3 text-xs leading-relaxed text-sky-200 ring-1 ring-inset ring-sky-500/20">
+          {t("settings.setupHelperOnlyNote")}
+        </p>
+      )}
 
       <div className={`mb-3 max-h-[300px] overflow-y-auto p-4 font-mono text-xs leading-relaxed text-neutral-300 whitespace-pre-wrap select-all ${CODE_SURFACE}`}>
         {loading ? t("common.loading") : prompt}
