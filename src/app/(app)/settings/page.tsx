@@ -69,10 +69,10 @@ const DANGER_SUBTLE_BUTTON = dangerSubtleButtonClass;
 const LEGACY_INPUT =
   "w-full min-h-10 rounded-xl bg-[#050505] px-4 py-2.5 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.08] transition focus:outline-none focus:bg-[#050505] focus:ring-white/[0.12]";
 const OPTION_BUTTON =
-  "w-full rounded-xl px-4 py-3 text-left transition-all ring-1 ring-inset";
-const OPTION_ACTIVE = "bg-white/[0.07] text-white ring-white/[0.18]";
+  "w-full rounded-xl px-4 py-3 text-left transition-all";
+const OPTION_ACTIVE = "bg-white/[0.07] text-white";
 const OPTION_IDLE =
-  "bg-neutral-950/38 text-neutral-400 ring-white/[0.07] hover:bg-neutral-900/70 hover:text-neutral-200 hover:ring-white/[0.13]";
+  "bg-neutral-950/38 text-neutral-400 hover:bg-neutral-900/70 hover:text-neutral-200";
 
 /* ── Types ── */
 
@@ -221,7 +221,7 @@ export default function SettingsPage() {
       )}
 
       {platformChangeNotice && (
-        <p className="rounded-xl bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200 ring-1 ring-inset ring-emerald-500/20">
+        <p className="rounded-xl bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200">
           {platformChangeNotice}
         </p>
       )}
@@ -367,10 +367,10 @@ function ToggleSwitch({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`relative h-6 w-11 shrink-0 rounded-full ring-1 ring-inset transition-all ${
+      className={`relative h-6 w-11 shrink-0 rounded-full transition-all ${
         checked
-          ? "bg-emerald-500 ring-emerald-400/25"
-          : "bg-neutral-800 ring-white/[0.08]"
+          ? "bg-emerald-500"
+          : "bg-neutral-800"
       } disabled:opacity-50`}
     >
       <span
@@ -427,7 +427,7 @@ function ChangeAgentPlatformSection({
         </button>
       ) : (
         <div className="space-y-4">
-          <p className="rounded-xl bg-amber-950/20 px-4 py-3 text-xs leading-relaxed text-amber-200 ring-1 ring-inset ring-amber-500/20">
+          <p className="rounded-xl bg-amber-950/20 px-4 py-3 text-xs leading-relaxed text-amber-200">
             {t("settings.changeAgentWarning")}
           </p>
 
@@ -446,7 +446,7 @@ function ChangeAgentPlatformSection({
                   className={cx(
                     OPTION_BUTTON,
                     isCurrent
-                      ? "cursor-not-allowed bg-white/[0.03] text-neutral-500 ring-white/[0.06]"
+                      ? "cursor-not-allowed bg-white/[0.03] text-neutral-500"
                       : isSelected
                         ? OPTION_ACTIVE
                         : OPTION_IDLE
@@ -678,10 +678,10 @@ function ExcludedTopicsSection({
       </p>
       {privacySync?.pending && (
         <div
-          className={`mb-4 rounded-xl p-4 ring-1 ring-inset ${
+          className={`mb-4 rounded-xl p-4 ${
             privacySync.searchPaused
-              ? "bg-amber-950/18 ring-amber-500/[0.14]"
-              : "bg-sky-950/18 ring-sky-500/[0.14]"
+              ? "bg-amber-950/18"
+              : "bg-sky-950/18"
           }`}
         >
           <p
@@ -741,7 +741,7 @@ function ExcludedTopicsSection({
               onClick={() => toggle(cat.value)}
               className={`${OPTION_BUTTON} flex items-center justify-between text-sm ${
                 excluded
-                  ? "bg-red-950/20 text-red-200 ring-red-500/[0.18]"
+                  ? "bg-red-950/20 text-red-200"
                   : `${OPTION_IDLE} text-neutral-300`
               }`}
             >
@@ -807,7 +807,7 @@ function ResearchConsentSection({
       </p>
 
       {showConfirm ? (
-        <div className="mb-3 rounded-xl bg-amber-950/18 p-4 ring-1 ring-inset ring-amber-500/[0.14]">
+        <div className="mb-3 rounded-xl bg-amber-950/18 p-4">
           <p className="text-sm text-amber-300 mb-3">
             {t("settings.withdrawConfirm")}
           </p>
@@ -949,7 +949,7 @@ function RegenerateKeySection({ agentId }: { agentId: string }) {
           </div>
         </div>
       ) : showConfirm ? (
-        <div className="mb-3 rounded-xl bg-red-950/18 p-4 ring-1 ring-inset ring-red-500/[0.14]">
+        <div className="mb-3 rounded-xl bg-red-950/18 p-4">
           <p className="text-sm text-red-300 mb-3">
             {t("settings.regenerateWarning")}
           </p>
@@ -990,15 +990,15 @@ function AdvancedSection({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <section className={cx(SECTION_SHELL, open && "border-white/[0.16]")}>
+    <section className={SECTION_SHELL}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cx(
-          "group flex w-full items-center justify-between gap-4 rounded-xl px-3 py-3 text-left ring-1 ring-inset transition-colors",
+          "group flex w-full items-center justify-between gap-4 rounded-xl px-3 py-3 text-left transition-colors",
           open
-            ? "bg-white/[0.055] ring-white/[0.13]"
-            : "ring-transparent hover:bg-white/[0.035] hover:ring-white/[0.09]"
+            ? "bg-white/[0.055]"
+            : "hover:bg-white/[0.035]"
         )}
       >
         <div>
@@ -1520,7 +1520,7 @@ function InstantWakeSection({
             <code className="text-neutral-400 font-mono">{WAKE_PATH}</code> automatically.
           </p>
 
-          <div className="flex items-center justify-between gap-3 rounded-xl bg-neutral-950/40 px-3 py-3 ring-1 ring-inset ring-white/[0.08]">
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-neutral-950/40 px-3 py-3">
             <div>
               <p className="text-[13px] font-medium text-neutral-200">Enable legacy inbound webhook</p>
               <p className="mt-1 text-xs text-neutral-500">
@@ -1847,7 +1847,7 @@ function SetupPromptSection({
       </p>
 
       {isSetupHelperOnly && (
-        <p className="mb-4 rounded-xl bg-sky-950/20 px-4 py-3 text-xs leading-relaxed text-sky-200 ring-1 ring-inset ring-sky-500/20">
+        <p className="mb-4 rounded-xl bg-sky-950/20 px-4 py-3 text-xs leading-relaxed text-sky-200">
           {t("settings.setupHelperOnlyNote")}
         </p>
       )}
