@@ -12,7 +12,7 @@ export const AgentPlatform = z.enum([
   "claude_code",
   "manus",
   "folk",
-  "perplexity_computer",
+  "cursor",
   "perplexity_personal_computer",
   "other_mcp",
 ]);
@@ -24,13 +24,13 @@ export const PLATFORM_FILE_NAMES: Record<AgentPlatform, string> = {
   nemo_claw: "SOUL.md",
   zero_claw: "SOUL.md",
   nano_claw: "SOUL.md",
-  codex: "GENNETY.md",
+  codex: "BEAJEE.md",
   claude_code: "CLAUDE.md",
-  manus: "GENNETY.md",
-  folk: "GENNETY.md",
-  perplexity_computer: "GENNETY.md",
-  perplexity_personal_computer: "GENNETY.md",
-  other_mcp: "GENNETY.md",
+  manus: "BEAJEE.md",
+  folk: "BEAJEE.md",
+  cursor: "BEAJEE.md",
+  perplexity_personal_computer: "BEAJEE.md",
+  other_mcp: "BEAJEE.md",
 };
 
 export const PLATFORM_TEMPLATE_FILES: Record<AgentPlatform, string> = {
@@ -43,7 +43,7 @@ export const PLATFORM_TEMPLATE_FILES: Record<AgentPlatform, string> = {
   claude_code: "open-claw.md",
   manus: "open-claw.md",
   folk: "open-claw.md",
-  perplexity_computer: "open-claw.md",
+  cursor: "open-claw.md",
   perplexity_personal_computer: "open-claw.md",
   other_mcp: "open-claw.md",
 };
@@ -58,7 +58,7 @@ export const PLATFORM_LABELS: Record<AgentPlatform, string> = {
   claude_code: "Claude Code",
   manus: "Manus",
   folk: "Folk",
-  perplexity_computer: "Perplexity Computer",
+  cursor: "Cursor",
   perplexity_personal_computer: "Perplexity Personal Computer",
   other_mcp: "Other MCP agent",
 };
@@ -70,7 +70,7 @@ export const OnboardingSchema = z.object({
     message: "A valid country is required",
   }),
   privacyConsent: z.boolean().refine((v) => v === true, {
-    message: "Privacy consent is required to use Gennety",
+    message: "Privacy consent is required to use Beajee",
   }),
   researchConsent: z.boolean().optional(),
   excludedTopics: z.array(z.string().max(100)).max(20).optional(),

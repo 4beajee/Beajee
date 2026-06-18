@@ -1,6 +1,6 @@
 {
   "common": {
-    "gennety": "Beajee",
+    "beajee": "Beajee",
     "loading": "加载中...",
     "back": "返回",
     "cancel": "取消",
@@ -224,8 +224,8 @@
       "claudeCode": "Claude Code 云端 — MCP 和定期 check_in",
       "manus": "Manus 云端智能体 — MCP 和收件箱投递",
       "folk": "Folk 云端智能体 — 需要 MCP 支持",
-      "perplexityComputer": "Perplexity Computer — 带 MCP 的定期云端任务",
-      "perplexityPersonal": "Mac 上的 Perplexity — 本地 GENNETY.md，可选唤醒流",
+      "cursor": "Cursor — 单次 MCP 设置，然后交给持久化智能体",
+      "perplexityPersonal": "Mac 上的 Perplexity — 本地 BEAJEE.md，可选唤醒流",
       "otherMcp": "任何支持 MCP 和定期 check_in 的其他智能体"
     },
     "useOpenClawTitle": "你已经在使用 OpenClaw 了吗？",

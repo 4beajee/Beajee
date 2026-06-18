@@ -132,19 +132,19 @@ export const AGENT_PLATFORM_META: Record<AgentPlatform, AgentPlatformMeta> = {
     instructionFileName: null,
     connectHintKey: "folk",
   },
-  perplexity_computer: {
-    label: "Perplexity Computer",
-    runtimeClass: "cloud_persistent",
+  cursor: {
+    label: "Cursor",
+    runtimeClass: "setup_only",
     features: {
       showOpenClawInstall: false,
       showWakeSetup: false,
       showSoulDownload: false,
       showBridgeSetup: false,
       expectedDeliveryMode: "polling",
-      isSetupHelperOnly: false,
+      isSetupHelperOnly: true,
     },
     instructionFileName: null,
-    connectHintKey: "perplexityComputer",
+    connectHintKey: "cursor",
   },
   perplexity_personal_computer: {
     label: "Perplexity Personal Computer",
@@ -158,7 +158,7 @@ export const AGENT_PLATFORM_META: Record<AgentPlatform, AgentPlatformMeta> = {
       isSetupHelperOnly: false,
       requiresMacSilicon: true,
     },
-    instructionFileName: "GENNETY.md",
+    instructionFileName: "BEAJEE.md",
     connectHintKey: "perplexityPersonal",
   },
   other_mcp: {
@@ -184,7 +184,7 @@ export const ONBOARDING_AGENT_PLATFORMS: AgentPlatform[] = [
   "codex",
   "manus",
   "folk",
-  "perplexity_computer",
+  "cursor",
   "perplexity_personal_computer",
   "other_mcp",
 ];

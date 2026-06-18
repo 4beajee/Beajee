@@ -54,8 +54,7 @@ function generateCodexPrompt(params: AgentPromptParams): string {
 ${urls.platformName} (${urls.landingOrigin}) is an AI networking platform for personal agents.
 
 You are NOT ${urls.platformName}'s permanent networking agent. You are a one-session setup helper.
-After this session the owner still needs a persistent agent (OpenClaw, Manus, Claude Code,
-Perplexity Computer, etc.) that calls ${urls.platformName} on a schedule.
+After this session the owner still needs a persistent agent (OpenClaw, Manus, Claude Code, etc.) that calls ${urls.platformName} on a schedule.
 
 Docs: ${urls.skillUrl}
 
@@ -187,15 +186,42 @@ If any answer is no, stop and explain Folk may not fully support ${urls.platform
   );
 }
 
-function generatePerplexityComputerPrompt(params: AgentPromptParams): string {
+function generateCursorPrompt(params: AgentPromptParams): string {
   const urls = getPlatformUrls();
-  return `${generateCloudPersistentPrompt(params, "Perplexity Computer")}
+  const ownerLine = params.ownerName
+    ? `Your owner ${params.ownerName} copied this into Cursor.`
+    : `Your owner copied this into Cursor.`;
 
-PERPLEXITY COMPUTER NOTES
+  return `Hi! ${ownerLine}
 
-- Work in your cloud sandbox — do not expect files on the owner's Mac.
-- Create a recurring Computer task that calls check_in on the cadence from next_check_in_ms.
-- Treat ${urls.platformName} as a long-running workflow, not a one-shot chat.`;
+${urls.platformName} (${urls.landingOrigin}) is an AI networking platform for personal agents.
+
+You are NOT ${urls.platformName}'s permanent networking agent. You are a one-session setup helper.
+After this session the owner still needs a persistent agent (OpenClaw, Manus, Claude Code, etc.) that calls ${urls.platformName} on a schedule.
+
+Docs: ${urls.skillUrl}
+
+---
+
+YOUR CREDENTIALS
+
+${credentialsBlock(params.agentId, params.apiKey, params.networkingGoal)}
+
+---
+
+WHAT TO DO IN THIS SESSION
+
+1. Confirm with the owner they recognise the agent_id and want setup now.
+2. Add ${urls.platformName} MCP to this project (e.g. .mcp.json):
+   { "mcpServers": { "${urls.mcpServerKey}": { "url": "${urls.mcpEndpoint}",
+     "headers": { "Authorization": "Bearer ${params.apiKey}" } } } }
+   Do not commit api_key to a public repo.
+3. Verify tools/list shows ${urls.platformName} tools (publish_context, check_in, find_matches, ...).
+4. Read skill.md logic from the URL. Do NOT install OpenClaw files, SOUL.md, ~/.openclaw/skills, or the ${urls.platformName} bridge.
+5. Optional: create BEAJEE.md in the project as owner reference — show before writing.
+6. Ask the owner for context fields, show planned publish_context payload, get confirmation, then call publish_context once.
+7. Call check_in once, print inbox events (e.g. goal_changed) to prove it works.
+8. Stop. Explain next steps: the owner must hook up a persistent agent to handle matches in the background.`;
 }
 
 function generatePerplexityPersonalComputerPrompt(params: AgentPromptParams): string {
@@ -315,8 +341,8 @@ export function generateAgentOnboardingPrompt(params: AgentPromptParams): string
       return generateCloudPersistentPrompt(params, "Manus");
     case "folk":
       return generateFolkPrompt(params);
-    case "perplexity_computer":
-      return generatePerplexityComputerPrompt(params);
+    case "cursor":
+      return generateCursorPrompt(params);
     case "perplexity_personal_computer":
       return generatePerplexityPersonalComputerPrompt(params);
     case "other_mcp":

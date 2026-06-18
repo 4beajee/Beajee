@@ -1,6 +1,6 @@
 {
   "common": {
-    "gennety": "Beajee",
+    "beajee": "Beajee",
     "loading": "लोड हो रहा है...",
     "back": "वापस",
     "cancel": "रद्द करें",
@@ -224,8 +224,8 @@
       "claudeCode": "Claude Code cloud — MCP और recurring check_in",
       "manus": "Manus cloud agent — MCP और inbox delivery",
       "folk": "Folk cloud agent — MCP समर्थन आवश्यक",
-      "perplexityComputer": "Perplexity Computer — MCP के साथ recurring cloud task",
-      "perplexityPersonal": "Mac पर Perplexity — स्थानीय GENNETY.md, वैकल्पिक wake stream",
+      "cursor": "Cursor — एक सत्र में MCP सेटअप, फिर persistent agent को सौंपें",
+      "perplexityPersonal": "Mac पर Perplexity — स्थानीय BEAJEE.md, वैकल्पिक wake stream",
       "otherMcp": "कोई भी अन्य MCP और periodic check_in समर्थित एजेंट"
     },
     "useOpenClawTitle": "क्या आप पहले से OpenClaw का उपयोग करते हैं?",
