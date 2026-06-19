@@ -189,8 +189,8 @@ async function main() {
       path.join(ROOT, "src/app/(public)/telegram/layout.tsx"),
       "utf8"
     );
-    assert.match(middleware, /appExact\s*=\s*\[[^\]]*"\/telegram"/s);
-    assert.match(middleware, /publicApiPrefixes\s*=\s*\[[^\]]*"\/api\/telegram"/s);
+    assert.match(middleware, /appExact\s*=\s*\[[^\]]*"\/telegram"/);
+    assert.match(middleware, /publicApiPrefixes\s*=\s*\[[^\]]*"\/api\/telegram"/);
     assert.match(layout, /https:\/\/telegram\.org\/js\/telegram-web-app\.js/);
     ok("Mini App page, auth API, and Telegram WebApp SDK are public");
   }

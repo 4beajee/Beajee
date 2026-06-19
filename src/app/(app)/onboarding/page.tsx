@@ -228,18 +228,17 @@ function AgentLogo({ platform }: { platform: AgentPlatform }) {
       );
     case "folk":
       return (
-        <svg
-          style={{ flex: "none", lineHeight: 1 }}
-          viewBox="0 0 128 128"
-          className="h-6 w-6 text-white"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <title>Folk</title>
-          <path
-            d="M64 4C97.1371 4 124 30.8629 124 64C124 97.1371 97.1371 124 64 124C30.8629 124 4 97.1371 4 64C4 30.8629 30.8629 4 64 4ZM64 9.90137C34.1223 9.90137 9.90137 34.1223 9.90137 64C9.90137 93.8777 34.1223 118.099 64 118.099C93.8777 118.099 118.099 93.8777 118.099 64C118.099 34.1223 93.8777 9.90137 64 9.90137ZM98.5049 64C99.5667 64 100.42 64.8927 100.393 65.9756C99.9003 85.5556 84.1958 100.394 64.9912 100.394H63.0088C43.8042 100.394 28.0997 85.5556 27.6074 65.9756C27.5803 64.8927 28.4332 64.0001 29.4951 64H98.5049Z"
+        <div className="relative h-6 w-6 rounded-[4px] bg-black text-white overflow-hidden shrink-0">
+          <svg
             fill="currentColor"
-          />
-        </svg>
+            viewBox="0 0 24 24"
+            className="absolute bottom-0 left-0 right-0 h-full w-full"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <title>Folk</title>
+            <path d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V1.5c-.32-.04-1.42-.15-2.7-.15-2.68 0-4.5 1.62-4.5 4.65v3H8v4h2.3v11h3.7v-11z" />
+          </svg>
+        </div>
       );
     case "perplexity_personal_computer":
       return (
@@ -1408,20 +1407,6 @@ export default function OnboardingPage() {
               <div className={cx(codePanelClass, "p-4 font-mono text-xs leading-relaxed text-neutral-300 break-all select-all")}>
                 {result.setupPrompt}
               </div>
-              <button
-                onClick={() => handleCopy(result.setupPrompt, "prompt")}
-                className={cx(subtleButtonSmallClass, "absolute right-2 top-2 h-9 w-9 p-0")}
-              >
-                {copied === "prompt" ? (
-                  <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                )}
-              </button>
             </div>
 
             <button
