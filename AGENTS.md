@@ -1,4 +1,4 @@
-# AGENTS.md — Gennety
+# AGENTS.md — Beajee
 
 > Primary context document for Claude Code.
 > Read this file completely before writing any code or making architectural decisions.
@@ -46,17 +46,16 @@ If gstack skills are not working, run `cd .claude/skills/gstack && ./setup` to b
 
 ### PROTOCOL: BRANCH PROTECTION & DEPLOYMENT
 
-- All code modifications triggered by OpenClaw MUST be performed exclusively within the OpenClaw branch.
-- DIRECT commits to main or production branches are strictly prohibited.
-- After completing a task, the agent must commit changes and push them to the origin OpenClaw branch.
-- Each push must be followed by a clear notification to the maintainer (Gleb) for Pull Request review.
-- Before starting any new task, the agent must synchronize the OpenClaw branch with the latest main branch to avoid merge conflicts.
+- **Autonomous Agent Mode (OpenClaw)**: All code modifications triggered by the autonomous OpenClaw agent runner MUST be performed exclusively within the `OpenClaw` branch. DIRECT commits to `main` by autonomous OpenClaw processes are strictly prohibited.
+- **Interactive Pair Programming Mode**: When working directly with the owner (human developer) in chat sessions, the coding agent must work directly inside the `main` branch and commit/push to `main` as requested. The `OpenClaw` branch must NOT be used for direct user pair-programming sessions.
+- After completing a task in autonomous mode, the agent must commit changes and push them to the origin `OpenClaw` branch, followed by a PR notification.
+- Before starting any new task, synchronize with the latest `main` branch.
 
 ---
 
 ## What We're Building
 
-**Gennety** — an AI-powered networking platform where your personal agent proactively finds the right people at the right moment.
+**Beajee** — an AI-powered networking platform where your personal agent proactively finds the right people at the right moment.
 
 This is NOT a social feed. NOT a directory. NOT a search engine.
 This is a **context-driven mutual matching system** where agents negotiate introductions on behalf of their owners.
@@ -77,7 +76,7 @@ This is a **context-driven mutual matching system** where agents negotiate intro
 ## How It Works — End to End
 
 ### Step 1: Onboarding (one question)
-Owner answers: what do you want from Gennety?
+Owner answers: what do you want from Beajee?
 - Find a business partner
 - Find a collaborator on a project
 - Find a mentor / mentee
@@ -97,11 +96,11 @@ significant context change:
 **Stage 2** — sensitive review: agent scans MEMORY.md for sensitive categories (health, finances, personal relationships) and asks owner which to exclude. Everything else publishes to the index in full.
 
 ### Step 3: Agent gets SOUL.md
-Platform issues SOUL.md — the agent's instruction file for Gennety.
+Platform issues SOUL.md — the agent's instruction file for Beajee.
 Agent reads it once. Operates autonomously from that point.
 
 ### Step 4: Context published to index
-Agent reads MEMORY.md, extracts a structured context snapshot, publishes to Gennety index.
+Agent reads MEMORY.md, extracts a structured context snapshot, publishes to Beajee index.
 Re-publishes automatically whenever MEMORY.md changes significantly.
 
 ### Step 5: Beacon set (if no match found)
@@ -115,9 +114,9 @@ They agree: is there a real intersection? How to frame it for each owner?
 Only if both agents say yes → proposal goes to both humans simultaneously.
 
 ### Step 7: Mutual match
-Both owners say "yes" → chat opens inside Gennety.
+Both owners say "yes" → chat opens inside Beajee.
 Agent of each writes an opening message with the specific reason for the introduction.
-Humans talk from there. Gennety's job is done.
+Humans talk from there. Beajee's job is done.
 
 ### Step 7.5: Model advice inside chat
 After the humans exchange a few messages, either side can request `Model Advice`.
@@ -252,10 +251,10 @@ Quality over quantity. One precise match per month beats ten vague ones per week
 ## Project Structure
 
 ```
-gennety/
+beajee/
 ├── AGENTS.md
 ├── CLAUDE_CODE_CONTEXT.md           ← current working context for coding agents
-├── GENNETY_SPEC.md                  ← product spec and product principles
+├── BEAJEE_SPEC.md                  ← product spec and product principles
 ├── deploy.md                        ← private deployment runbook (gitignored, if present)
 ├── SOUL.md                          ← issued to agents at onboarding
 ├── INDEX.md                         ← soul skill index with startup sequence
@@ -267,8 +266,8 @@ gennety/
 ├── llms.txt                         ← AI discovery file (→ /public/)
 ├── public/
 │   ├── tools/
-│   │   ├── gennety-openclaw-bridge.mjs ← local bridge runtime for default OpenClaw installs
-│   │   └── gennety-openclaw-bridge.md  ← bridge install and verification guide
+│   │   ├── beajee-openclaw-bridge.mjs ← local bridge runtime for default OpenClaw installs
+│   │   └── beajee-openclaw-bridge.md  ← bridge install and verification guide
 │   └── skills/                      ← static soul skill files served publicly
 ├── package.json
 ├── tsconfig.json
@@ -525,15 +524,15 @@ Not significant = minor refactors, comments, formatting fixes.
 
 ## Agent Discovery Files (public/)
 
-**skill.md** — served at `gennety.com/skill.md`. The agent discovery and onboarding entry point. Any AI agent visiting this URL gets full instructions to connect autonomously: platform description, registration flow, MCP tool reference, error codes.
+**skill.md** — served at `beajee.com/skill.md`. The agent discovery and onboarding entry point. Any AI agent visiting this URL gets full instructions to connect autonomously: platform description, registration flow, MCP tool reference, error codes.
 
-**llms.txt** — served at `gennety.com/llms.txt`. Standard AI discovery file listing available MCP tools and the onboarding path for agents.
+**llms.txt** — served at `beajee.com/llms.txt`. Standard AI discovery file listing available MCP tools and the onboarding path for agents.
 
 Both files live in `/public/` and are served as static assets by Next.js.
 
 ## Soul Skill Files (open source)
 
-The skill files are served statically from `public/skills/` at `https://gennety.com/skills/`, no auth required. They are the public documentation surface that agents fetch during onboarding. The canonical index is `https://gennety.com/skill.md`.
+The skill files are served statically from `public/skills/` at `https://beajee.com/skills/`, no auth required. They are the public documentation surface that agents fetch during onboarding. The canonical index is `https://beajee.com/skill.md`.
 
 | File | Purpose |
 |------|---------|
@@ -563,8 +562,8 @@ so that the platform it builds is compatible with the agents that will use it.
 
 | Term | Definition |
 |------|-----------|
-| **MEMORY.md** | Agent's memory file — owned by agent, read by Gennety with consent |
-| **SOUL.md** | Instruction file issued to agent at onboarding — how to use Gennety |
+| **MEMORY.md** | Agent's memory file — owned by agent, read by Beajee with consent |
+| **SOUL.md** | Instruction file issued to agent at onboarding — how to use Beajee |
 | **Context snapshot** | Structured excerpt from MEMORY.md published to the index |
 | **Beacon** | Subscription to a future context — "notify me when X appears" |
 | **Negotiation** | Agent-to-agent evaluation of whether an introduction makes sense |
@@ -574,7 +573,7 @@ so that the platform it builds is compatible with the agents that will use it.
 
 ---
 
-*Project: Gennety | Version: 1.0 | Status: Active MVP build*
+*Project: Beajee | Version: 1.0 | Status: Active MVP build*
 
 ---
 
