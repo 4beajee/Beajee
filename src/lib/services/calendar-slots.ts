@@ -31,7 +31,7 @@ function parseDate(value: unknown): Date | null {
 function decryptPersonalConnectorToken(connector: PersonalConnector) {
   if (!connector.encryptedToken || !connector.tokenIv) return null;
   try {
-    return decryptConnectorSecret(connector.encryptedToken, connector.tokenIv);
+    return decryptConnectorSecret(connector);
   } catch {
     return null;
   }

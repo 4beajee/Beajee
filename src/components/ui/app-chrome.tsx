@@ -22,6 +22,7 @@ export const mattePillBaseClass =
   "inline-flex min-h-7 items-center justify-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium leading-none";
 export const subtleButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl bg-neutral-950/58 px-4 py-2.5 text-sm font-medium text-neutral-300 ring-1 ring-inset ring-white/[0.10] transition hover:bg-neutral-900/80 hover:text-white hover:ring-white/[0.16] disabled:opacity-50";
+export const secondaryButtonClass = subtleButtonClass;
 export const subtleButtonSmallClass =
   "inline-flex min-h-8 items-center justify-center rounded-lg bg-neutral-950/58 px-2.5 py-1.5 text-xs font-medium text-neutral-300 ring-1 ring-inset ring-white/[0.10] transition hover:bg-neutral-900/80 hover:text-white hover:ring-white/[0.16] disabled:opacity-50";
 export const primaryButtonClass =
@@ -35,13 +36,13 @@ export const dangerButtonSmallClass =
 export const dangerSubtleButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl bg-red-500/[0.12] px-4 py-2.5 text-sm font-medium text-red-200 transition hover:bg-red-500/[0.18] hover:text-red-100 disabled:opacity-50";
 export const inputClass =
-  "w-full min-h-10 rounded-xl bg-neutral-950/68 px-4 py-2.5 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.10] transition focus:outline-none focus:ring-white/[0.18]";
+  "w-full min-h-10 appearance-none rounded-xl bg-neutral-950/68 px-4 py-2.5 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.10] transition [color-scheme:dark] focus:outline-none focus:ring-white/[0.18]";
 export const compactInputClass =
-  "w-full min-h-9 rounded-lg bg-neutral-950/70 px-3 py-2 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.10] transition focus:outline-none focus:ring-white/[0.20]";
+  "w-full min-h-9 appearance-none rounded-lg bg-neutral-950/70 px-3 py-2 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.10] transition [color-scheme:dark] focus:outline-none focus:ring-white/[0.20]";
 export const compactSelectClass =
-  "w-full min-h-9 rounded-lg bg-neutral-950 px-3 py-2 text-sm text-white ring-1 ring-inset ring-white/[0.10] transition focus:outline-none focus:ring-white/[0.20]";
+  "w-full min-h-9 rounded-lg bg-neutral-950 px-3 py-2 text-sm text-white ring-1 ring-inset ring-white/[0.10] transition [color-scheme:dark] focus:outline-none focus:ring-white/[0.20]";
 export const compactTextareaClass =
-  "w-full rounded-lg bg-neutral-950/70 px-3 py-2 text-sm leading-5 text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.10] transition focus:outline-none focus:ring-white/[0.20]";
+  "w-full appearance-none rounded-lg bg-neutral-950/70 px-3 py-2 text-sm leading-5 text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.10] transition [color-scheme:dark] focus:outline-none focus:ring-white/[0.20]";
 export const fieldLabelClass =
   "mb-1.5 block text-[11px] font-medium uppercase text-neutral-500";
 export const toolbarButtonClass =

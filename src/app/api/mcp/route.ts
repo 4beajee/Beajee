@@ -84,7 +84,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    let body: { method?: string; params?: Record<string, unknown>; id?: unknown };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { jsonrpc: "2.0", error: { code: -32700, message: "Parse error: invalid JSON body" }, id: null },
+        { status: 400 }
+      );
+    }
+
     const { method, params, id } = body;
 
     // Handle MCP protocol methods
@@ -99,6 +108,10 @@ export async function POST(request: NextRequest) {
           },
           id,
         });
+      }
+
+      case "notifications/initialized": {
+        return new NextResponse(null, { status: 202 });
       }
 
       case "tools/list": {
@@ -116,7 +129,20 @@ export async function POST(request: NextRequest) {
       }
 
       case "tools/call": {
-        const { name, arguments: args } = params;
+        const { name, arguments: rawArgs } = (params ?? {}) as {
+          name?: string;
+          arguments?: unknown;
+        };
+        const args = rawArgs as Record<string, unknown> | undefined;
+
+        if (typeof name !== "string") {
+          return NextResponse.json({
+            jsonrpc: "2.0",
+            error: { code: -32602, message: "Invalid params: tool name is required" },
+            id,
+          });
+        }
+
         const tool = tools.find((t) => t.name === name);
 
         if (!tool) {
@@ -128,39 +154,49 @@ export async function POST(request: NextRequest) {
         }
 
         try {
+          const externalAgentId = typeof args?.agent_id === "string" ? args.agent_id : undefined;
+          const internalAgentId = typeof args?.agentId === "string" ? args.agentId : undefined;
+          const requestedBy = typeof args?.requestedBy === "string" ? args.requestedBy : undefined;
+          const actorId =
+            typeof args?.actorId === "string"
+              ? args.actorId
+              : typeof args?.creatorId === "string"
+                ? args.creatorId
+                : undefined;
+
           // Enforce agent identity — if tool args contain agent_id, it must match authenticated agent
-          if (args?.agent_id && args.agent_id !== agent.agentId) {
+          if (externalAgentId && externalAgentId !== agent.agentId) {
             return NextResponse.json({
               jsonrpc: "2.0",
               result: {
-                content: [{ type: "text", text: JSON.stringify({ error: `Identity mismatch: authenticated as ${agent.agentId} but tool called with ${args.agent_id}` }) }],
+                content: [{ type: "text", text: JSON.stringify({ error: `Identity mismatch: authenticated as ${agent.agentId} but tool called with ${externalAgentId}` }) }],
                 isError: true,
               },
               id,
             });
           }
 
-          if (args?.agentId && ![agent.id, agent.agentId].includes(args.agentId)) {
+          if (internalAgentId && ![agent.id, agent.agentId].includes(internalAgentId)) {
             return NextResponse.json({
               jsonrpc: "2.0",
               result: {
-                content: [{ type: "text", text: JSON.stringify({ error: `Identity mismatch: authenticated as ${agent.agentId} but tool called with agentId=${args.agentId}` }) }],
+                content: [{ type: "text", text: JSON.stringify({ error: `Identity mismatch: authenticated as ${agent.agentId} but tool called with agentId=${internalAgentId}` }) }],
                 isError: true,
               },
               id,
             });
           }
 
-          if (args?.requestedBy) {
+          if (requestedBy) {
             const requestedByMatchesAgent =
-              args.requestedBy === agent.id || args.requestedBy === agent.agentId;
-            const requestedByMatchesOwner = args.requestedBy === agent.ownerId;
+              requestedBy === agent.id || requestedBy === agent.agentId;
+            const requestedByMatchesOwner = requestedBy === agent.ownerId;
 
             if (agentRequestedByTools.has(name) && !requestedByMatchesAgent) {
               return NextResponse.json({
                 jsonrpc: "2.0",
                 result: {
-                  content: [{ type: "text", text: JSON.stringify({ error: `Identity mismatch: authenticated as ${agent.agentId} but tool called with requestedBy=${args.requestedBy}` }) }],
+                  content: [{ type: "text", text: JSON.stringify({ error: `Identity mismatch: authenticated as ${agent.agentId} but tool called with requestedBy=${requestedBy}` }) }],
                   isError: true,
                 },
                 id,
@@ -171,7 +207,7 @@ export async function POST(request: NextRequest) {
               return NextResponse.json({
                 jsonrpc: "2.0",
                 result: {
-                  content: [{ type: "text", text: JSON.stringify({ error: `Identity mismatch: authenticated owner is ${agent.ownerId} but tool called with requestedBy=${args.requestedBy}` }) }],
+                  content: [{ type: "text", text: JSON.stringify({ error: `Identity mismatch: authenticated owner is ${agent.ownerId} but tool called with requestedBy=${requestedBy}` }) }],
                   isError: true,
                 },
                 id,
@@ -180,7 +216,6 @@ export async function POST(request: NextRequest) {
           }
 
           if (agentActorTools.has(name)) {
-            const actorId = args?.actorId ?? args?.creatorId;
             if (actorId && ![agent.id, agent.agentId, agent.ownerId].includes(actorId)) {
               return NextResponse.json({
                 jsonrpc: "2.0",

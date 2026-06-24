@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { createInboxEvent } from "@/lib/services/inbox";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
 import { findOverlappingCallSlots } from "@/lib/services/calendar-slots";
-import type { MatchCallStatus } from "@prisma/client";
+import type { MatchCallStatus, Prisma } from "@prisma/client";
 
 interface MatchParticipants {
   matchId: string;
@@ -111,7 +111,7 @@ async function notifyAgent(args: {
   agentId: string;
   type: "CALL_TIME_PROPOSED" | "CALL_TIME_CONFIRMED" | "ZOOM_LINK_READY";
   referenceId: string;
-  payload: Record<string, unknown>;
+  payload: Prisma.InputJsonValue;
   workKind: "CALL_TIME_PROPOSED" | "CALL_TIME_CONFIRMED" | "ZOOM_LINK_READY";
   reason: string;
 }) {
@@ -235,7 +235,7 @@ export async function requestZoomCall(matchId: string, ownerId: string) {
   });
 
   const bothWant = updated.wantsCallByA && updated.wantsCallByB;
-  const finalCall = bothWant ? await maybeGenerateZoomLink(matchId, call.id) : updated;
+  const finalCall = (bothWant ? await maybeGenerateZoomLink(matchId, call.id) : updated) ?? updated;
 
   return {
     matchId,
@@ -420,7 +420,7 @@ export async function confirmCallTime(matchId: string, ownerId: string, proposal
     reason: "Call time confirmed — notify owner",
   });
 
-  const finalCall = updated.zoomUrl ? updated : await maybeGenerateZoomLink(matchId, call.id);
+  const finalCall = (updated.zoomUrl ? updated : await maybeGenerateZoomLink(matchId, call.id)) ?? updated;
 
   return {
     matchId,

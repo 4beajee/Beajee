@@ -801,6 +801,7 @@ export default function OnboardingPage() {
                   value={countryQuery}
                   onChange={(event) => setCountryQuery(event.target.value)}
                   autoFocus
+                  autoComplete="off"
                   placeholder={t("onboarding.countrySearchPlaceholder")}
                   className={cx(inputClass, "pl-11")}
                 />

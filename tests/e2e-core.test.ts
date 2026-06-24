@@ -1149,6 +1149,27 @@ async function main() {
       "MCP tools/list should expose publish_context"
     );
 
+    const initializedNotification = await mcpPost(
+      new NextRequest("http://localhost/api/mcp", {
+        method: "POST",
+        headers: { authorization: "Bearer gny_alpha_e2e" },
+        body: JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized", params: {} }),
+      })
+    );
+    assert.equal(initializedNotification.status, 202);
+
+    const malformedResponse = await mcpPost(
+      new NextRequest("http://localhost/api/mcp", {
+        method: "POST",
+        headers: { authorization: "Bearer gny_alpha_e2e" },
+        body: "{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",",
+      })
+    );
+    assert.equal(malformedResponse.status, 400);
+    const malformedBody = await responseJson(malformedResponse);
+    assert.equal(malformedBody.error.code, -32700);
+    assert.match(malformedBody.error.message, /invalid JSON/i);
+
     const mismatchResponse = await mcpPost(
       new NextRequest("http://localhost/api/mcp", {
         method: "POST",

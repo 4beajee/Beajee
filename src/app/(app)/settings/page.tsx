@@ -64,7 +64,7 @@ const DANGER_BUTTON = dangerButtonClass;
 const DANGER_BUTTON_SM = dangerButtonSmallClass;
 const DANGER_SUBTLE_BUTTON = dangerSubtleButtonClass;
 const LEGACY_INPUT =
-  "w-full min-h-10 rounded-xl bg-[#050505] px-4 py-2.5 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.08] transition focus:outline-none focus:bg-[#050505] focus:ring-white/[0.12]";
+  "w-full min-h-10 appearance-none rounded-xl bg-[#050505] px-4 py-2.5 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.08] transition [color-scheme:dark] focus:outline-none focus:bg-[#050505] focus:ring-white/[0.12]";
 const OPTION_BUTTON =
   "w-full rounded-xl px-4 py-3 text-left transition-all ring-1 ring-inset";
 const OPTION_ACTIVE = "bg-white/[0.07] text-white ring-white/[0.18]";
@@ -665,10 +665,6 @@ function SchedulingUrlSection({
   const t = useTranslations();
   const { saving, saved, err, save } = useSave();
   const [value, setValue] = useState(schedulingUrl ?? "");
-
-  useEffect(() => {
-    setValue(schedulingUrl ?? "");
-  }, [schedulingUrl]);
 
   const submit = async () => {
     const result = await save("/api/settings", {
