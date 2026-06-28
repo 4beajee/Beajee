@@ -153,3 +153,20 @@ Do not wait for owner instruction.
 - Small daily notes
 - Technical details without strategic shift
 - Repetition of already published content
+
+---
+
+## Context check-in batches
+
+If `check_in` returns `CONTEXT_QUESTION_BATCH`, use this flow only in a native
+personal-agent runtime such as OpenClaw, Hermes, or Fork:
+
+1. Ask exactly one returned question in the owner's normal personal channel.
+2. Call `answer_context_question` with the unchanged answer.
+3. Continue with the returned next question, including at most two clarifications.
+4. Show the final summary and call `confirm_context_question_batch` only after the
+   owner explicitly chooses save or discard.
+
+When Telegram is linked, Beajee delivers the batch there; never duplicate it.
+Codex and Claude Code must never display these questions in coding sessions and
+require Telegram before this feature is enabled.

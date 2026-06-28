@@ -16,13 +16,18 @@ import {
   subtleButtonClass,
   subtleButtonSmallClass,
 } from "@/components/ui/app-chrome";
+import { ContextCheckInDelivery } from "@/components/context-check-in-delivery";
+import {
+  getContextQuestionDeliveryMode,
+  PLATFORM_LABELS,
+  type AgentPlatformValue,
+} from "@/lib/agent-platform";
 
-type Step = "use_openclaw" | "install" | "thesis" | "goal" | "country" | "consent" | "sensitive" | "research" | "complete";
+type Step = "platform" | "install" | "thesis" | "goal" | "country" | "consent" | "sensitive" | "research" | "complete";
 type Goal = "partnership" | "collaboration" | "mentor" | "peer";
 type OS = "unix" | "windows";
 type OpenClawStatus = "using" | "installed_later" | null;
 
-const AGENT_PLATFORM = "open_claw";
 const FILE_NAME = "SOUL.md";
 const ONBOARDING_TITLE = "text-xl font-semibold text-white mb-3 text-center";
 const ONBOARDING_TITLE_TIGHT = "text-xl font-semibold text-white mb-2 text-center";
@@ -171,7 +176,8 @@ export default function OnboardingPage() {
   const { data: session } = useSession();
   const t = useTranslations();
   const locale = useLocale();
-  const [step, setStep] = useState<Step>("use_openclaw");
+  const [step, setStep] = useState<Step>("platform");
+  const [selectedAgentPlatform, setSelectedAgentPlatform] = useState<AgentPlatformValue | null>(null);
   const [openClawStatus, setOpenClawStatus] = useState<OpenClawStatus>(null);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null);
@@ -231,7 +237,7 @@ export default function OnboardingPage() {
     ? countryOptions.find((country) => country.code === selectedCountryCode) ?? null
     : null;
 
-  const fileName = FILE_NAME;
+  const fileName = result?.fileName ?? FILE_NAME;
 
   const handleGoalSelect = (goal: Goal) => {
     setSelectedGoal(goal);
@@ -257,13 +263,13 @@ export default function OnboardingPage() {
   };
 
   const handleComplete = async () => {
-    if (!selectedGoal || !selectedCountryCode) return;
+    if (!selectedGoal || !selectedCountryCode || !selectedAgentPlatform) return;
     setLoading(true);
     setError(null);
 
     try {
       const body = {
-        agentPlatform: AGENT_PLATFORM,
+        agentPlatform: selectedAgentPlatform,
         networkingGoal: selectedGoal,
         countryCode: selectedCountryCode,
         privacyConsent: true,
@@ -342,7 +348,7 @@ export default function OnboardingPage() {
 
   const TOTAL_STEPS = 7;
   const stepNumber =
-    step === "use_openclaw" ? 1
+    step === "platform" ? 1
       : step === "install" ? 1
       : step === "thesis" ? 2
       : step === "goal" ? 3
@@ -387,32 +393,38 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Step 1a: Do you use OpenClaw? */}
-        {step === "use_openclaw" && (
+        {/* Step 1a: Choose the runtime that owns this agent. */}
+        {step === "platform" && (
           <div>
             <h2 className={ONBOARDING_TITLE}>
-              {t("onboarding.useOpenClawTitle")}
+              Which personal agent do you use?
             </h2>
             <p className={cx(ONBOARDING_DESC, "mb-8 text-center")}>
-              {t("onboarding.useOpenClawDesc")}
+              Beajee uses this to choose a reliable personal delivery channel.
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => {
-                  setOpenClawStatus("using");
-                  setStep("thesis");
-                }}
-                className={ONBOARDING_PRIMARY}
-              >
-                {t("onboarding.yesUsing")}
-              </button>
-              <button
-                onClick={() => setStep("install")}
-                className={ONBOARDING_SECONDARY}
-              >
-                {t("onboarding.noNotYet")}
-              </button>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {(["open_claw", "hermes", "fork", "codex", "claude_code"] as const).map((platform) => (
+                <button
+                  key={platform}
+                  onClick={() => {
+                    setSelectedAgentPlatform(platform);
+                    if (platform === "open_claw") setOpenClawStatus("using");
+                    setStep("thesis");
+                  }}
+                  className={cx(ONBOARDING_OPTION, ONBOARDING_OPTION_IDLE)}
+                >
+                  <span className="font-medium text-white">{PLATFORM_LABELS[platform]}</span>
+                  <span className="mt-1 block text-xs leading-5 text-neutral-500">
+                    {getContextQuestionDeliveryMode(platform, false) === "native_agent"
+                      ? "Personal check-ins can use this agent's normal channel."
+                      : "Telegram is required for personal check-ins; coding chats stay clean."}
+                  </span>
+                </button>
+              ))}
             </div>
+            <button onClick={() => setStep("install")} className={cx(ONBOARDING_SECONDARY, "mt-4")}>
+              I need to install OpenClaw first
+            </button>
           </div>
         )}
 
@@ -488,6 +500,7 @@ export default function OnboardingPage() {
               <button
                 onClick={() => {
                   setOpenClawStatus("installed_later");
+                  setSelectedAgentPlatform("open_claw");
                   setStep("thesis");
                 }}
                 className={cx(ONBOARDING_PRIMARY, "mt-6")}
@@ -635,7 +648,7 @@ export default function OnboardingPage() {
               )}
 
               <button
-                onClick={() => setStep("use_openclaw")}
+                onClick={() => setStep("platform")}
                 className={cx(ONBOARDING_BACK, "mt-5")}
               >
                 {t("common.back")}
@@ -728,7 +741,7 @@ export default function OnboardingPage() {
                 </button>
 
                 <button
-                  onClick={() => setStep(openClawStatus === "installed_later" ? "install" : "use_openclaw")}
+                  onClick={() => setStep(openClawStatus === "installed_later" ? "install" : "platform")}
                   className="inline-flex min-h-9 items-center justify-center rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-400 transition-colors hover:bg-white/[0.035] hover:text-white"
                 >
                   {t("common.back")}
@@ -1085,6 +1098,13 @@ export default function OnboardingPage() {
             >
               {copied === "prompt" ? t("common.copied") : t("onboarding.copySetupPrompt")}
             </button>
+
+            {selectedAgentPlatform ? (
+              <ContextCheckInDelivery
+                mode={getContextQuestionDeliveryMode(selectedAgentPlatform, false)}
+                className="mb-6"
+              />
+            ) : null}
 
             {/* How it works */}
             <div className="space-y-3 mb-6">

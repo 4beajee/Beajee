@@ -177,8 +177,10 @@ async function main() {
     });
     assert.equal(verified.telegramId, "42");
     assert.equal(verified.user.first_name, "Ada");
+    const tampered = new URLSearchParams(initData);
+    tampered.set("hash", "0".repeat(64));
     assert.throws(
-      () => verifyInitData(initData.replace(/.$/, "0"), { botToken: process.env.TELEGRAM_BOT_TOKEN }),
+      () => verifyInitData(tampered.toString(), { botToken: process.env.TELEGRAM_BOT_TOKEN }),
       /signature is invalid/
     );
     ok("Telegram initData HMAC verification accepts valid payloads and rejects tampering");

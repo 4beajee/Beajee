@@ -26,6 +26,8 @@ import { proposeCallTimeTool } from "./tools/propose-call-time";
 import { confirmCallTimeTool } from "./tools/confirm-call-time";
 import { getCallStatusTool } from "./tools/get-call-status";
 import { setSchedulingUrlTool } from "./tools/set-scheduling-url";
+import { answerContextQuestionTool } from "./tools/answer-context-question";
+import { confirmContextQuestionBatchTool } from "./tools/confirm-context-question-batch";
 
 const tools = [
   publishContextTool,
@@ -51,6 +53,8 @@ const tools = [
   confirmCallTimeTool,
   getCallStatusTool,
   setSchedulingUrlTool,
+  answerContextQuestionTool,
+  confirmContextQuestionBatchTool,
 ];
 
 export function createMcpServer() {

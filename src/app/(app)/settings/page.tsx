@@ -31,6 +31,7 @@ import {
   getAgentPlatformLabel,
   isOpenClawPlatform,
 } from "@/lib/agent-platform";
+import { ContextCheckInDelivery } from "@/components/context-check-in-delivery";
 
 /* ── Constants ── */
 
@@ -94,6 +95,8 @@ interface Settings {
   wakeStreamLastError: string | null;
   wakeDeliveryMode: "stream" | "webhook" | "polling";
   schedulingUrl: string | null;
+  telegramConnected: boolean;
+  contextQuestionDelivery: "telegram" | "native_agent" | "telegram_required";
   privacySync: {
     pending: boolean;
     searchPaused: boolean;
@@ -196,6 +199,10 @@ export default function SettingsPage() {
         schedulingUrl={settings.schedulingUrl}
         onUpdate={(v) => setSettings({ ...settings, schedulingUrl: v })}
       />
+
+      <Section title="Context check-ins">
+        <ContextCheckInDelivery mode={settings.contextQuestionDelivery} />
+      </Section>
 
       <LanguageSection />
 

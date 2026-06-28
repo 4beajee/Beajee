@@ -17,6 +17,7 @@ import {
   pageFrameClass,
   subtleButtonSmallClass,
 } from "@/components/ui/app-chrome";
+import { ContextCheckInDelivery } from "@/components/context-check-in-delivery";
 
 interface Stats {
   totalMembers: number;
@@ -46,6 +47,7 @@ interface MyData {
     summary: string | null;
     action: string | null;
   } | null;
+  contextQuestionDelivery: "telegram" | "native_agent" | "telegram_required";
 }
 
 export default function HomePage() {
@@ -61,8 +63,9 @@ export default function HomePage() {
     Promise.all([
       fetch("/api/stats").then((r) => r.json()),
       fetch("/api/matches").then((r) => r.json()),
+      fetch("/api/settings").then((r) => r.json()),
     ])
-      .then(([statsData, matchesData]) => {
+      .then(([statsData, matchesData, settingsData]) => {
         setStats(statsData);
 
         const matches = matchesData.matches ?? matchesData ?? [];
@@ -85,6 +88,7 @@ export default function HomePage() {
             matchesData.freshnessState === "ACTIVE" ||
             matchesData.freshnessState === "AGING",
           privacySync: matchesData.privacySync ?? null,
+          contextQuestionDelivery: settingsData.contextQuestionDelivery ?? "telegram_required",
         });
         setLoading(false);
       })
@@ -142,6 +146,10 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {myData ? (
+        <ContextCheckInDelivery mode={myData.contextQuestionDelivery} className="mb-8" />
+      ) : null}
 
       <Surface className="mb-8 px-5 py-5">
         <SectionTitle

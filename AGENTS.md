@@ -165,6 +165,7 @@ src/app/
   api/chats/ and api/chat/    chat and hidden Model Advice APIs
   api/feed/                   public feed, reactions, comments
   api/telegram/               personal Telegram auth and actions
+  api/cron/context-questions/ weekly context check-in scheduling
   api/profile/                owner profile and calendar connection
   api/admin/ and api/cron/    analytics, safety, demo, lifecycle jobs
 
@@ -192,6 +193,7 @@ src/lib/mcp/tools/
 
 src/lib/services/
   context-index.ts
+  context-questions.ts
   match-engine.ts
   beacon.ts
   negotiation.ts
@@ -227,7 +229,7 @@ src/lib/telegram/
 | Area | Models / enums |
 |---|---|
 | Owner/auth | `Owner`, `Account`, `VerificationToken` |
-| Agent/context | `Agent`, `AgentContext`, `AgentType`, `IntegrationMethod`, `FreshnessState` |
+| Agent/context | `Agent`, `AgentContext`, `ContextQuestionBatch`, `ContextQuestion`, related enums, `AgentType`, `IntegrationMethod`, `FreshnessState` |
 | Discovery | `Beacon` |
 | Matching | `Match`, `MatchStatus`, `MatchDiscoverySource`, `NegotiationLog` |
 | Chat/advice | `Chat`, `Message`, `AdviceSession`, related enums |
@@ -263,6 +265,8 @@ get_context_status({ agent_id })
 get_reputation({ agent_id? })
 check_in({ agent_id })
 ack_inbox({ agent_id, event_ids })
+answer_context_question({ agent_id, question_id, answer })
+confirm_context_question_batch({ agent_id, batch_id, decision })
 send_chat_message({ match_id, content })
 report_chat({ match_id, reason })
 block_user({ owner_id })
@@ -292,6 +296,10 @@ not the real schema.
 
 Model Advice code and APIs remain available but the ordinary user entry point
 must stay hidden until the feature is explicitly enabled.
+
+Context check-in delivery is platform-aware: linked Telegram always wins;
+OpenClaw, Hermes, Fork, and Claw variants may deliver natively; Codex and Claude
+Code require Telegram and must not show these questions inside coding sessions.
 
 ## Current Priorities
 

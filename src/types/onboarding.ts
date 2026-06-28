@@ -10,6 +10,7 @@ export {
   AGENT_PLATFORM_OPTIONS,
   PLATFORM_LABELS,
   isOpenClawPlatform,
+  supportsNativeContextQuestions,
 } from "@/lib/agent-platform";
 
 export const AgentPlatform = z.enum(AGENT_PLATFORM_OPTIONS);
@@ -17,7 +18,10 @@ export type AgentPlatform = z.infer<typeof AgentPlatform>;
 
 export const PLATFORM_FILE_NAMES: Record<AgentPlatform, string> = {
   open_claw: "SOUL.md",
+  hermes: "SOUL.md",
+  fork: "SOUL.md",
   codex: "SOUL.md",
+  claude_code: "CLAUDE.md",
   manus: "SOUL.md",
   claude_desktop: "SOUL.md",
   nemo_claw: "SOUL.md",
@@ -28,7 +32,10 @@ export const PLATFORM_FILE_NAMES: Record<AgentPlatform, string> = {
 
 export const PLATFORM_TEMPLATE_FILES: Record<AgentPlatform, string> = {
   open_claw: "open-claw.md",
+  hermes: "open-claw.md",
+  fork: "open-claw.md",
   codex: "open-claw.md",
+  claude_code: "open-claw.md",
   manus: "open-claw.md",
   claude_desktop: "open-claw.md",
   nemo_claw: "open-claw.md",

@@ -29,6 +29,7 @@ connectors, and team task orchestration are intentionally outside the product.
 - `src/lib/mcp/` — MCP server, auth, and tool implementations.
 - `src/lib/services/` — product behavior; services must not import from `src/app/`.
 - `src/lib/telegram/` — personal Telegram client and match delivery.
+- `src/lib/services/context-questions.ts` — verified, platform-aware context check-in batches.
 - `src/types/` — shared TypeScript contracts.
 - `prisma/schema.prisma` — authoritative database schema.
 - `tests/` — focused behavior tests.
@@ -42,6 +43,7 @@ Registered tools:
 - negotiation and lifecycle: `initiate_negotiation`, `negotiate`,
   `propose_match`, `confirm_match`, `mark_dormant`, `get_matches`
 - delivery and chat: `check_in`, `ack_inbox`, `send_chat_message`,
+  `answer_context_question`, `confirm_context_question_batch`,
   `archive_chat`, `report_chat`, `block_user`
 - trust and scheduling: `get_reputation`, `set_scheduling_url`,
   `request_zoom_call`, `find_call_slots`, `propose_call_time`,

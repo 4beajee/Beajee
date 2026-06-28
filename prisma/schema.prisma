@@ -22,7 +22,7 @@ model Owner {
   privacyConsent  Boolean   @default(false) @map("privacy_consent")
   researchConsent Boolean   @default(false) @map("research_consent") // Purpose B — separate GDPR basis
   excludedTopics  String[]  @default([]) @map("excluded_topics")
-  agentPlatform   String?   @map("agent_platform") // "open_claw" | "nemo_claw" | "zero_claw" | "nano_claw"
+  agentPlatform   String?   @map("agent_platform") // Runtime key from src/lib/agent-platform.ts
   schedulingUrl   String?   @map("scheduling_url") // Cal.com or Calendly booking page
   telegramId      String?   @unique @map("telegram_id")
   onboarded       Boolean   @default(false)
@@ -42,6 +42,7 @@ model Owner {
   matchComments            MatchComment[]
   telegramTopics           TelegramTopic[]
   personalConnectors       PersonalConnector[]
+  contextQuestionBatches   ContextQuestionBatch[]
 
   @@index([isDemo])
   @@map("owners")
@@ -151,6 +152,7 @@ model Agent {
   matchesAsA      Match[]               @relation("AgentA")
   matchesAsB      Match[]               @relation("AgentB")
   negotiationLogs NegotiationLog[]
+  contextQuestionBatches ContextQuestionBatch[]
 
   @@index([isDemo])
   @@index([isDemo, lastDemoTickAt])
@@ -599,6 +601,65 @@ model InboxEvent {
   @@index([ownerId, type, referenceId])
   @@index([createdAt])
   @@map("inbox_events")
+}
+
+enum ContextQuestionBatchStatus {
+  READY
+  ACTIVE
+  REVIEW
+  COMPLETED
+  SKIPPED
+  DISCARDED
+  EXPIRED
+}
+
+enum ContextQuestionDelivery {
+  TELEGRAM
+  NATIVE_AGENT
+}
+
+model ContextQuestionBatch {
+  id            String                     @id @default(cuid())
+  ownerId       String                     @map("owner_id")
+  owner         Owner                      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  agentId       String                     @map("agent_id")
+  agent         Agent                      @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  cadenceKey    String                     @map("cadence_key")
+  delivery      ContextQuestionDelivery
+  status        ContextQuestionBatchStatus @default(READY)
+  summary       Json?
+  createdAt     DateTime                   @default(now()) @map("created_at")
+  deliveredAt   DateTime?                  @map("delivered_at")
+  deliveryError String?                    @map("delivery_error")
+  startedAt     DateTime?                  @map("started_at")
+  completedAt   DateTime?                  @map("completed_at")
+  expiresAt     DateTime                   @map("expires_at")
+  questions     ContextQuestion[]
+
+  @@unique([ownerId, cadenceKey])
+  @@index([agentId, status])
+  @@index([status, expiresAt])
+  @@map("context_question_batches")
+}
+
+model ContextQuestion {
+  id               String               @id @default(cuid())
+  batchId          String               @map("batch_id")
+  batch            ContextQuestionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  sequence         Int
+  topic            String
+  prompt           String
+  reason           String
+  followUpPrompt   String?              @map("follow_up_prompt")
+  isFollowUp       Boolean              @default(false) @map("is_follow_up")
+  parentQuestionId String?              @map("parent_question_id")
+  answer           String?              @db.Text
+  answeredAt       DateTime?            @map("answered_at")
+  createdAt        DateTime             @default(now()) @map("created_at")
+
+  @@unique([batchId, sequence])
+  @@index([batchId, answeredAt])
+  @@map("context_questions")
 }
 
 // Append-only analytics lifecycle ledger.

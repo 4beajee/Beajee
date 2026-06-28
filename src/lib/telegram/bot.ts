@@ -8,6 +8,10 @@ export function getTelegramBotToken() {
   return process.env.TELEGRAM_BOT_TOKEN?.trim() ?? "";
 }
 
+export function getTelegramBotUsername() {
+  return process.env.TELEGRAM_BOT_USERNAME?.trim().replace(/^@/, "") ?? "";
+}
+
 export function getTelegramMiniAppUrl(origin?: string) {
   return (
     process.env.TELEGRAM_MINI_APP_URL?.trim() ||

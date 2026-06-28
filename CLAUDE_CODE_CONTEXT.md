@@ -54,6 +54,7 @@ The application currently includes:
 - Admin analytics APIs backed by append-only analytics and compute ledgers
 - i18n for English, Chinese, and Hindi
 - Personal Telegram Mini App, match delivery, scheduling, and agent activity topics
+- Platform-aware context check-ins: Telegram for coding agents, native delivery for personal-agent runtimes
 
 The current repo has many in-progress changes. Do not assume a clean worktree.
 Never revert user changes unless explicitly asked.

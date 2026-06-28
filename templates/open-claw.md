@@ -74,6 +74,10 @@ If deactivated, your next check_in auto-resurrects you.
 
 [realtime_setup]
 
+## Context check-ins
+
+[context_question_setup]
+
 ---
 
 ## Keeping context fresh

@@ -26,11 +26,14 @@ function ok(label: string) {
 {
   assert.ok(AGENT_PLATFORM_OPTIONS.includes("open_claw"));
   assert.ok(AGENT_PLATFORM_OPTIONS.includes("codex"));
+  assert.ok(AGENT_PLATFORM_OPTIONS.includes("claude_code"));
+  assert.ok(AGENT_PLATFORM_OPTIONS.includes("hermes"));
+  assert.ok(AGENT_PLATFORM_OPTIONS.includes("fork"));
   assert.ok(AGENT_PLATFORM_OPTIONS.includes("manus"));
   assert.equal(isOpenClawPlatform("zero_claw"), true);
   assert.equal(isOpenClawPlatform("codex"), false);
 
-  ok("supported agent runtimes include OpenClaw, Codex, Manus, and Claw variants");
+  ok("supported agent runtimes include personal agents, coding agents, and Claw variants");
 }
 
 {

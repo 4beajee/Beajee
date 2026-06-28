@@ -17,6 +17,17 @@ import {
 } from "@/lib/services/agent-search";
 import { confirmMatch, markDormant } from "@/lib/services/negotiation";
 import { requestZoomCall } from "@/lib/services/match-call";
+import { consumeTelegramLink } from "@/lib/telegram/link";
+import {
+  answerContextQuestion,
+  confirmContextQuestionBatch,
+  formatQuestionBatchSummary,
+  formatTelegramQuestion,
+  getActiveTelegramQuestion,
+  skipContextQuestionBatch,
+  startContextQuestionBatch,
+} from "@/lib/services/context-questions";
+import { escapeTelegramHtml } from "@/lib/services/telegram";
 
 interface TelegramUpdate {
   message?: TelegramMessage;
@@ -37,7 +48,7 @@ interface TelegramMessage {
     title?: string;
     is_forum?: boolean;
   };
-  from?: { id?: number; username?: string };
+  from?: { id?: number; username?: string; first_name?: string; last_name?: string };
 }
 
 function isAuthorized(request: NextRequest, chatId: string | number | null | undefined) {
@@ -55,7 +66,11 @@ function parseTextCommand(text: string) {
   const [commandWithBot, agentId] = text.trim().split(/\s+/);
   const command = commandWithBot.split("@")[0];
 
-  if (command === "/start") return { kind: "start" as const };
+  if (command === "/start") {
+    return agentId?.startsWith("sync_")
+      ? { kind: "telegram_sync" as const, rawToken: agentId.slice("sync_".length) }
+      : { kind: "start" as const };
+  }
   if (command === "/setup_topics") return { kind: "setup_topics" as const };
 
   if (!agentId) return null;
@@ -82,6 +97,10 @@ function parseCallbackCommand(data: string) {
   if (action === "match_skip" && id) return { kind: "match_skip" as const, matchId: id };
   if (action === "match_dialogue" && id) return { kind: "match_dialogue" as const, matchId: id };
   if (action === "match_schedule" && id) return { kind: "match_schedule" as const, matchId: id };
+  if (action === "context_start" && id) return { kind: "context_start" as const, batchId: id };
+  if (action === "context_skip" && id) return { kind: "context_skip" as const, batchId: id };
+  if (action === "context_save" && id) return { kind: "context_save" as const, batchId: id };
+  if (action === "context_discard" && id) return { kind: "context_discard" as const, batchId: id };
   return null;
 }
 
@@ -125,6 +144,104 @@ async function handleStart(message: TelegramMessage, origin?: string) {
       "Your personal agent can find relevant people, negotiate introductions, and bring you one clear question: Meet?",
     replyMarkup: buildMiniAppReplyMarkup(origin),
   });
+}
+
+async function handleTelegramSync(message: TelegramMessage, rawToken: string) {
+  const telegramId = message.from?.id;
+  if (!message.chat?.id || !telegramId) throw new Error("Telegram identity is missing");
+  const name =
+    [message.from?.first_name, message.from?.last_name].filter(Boolean).join(" ").trim() ||
+    (message.from?.username ? `@${message.from.username}` : `Telegram ${telegramId}`);
+  try {
+    const owner = await consumeTelegramLink({ rawToken, telegramId: String(telegramId), name });
+    await sendTelegramMessageToChat({
+      chatId: message.chat.id,
+      text:
+        "<b>Telegram connected</b>\n" +
+        "Your Beajee account and personal agent are now synced. Context check-ins will arrive here.",
+    });
+    return owner;
+  } catch (error) {
+    await sendTelegramMessageToChat({
+      chatId: message.chat.id,
+      text: `<b>Telegram sync failed</b>\n${escapeTelegramHtml(
+        error instanceof Error ? error.message : "Start again from the Beajee web app"
+      )}`,
+    });
+    return null;
+  }
+}
+
+async function handleContextCallback(
+  command: { kind: string; batchId: string },
+  telegramUserId?: number
+) {
+  try {
+    const ownerId = await ownerIdFromTelegramUser(telegramUserId);
+    if (!ownerId) return "Open the Mini App first or sync Telegram from the Beajee web app.";
+
+    if (command.kind === "context_skip") {
+      await skipContextQuestionBatch({ batchId: command.batchId, ownerId });
+      return "Skipped for this week";
+    }
+    if (command.kind === "context_save" || command.kind === "context_discard") {
+      const result = await confirmContextQuestionBatch({
+        batchId: command.batchId,
+        ownerId,
+        decision: command.kind === "context_save" ? "save" : "discard",
+      });
+      return result.status === "COMPLETED" ? "Saved to your Beajee context" : "Answers discarded";
+    }
+
+    const started = await startContextQuestionBatch({ batchId: command.batchId, ownerId });
+    if (!started.question) return "This check-in has no pending questions";
+    const total = started.batch.questions.filter((question) => !question.isFollowUp).length;
+    await sendTelegramMessageToChat({
+      chatId: String(telegramUserId),
+      text: formatTelegramQuestion(started.question, 1, total),
+    });
+    return "Check-in started";
+  } catch (error) {
+    return error instanceof Error ? error.message : "Could not update this check-in";
+  }
+}
+
+async function handleContextAnswer(message: TelegramMessage) {
+  const text = message.text?.trim();
+  const telegramId = message.from?.id;
+  if (!text || !telegramId || text.startsWith("/")) return false;
+  const active = await getActiveTelegramQuestion(String(telegramId));
+  if (!active?.question || !message.chat?.id) return false;
+
+  const result = await answerContextQuestion({
+    ownerId: active.ownerId,
+    questionId: active.question.id,
+    answer: text,
+  });
+  if (result.status === "ACTIVE" && result.question) {
+    const total = active.batch.questions.filter((question) => !question.isFollowUp).length;
+    const position = Math.min(total, Math.max(1, Math.floor(result.question.sequence / 10)));
+    await sendTelegramMessageToChat({
+      chatId: message.chat.id,
+      text: formatTelegramQuestion(result.question, position, total),
+    });
+    return true;
+  }
+
+  const summary = formatQuestionBatchSummary(result.summary);
+  await sendTelegramMessageToChat({
+    chatId: message.chat.id,
+    text:
+      "<b>Done. Here is what I understood:</b>\n" +
+      `${escapeTelegramHtml(summary)}\n\nSave these facts to your Beajee matching context?`,
+    replyMarkup: {
+      inline_keyboard: [[
+        { text: "Save", callback_data: `context_save:${active.batch.id}` },
+        { text: "Discard", callback_data: `context_discard:${active.batch.id}` },
+      ]],
+    },
+  });
+  return true;
 }
 
 async function handleTopicSetup(message: TelegramMessage, telegramUserId?: number) {
@@ -211,6 +328,9 @@ export async function POST(request: NextRequest) {
     const command = callbackCommand ?? messageCommand;
 
     if (!command) {
+      if (update.message && (await handleContextAnswer(update.message))) {
+        return NextResponse.json({ ok: true });
+      }
       return NextResponse.json({ ok: true, ignored: true });
     }
 
@@ -218,6 +338,9 @@ export async function POST(request: NextRequest) {
 
     if (command.kind === "start" && update.message) {
       await handleStart(update.message, request.nextUrl.origin);
+    } else if (command.kind === "telegram_sync" && update.message) {
+      await handleTelegramSync(update.message, command.rawToken);
+      callbackAnswer = "Telegram connected";
     } else if (command.kind === "setup_topics") {
       callbackAnswer = await handleTopicSetup(
         update.callback_query?.message ?? update.message ?? {},
@@ -233,6 +356,13 @@ export async function POST(request: NextRequest) {
       command.kind === "match_schedule"
     ) {
       callbackAnswer = await handleMatchCallback(command, update.callback_query?.from?.id);
+    } else if (
+      command.kind === "context_start" ||
+      command.kind === "context_skip" ||
+      command.kind === "context_save" ||
+      command.kind === "context_discard"
+    ) {
+      callbackAnswer = await handleContextCallback(command, update.callback_query?.from?.id);
     }
 
     if (callbackId) {

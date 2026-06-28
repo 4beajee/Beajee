@@ -10,6 +10,7 @@ import { SettingsUpdateSchema } from "@/types/settings";
 import { getWakeWebhookUrlError } from "@/lib/wake-webhook";
 import { getWakeStreamConnectionCount, hasLiveWakeStream } from "@/lib/services/agent-wake-stream";
 import { ZodError } from "zod";
+import { getContextQuestionDeliveryMode } from "@/lib/agent-platform";
 
 // GET /api/settings — load current settings for the authenticated owner
 export async function GET() {
@@ -67,6 +68,11 @@ export async function GET() {
       wakeDeliveryMode,
       privacySync,
       schedulingUrl: owner.schedulingUrl,
+      telegramConnected: !!owner.telegramId,
+      contextQuestionDelivery: getContextQuestionDeliveryMode(
+        owner.agentPlatform,
+        !!owner.telegramId
+      ),
     });
   } catch (error) {
     return safeErrorResponse(error, "Failed to load settings");
