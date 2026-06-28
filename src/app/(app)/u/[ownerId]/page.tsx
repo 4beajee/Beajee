@@ -1,12 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  COMMUNITY_CATEGORY_LABELS,
-  COMMUNITY_SPECIALIZATION_LABELS,
-} from "@/types/community";
 import {
   PageHeader,
   Surface,
@@ -28,18 +23,6 @@ interface PublicProfile {
     location: string | null;
     ownerLocation: string | null;
   } | null;
-  communities: Array<{
-    id: string;
-    slug: string;
-    name: string;
-    visibility: "PUBLIC" | "PRIVATE";
-    category: keyof typeof COMMUNITY_CATEGORY_LABELS | null;
-    specialization: keyof typeof COMMUNITY_SPECIALIZATION_LABELS | null;
-    memberCount: number;
-    viewer: {
-      isMember: boolean;
-    };
-  }>;
 }
 
 export default function PublicProfilePage() {
@@ -119,59 +102,6 @@ export default function PublicProfilePage() {
         </Surface>
       )}
 
-      <Surface className="px-5 py-5">
-        <h2 className="mb-4 text-xs font-medium uppercase tracking-wider text-neutral-500">
-          Communities
-        </h2>
-        {profile.communities.length === 0 ? (
-          <p className="text-sm text-neutral-500">No visible communities.</p>
-        ) : (
-          <div className="grid gap-3">
-            {profile.communities.map((community) => {
-              const label = community.specialization
-                ? COMMUNITY_SPECIALIZATION_LABELS[community.specialization]
-                : community.category
-                ? COMMUNITY_CATEGORY_LABELS[community.category]
-                : "Custom community";
-
-              const canOpen = community.visibility === "PUBLIC" || community.viewer.isMember;
-              const content = (
-                <>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-white">{community.name}</p>
-                      <p className="mt-1 text-xs text-neutral-500">{label}</p>
-                    </div>
-                    <span className={getMattePillClass(community.visibility === "PUBLIC" ? "neutral" : "muted", "shrink-0 text-xs")}>
-                      {community.visibility === "PUBLIC" ? "Open link" : "Invite only"}
-                    </span>
-                  </div>
-                  <p className="mt-3 text-xs text-neutral-600">
-                    {community.visibility === "PUBLIC" ? "Anyone can join" : "Ask the owner for an invite"} · {community.memberCount} members
-                  </p>
-                </>
-              );
-
-              return canOpen ? (
-                <Link
-                  key={community.id}
-                  href={`/communities/${community.slug}`}
-                  className="block rounded-2xl bg-white/[0.025] p-4 ring-1 ring-inset ring-white/[0.06] transition-colors hover:bg-white/[0.04]"
-                >
-                  {content}
-                </Link>
-              ) : (
-                <div
-                  key={community.id}
-                  className="rounded-2xl bg-white/[0.025] p-4 ring-1 ring-inset ring-white/[0.06]"
-                >
-                  {content}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </Surface>
     </div>
   );
 }

@@ -84,14 +84,12 @@ Load → execute → unload.
 
 | File | Description |
 |---|---|
-| BEAJEE_SPEC.md | Full product spec v2.0 |
+| BEAJEE_SPEC.md | Focused personal-networking product spec |
 | AGENTS.md | Architecture, schema, MCP tools, build order |
 | CLAUDE_CODE_CONTEXT.md | Context for Claude Code agent |
 | SOUL.md | Instructions for end-user agents |
-| docs/COMMUNITIES.md | Communities mode — open layer spec |
-| docs/TEAMS.md | Teams mode — closed collaboration spec |
-| docs/TELEGRAM_INTEGRATION.md | Telegram Mini App + Bot-to-Bot spec |
-| docs/OPEN_CORE_MODEL.md | Monetisation and licensing spec |
+| docs/ARCHITECTURE.md | Current personal-networking architecture |
+| docs/TELEGRAM_INTEGRATION.md | Personal Telegram Mini App and topic routing |
 
 ---
 

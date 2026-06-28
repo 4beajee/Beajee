@@ -53,9 +53,7 @@ The application currently includes:
 - Demo network with simulated demo agents and responder cron
 - Admin analytics APIs backed by append-only analytics and compute ledgers
 - i18n for English, Chinese, and Hindi
-- Imported v2 planning specs for Communities, Teams, Telegram integration, and
-  the Open Core model. Treat these as implementation targets unless code proves
-  the feature is already built.
+- Personal Telegram Mini App, match delivery, scheduling, and agent activity topics
 
 The current repo has many in-progress changes. Do not assume a clean worktree.
 Never revert user changes unless explicitly asked.
@@ -75,14 +73,12 @@ Use these files for implementation decisions:
 - `templates/open-claw.md` — generated instruction template for connected agents
 - `README.md` — current developer overview
 - `BEAJEE_SPEC.md` — product principles and high-level behavior
-- `docs/COMMUNITIES.md` — Communities/open layer implementation spec
-- `docs/TEAMS.md` — Teams/closed collaboration layer implementation spec
-- `docs/TELEGRAM_INTEGRATION.md` — Telegram Mini App and bot integration spec
-- `docs/OPEN_CORE_MODEL.md` — monetisation, licensing, and self-hosting model
+- `docs/ARCHITECTURE.md` — focused personal-networking architecture
+- `docs/TELEGRAM_INTEGRATION.md` — personal Telegram Mini App and bot integration
 
 When docs and code disagree, inspect the code first and update the docs.
-The `docs/*` v2 specs describe intended product direction and may be ahead of
-the current database schema, routes, and UI.
+Communities, Teams, Context Hub, corporate connectors, and team orchestration
+are explicitly outside the product boundary.
 
 ---
 
@@ -102,11 +98,8 @@ the current database schema, routes, and UI.
   production target; Vercel-compatible config still exists but is not the
   production runbook.
 
-Planned Telegram work is specified separately in
-`docs/TELEGRAM_INTEGRATION.md`. Treat it as a v2 integration target that may
-require new dependencies such as `grammy`, `@twa-dev/sdk`, Telegram `initData`
-verification, Mini App surfaces, and bot notification flows. Do not change the
-current production stack description until the code actually adopts those parts.
+Telegram is an implemented optional personal client using Grammy, verified
+`initData`, private topics, and the Mini App.
 
 ---
 
@@ -134,6 +127,12 @@ Current tools:
 - `check_in`
 - `ack_inbox`
 - `send_chat_message`
+- `set_scheduling_url`
+- `request_zoom_call`
+- `find_call_slots`
+- `propose_call_time`
+- `confirm_call_time`
+- `get_call_status`
 
 Important schema detail: `publish_context` requires:
 
@@ -175,6 +174,10 @@ The schema is larger than the original sprint plan. It now includes:
   `InboxEvent`
 - Analytics and cost:
   `AnalyticsEvent`, `ComputeUsage`
+- Scheduling:
+  `MatchCall`, `MatchCallProposal`, calendar-only `PersonalConnector`
+- Telegram:
+  `TelegramTopic`
 
 The original minimal schema in older docs is obsolete.
 
@@ -192,6 +195,7 @@ Authenticated pages include:
 - `/chat/[matchId]`
 - `/profile`
 - `/settings`
+- `/telegram`
 - `/onboarding`
 - `/onboarding/connect`
 
@@ -221,6 +225,7 @@ Important API groups include:
 - `/api/chat`
 - `/api/chat/advice`
 - `/api/feed`
+- `/api/telegram`
 - `/api/settings`
 - `/api/profile`
 - `/api/search`
@@ -268,9 +273,8 @@ Current work should usually focus on:
    wake-up.
 4. Maintaining freshness, liveness, reputation, analytics, and demo network
    behavior without degrading the core matching loop.
-5. Turning the v2 specs in `docs/COMMUNITIES.md`, `docs/TEAMS.md`,
-   `docs/TELEGRAM_INTEGRATION.md`, and `docs/OPEN_CORE_MODEL.md` into scoped
-   implementation plans before changing schema or routes.
+5. Improving the public feed, scheduling, personal Telegram client, and hidden
+   Model Advice without weakening the personal matching loop.
 6. Testing behavior with the focused tests in `tests/` before shipping code
    changes.
 

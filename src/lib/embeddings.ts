@@ -18,9 +18,6 @@ interface EmbeddingLogContext {
   beaconId?: string | null;
   chatId?: string | null;
   adviceSessionId?: string | null;
-  communityId?: string | null;
-  strategySessionId?: string | null;
-  knowledgeSourceId?: string | null;
   metadata?: Record<string, unknown>;
 }
 
@@ -60,9 +57,6 @@ export async function generateEmbeddingWithUsage(
       beaconId: logContext.beaconId,
       chatId: logContext.chatId,
       adviceSessionId: logContext.adviceSessionId,
-      communityId: logContext.communityId,
-      strategySessionId: logContext.strategySessionId,
-      knowledgeSourceId: logContext.knowledgeSourceId,
       tokensInput: usage.tokensInput,
       tokensOutput: 0,
       costUsd: usage.costUsd,

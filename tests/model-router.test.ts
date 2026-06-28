@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 
 import {
-  __test as modelRouterTest,
   getCheapModel,
   getQualityModel,
   inferModelProvider,
@@ -18,26 +17,16 @@ async function main() {
 
   assert.equal(getCheapModel(), "cheap-test-model");
   assert.equal(getQualityModel(), "quality-test-model");
-  assert.equal(isQualityModelTask("distillation"), false);
-  assert.equal(isQualityModelTask("hub_edit_chat"), true);
+  assert.equal(isQualityModelTask("match_scoring"), false);
+  assert.equal(isQualityModelTask("negotiation"), true);
 
-  assert.equal(await resolveModel("distillation"), "cheap-test-model");
-  assert.equal(await resolveModel("strategy_judge"), "quality-test-model");
-
-  modelRouterTest.setBudgetStatusLoader(async () => ({ monthlySpentPercent: 95 }));
-  assert.equal(
-    await resolveModel("strategy_judge", { communityId: "community_budgeted" }),
-    "cheap-test-model",
-    "quality tasks degrade to cheap model at 95% monthly budget"
-  );
+  assert.equal(await resolveModel("match_scoring"), "cheap-test-model");
+  assert.equal(await resolveModel("negotiation"), "quality-test-model");
 
   assert.equal(
-    await resolveModel("strategy_judge", {
-      communityId: "community_budgeted",
-      forceQuality: true,
-    }),
+    await resolveModel("match_scoring", { forceQuality: true }),
     "quality-test-model",
-    "forceQuality bypasses degradation"
+    "forceQuality selects the quality model"
   );
 
   assert.equal(inferModelProvider("claude-sonnet-4-20250514"), "anthropic");
@@ -49,7 +38,6 @@ async function main() {
 
 main()
   .finally(() => {
-    modelRouterTest.setBudgetStatusLoader(null);
     if (previousCheap === undefined) Reflect.deleteProperty(process.env, "CHEAP_MODEL");
     else process.env.CHEAP_MODEL = previousCheap;
     if (previousQuality === undefined) Reflect.deleteProperty(process.env, "QUALITY_MODEL");

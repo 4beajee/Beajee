@@ -3,7 +3,6 @@ generator client {
   previewFeatures = ["postgresqlExtensions"]
   binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
 }
-
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
@@ -41,16 +40,8 @@ model Owner {
   reports                  Report[]
   matchReactions           MatchReaction[]
   matchComments            MatchComment[]
-  communitiesOwned         Community[]            @relation("CommunityOwner")
-  communityMemberships     CommunityMember[]
-  communityInvitesSent     CommunityInvite[]      @relation("CommunityInviteInviter")
-  communityInvitesReceived CommunityInvite[]      @relation("CommunityInviteInvitee")
-  communityChatMessages    CommunityChatMessage[] @relation("CommunityChatMessageAuthor")
-  communityChatReads       CommunityChatRead[]
-  agentTasksApproved       AgentTask[]            @relation("AgentTaskApprovedByOwner")
   telegramTopics           TelegramTopic[]
   personalConnectors       PersonalConnector[]
-  profileAuditLogs         ProfileAuditLog[]
 
   @@index([isDemo])
   @@map("owners")
@@ -75,7 +66,6 @@ enum TelegramTopicType {
   DATES      @map("dates")
   SETTINGS   @map("settings")
   AGENT_LOG  @map("agent_log")
-  TEAM_SPACE @map("team_space")
 }
 
 model Account {
@@ -157,8 +147,6 @@ model Agent {
   lastDemoTickAt DateTime? @map("last_demo_tick_at")
 
   context         AgentContext?
-  instructions    AgentInstruction[]
-  selfAssessments AgentSelfAssessment[]
   beacons         Beacon[]
   matchesAsA      Match[]               @relation("AgentA")
   matchesAsB      Match[]               @relation("AgentB")
@@ -225,42 +213,12 @@ model PersonalConnector {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  events PersonalConnectorEvent[]
 
   @@unique([ownerId, type])
   @@index([type, enabled])
   @@map("personal_connectors")
 }
 
-model PersonalConnectorEvent {
-  id          String            @id @default(cuid())
-  connectorId String            @map("connector_id")
-  connector   PersonalConnector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
-  externalId  String            @map("external_id")
-  title       String
-  rawPayload  Json              @map("raw_payload")
-  distilled   String?           @map("distilled") @db.Text
-  status      String            @default("PENDING")
-  createdAt   DateTime          @default(now()) @map("created_at")
-
-  @@unique([connectorId, externalId])
-  @@index([connectorId, status, createdAt])
-  @@map("personal_connector_events")
-}
-
-model ProfileAuditLog {
-  id        String   @id @default(cuid())
-  ownerId   String   @map("owner_id")
-  owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  action    String
-  fieldPath String   @map("field_path")
-  oldValue  String?  @map("old_value") @db.Text
-  newValue  String?  @map("new_value") @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([ownerId])
-  @@map("profile_audit_logs")
-}
 
 model Beacon {
   id                   String                       @id @default(cuid())
@@ -568,615 +526,6 @@ model Block {
   @@map("blocks")
 }
 
-model Community {
-  id                         String                     @id @default(cuid())
-  ownerId                    String                     @map("owner_id")
-  owner                      Owner                      @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  slug                       String                     @unique
-  name                       String
-  description                String?                    @db.Text
-  visibility                 CommunityVisibility        @default(PRIVATE)
-  profileVisibility          CommunityProfileVisibility @default(VISIBLE) @map("profile_visibility")
-  category                   CommunityCategory?
-  specialization             CommunitySpecialization?
-  status                     CommunityStatus            @default(ACTIVE)
-  ssotEnabled                Boolean                    @default(false) @map("ssot_enabled")
-  knowledgeSummary           String?                    @map("knowledge_summary") @db.Text
-  strategyEnabled            Boolean                    @default(false) @map("strategy_enabled")
-  teamMode                   Boolean                    @default(false) @map("team_mode")
-  strategyIntervalHours      Int                        @default(72) @map("strategy_interval_hours")
-  lastStrategySessionAt      DateTime?                  @map("last_strategy_session_at")
-  nextStrategySessionAt      DateTime?                  @map("next_strategy_session_at")
-  strategyTokenLimit         Int                        @default(80000) @map("strategy_token_limit")
-  monthlyTokenLimit          Int?                       @map("monthly_token_limit")
-  strategyUsdLimit           Float?                     @map("strategy_usd_limit")
-  monthlyUsdLimit            Float?                     @map("monthly_usd_limit")
-  judgeIterationLimit        Int                        @default(3) @map("judge_iteration_limit")
-  strategyLockUntil          DateTime?                  @map("strategy_lock_until")
-  roleChangesRequireApproval Boolean                    @default(true) @map("role_changes_require_approval")
-  createdAt                  DateTime                   @default(now()) @map("created_at")
-  updatedAt                  DateTime                   @updatedAt @map("updated_at")
-
-  members             CommunityMember[]
-  invites             CommunityInvite[]
-  inviteHandshakes    CommunityInviteHandshake[]
-  channels            CommunityChannel[]
-  knowledgeSources    CommunityKnowledgeSource[]
-  knowledgeDocuments  CommunityKnowledgeDocument[]
-  knowledgeChunks     CommunityKnowledgeChunk[]
-  strategySessions    CommunityStrategySession[]
-  strategyTurns       CommunityStrategyTurn[]
-  actionProposals     CommunityActionProposal[]
-  corporateConnectors CorporateConnector[]
-  activityLogs        TeamActivityLog[]
-  agentTasks          AgentTask[]
-  agentInstructions   AgentInstruction[]
-  agentAssessments    AgentSelfAssessment[]
-  chat                CommunityChat?
-
-  @@index([ownerId])
-  @@index([visibility, status, category])
-  @@index([strategyEnabled, nextStrategySessionAt])
-  @@map("communities")
-}
-
-model CorporateConnector {
-  id              String    @id @default(cuid())
-  communityId     String    @map("community_id")
-  community       Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  platform        String
-  enabled         Boolean   @default(true)
-  encryptedToken  String    @map("encrypted_token") @db.Text
-  tokenIv         String    @map("token_iv")
-  webhookSecret   String?   @map("webhook_secret")
-  externalSpaceId String    @map("external_space_id")
-  config          Json?
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-
-  @@unique([communityId, platform])
-  @@index([platform, enabled])
-  @@index([externalSpaceId])
-  @@map("corporate_connectors")
-}
-
-model CommunityMember {
-  id                        String                @id @default(cuid())
-  communityId               String                @map("community_id")
-  community                 Community             @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  ownerId                   String                @map("owner_id")
-  owner                     Owner                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  role                      CommunityMemberRole   @default(MEMBER)
-  status                    CommunityMemberStatus @default(ACTIVE)
-  showOnProfile             Boolean               @default(true) @map("show_on_profile")
-  hubTitle                  String?               @map("hub_title")
-  hubSpecialization         String?               @map("hub_specialization")
-  skillTags                 String[]              @default([]) @map("skill_tags")
-  capacityHoursPerWeek      Int?                  @map("capacity_hours_per_week")
-  currentLoadScore          Float?                @map("current_load_score")
-  agentParticipationEnabled Boolean               @default(true) @map("agent_participation_enabled")
-  shareContextWithCommunity Boolean               @default(false) @map("share_context_with_community")
-  shareWorkloadSignals      Boolean               @default(false) @map("share_workload_signals")
-  lastRoleMappedAt          DateTime?             @map("last_role_mapped_at")
-  roleMappingConfidence     Float?                @map("role_mapping_confidence")
-  joinedAt                  DateTime              @default(now()) @map("joined_at")
-  updatedAt                 DateTime              @updatedAt @map("updated_at")
-
-  agentRoleConfig AgentRoleConfig?
-
-  @@unique([communityId, ownerId])
-  @@index([ownerId, status, showOnProfile])
-  @@index([communityId, status])
-  @@map("community_members")
-}
-
-model AgentRoleConfig {
-  id            String          @id @default(cuid())
-  memberId      String          @unique @map("member_id")
-  member        CommunityMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  autonomyPhase Int             @default(1) @map("autonomy_phase")
-  customSoul    String?         @map("custom_soul") @db.Text
-  createdAt     DateTime        @default(now()) @map("created_at")
-  updatedAt     DateTime        @updatedAt @map("updated_at")
-
-  @@map("agent_role_configs")
-}
-
-model AgentInstruction {
-  id               String    @id @default(cuid())
-  agentId          String    @map("agent_id")
-  agent            Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  communityId      String    @map("community_id")
-  community        Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  soul             String    @db.Text
-  currentGoals     String[]  @default([]) @map("current_goals")
-  recentActivity   String[]  @default([]) @map("recent_activity")
-  openBlockers     String[]  @default([]) @map("open_blockers")
-  delegationRights String[]  @default([]) @map("delegation_rights")
-  generatedAt      DateTime  @default(now()) @map("generated_at")
-
-  @@unique([agentId, communityId])
-  @@index([communityId, generatedAt])
-  @@map("agent_instructions")
-}
-
-model AgentSelfAssessment {
-  id                 String    @id @default(cuid())
-  agentId            String    @map("agent_id")
-  agent              Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  communityId        String    @map("community_id")
-  community          Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  period             String
-  tasksCompleted     Int       @map("tasks_completed")
-  tasksAutoDelegated Int       @map("tasks_auto_delegated")
-  approvalsRequested Int       @map("approvals_requested")
-  blockersRaised     Int       @map("blockers_raised")
-  responseTimeP50    Float     @map("response_time_p50")
-  autoDelegatedRatio Float     @map("auto_delegated_ratio")
-  gaps               String[]  @default([])
-  suggestions        String[]  @default([])
-  createdAt          DateTime  @default(now()) @map("created_at")
-
-  @@unique([agentId, communityId, period])
-  @@index([communityId, period])
-  @@map("agent_self_assessments")
-}
-
-model CommunityInvite {
-  id             String                @id @default(cuid())
-  communityId    String                @map("community_id")
-  community      Community             @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  inviterOwnerId String                @map("inviter_owner_id")
-  inviterOwner   Owner                 @relation("CommunityInviteInviter", fields: [inviterOwnerId], references: [id], onDelete: Cascade)
-  inviteeOwnerId String?               @map("invitee_owner_id")
-  inviteeOwner   Owner?                @relation("CommunityInviteInvitee", fields: [inviteeOwnerId], references: [id], onDelete: Cascade)
-  inviteeEmail   String?               @map("invitee_email")
-  tokenHash      String                @unique @map("token_hash")
-  status         CommunityInviteStatus @default(PENDING)
-  expiresAt      DateTime              @map("expires_at")
-  acceptedAt     DateTime?             @map("accepted_at")
-  createdAt      DateTime              @default(now()) @map("created_at")
-
-  handshake CommunityInviteHandshake?
-
-  @@index([communityId, status])
-  @@index([inviteeOwnerId, status])
-  @@index([inviteeEmail, status])
-  @@index([expiresAt])
-  @@map("community_invites")
-}
-
-model CommunityInviteHandshake {
-  id                        String                   @id @default(cuid())
-  inviteId                  String                   @unique @map("invite_id")
-  invite                    CommunityInvite          @relation(fields: [inviteId], references: [id], onDelete: Cascade)
-  communityId               String                   @map("community_id")
-  community                 Community                @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  inviteeOwnerId            String                   @map("invitee_owner_id")
-  inviteeAgentId            String?                  @map("invitee_agent_id")
-  ownerAgentId              String?                  @map("owner_agent_id")
-  status                    CommunityHandshakeStatus @default(PENDING)
-  recommendedRole           CommunityMemberRole?     @map("recommended_role")
-  recommendedTitle          String?                  @map("recommended_title")
-  recommendedSpecialization String?                  @map("recommended_specialization")
-  recommendedSkillTags      String[]                 @default([]) @map("recommended_skill_tags")
-  confidence                Float?
-  candidateSummary          String?                  @map("candidate_summary") @db.Text
-  ownerAgentSummary         String?                  @map("owner_agent_summary") @db.Text
-  judgeSummary              String?                  @map("judge_summary") @db.Text
-  failureReason             String?                  @map("failure_reason") @db.Text
-  startedAt                 DateTime?                @map("started_at")
-  completedAt               DateTime?                @map("completed_at")
-  expiresAt                 DateTime                 @map("expires_at")
-  createdAt                 DateTime                 @default(now()) @map("created_at")
-  updatedAt                 DateTime                 @updatedAt @map("updated_at")
-
-  @@index([communityId, status])
-  @@index([inviteeOwnerId, status])
-  @@index([expiresAt])
-  @@map("community_invite_handshakes")
-}
-
-model CommunityChannel {
-  id              String    @id @default(cuid())
-  communityId     String    @map("community_id")
-  community       Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  slug            String
-  name            String
-  description     String?   @db.Text
-  knowledgeFilter Json?     @map("knowledge_filter")
-  semanticQuery   String?   @map("semantic_query") @db.Text
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-
-  @@unique([communityId, slug])
-  @@index([communityId])
-  @@map("community_channels")
-}
-
-model CommunityKnowledgeSource {
-  id                   String                         @id @default(cuid())
-  communityId          String                         @map("community_id")
-  community            Community                      @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  type                 CommunityKnowledgeSourceType
-  name                 String
-  config               Json?
-  status               CommunityKnowledgeSourceStatus @default(ACTIVE)
-  syncCursor           String?                        @map("sync_cursor")
-  lastSyncedAt         DateTime?                      @map("last_synced_at")
-  lastSuccessfulSyncAt DateTime?                      @map("last_successful_sync_at")
-  lastError            String?                        @map("last_error") @db.Text
-  createdByOwnerId     String?                        @map("created_by_owner_id")
-  createdAt            DateTime                       @default(now()) @map("created_at")
-  updatedAt            DateTime                       @updatedAt @map("updated_at")
-
-  documents CommunityKnowledgeDocument[]
-
-  @@index([communityId, type, status])
-  @@map("community_knowledge_sources")
-}
-
-model CommunityKnowledgeDocument {
-  id               String                           @id @default(cuid())
-  communityId      String                           @map("community_id")
-  community        Community                        @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  sourceId         String                           @map("source_id")
-  source           CommunityKnowledgeSource         @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  externalId       String?                          @map("external_id")
-  title            String
-  url              String?
-  sourceHash       String                           @map("source_hash")
-  distilledHash    String?                          @map("distilled_hash")
-  distilledContent String?                          @map("distilled_content") @db.Text
-  summary          String?                          @db.Text
-  tags             String[]                         @default([])
-  privacyLevel     CommunityKnowledgePrivacy        @default(COMMUNITY) @map("privacy_level")
-  status           CommunityKnowledgeDocumentStatus @default(ACTIVE)
-  staleAfter       DateTime?                        @map("stale_after")
-  supersededAt     DateTime?                        @map("superseded_at")
-  metadata         Json?
-  createdAt        DateTime                         @default(now()) @map("created_at")
-  updatedAt        DateTime                         @updatedAt @map("updated_at")
-
-  chunks CommunityKnowledgeChunk[]
-
-  @@unique([sourceId, externalId])
-  @@index([communityId, status, privacyLevel])
-  @@index([communityId, sourceHash])
-  @@map("community_knowledge_documents")
-}
-
-model CommunityKnowledgeChunk {
-  id           String                       @id @default(cuid())
-  communityId  String                       @map("community_id")
-  community    Community                    @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  documentId   String                       @map("document_id")
-  document     CommunityKnowledgeDocument   @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  content      String                       @db.Text
-  embedding    Unsupported("vector(1536)")?
-  tokenCount   Int                          @default(0) @map("token_count")
-  tags         String[]                     @default([])
-  privacyLevel CommunityKnowledgePrivacy    @default(COMMUNITY) @map("privacy_level")
-  metadata     Json?
-  createdAt    DateTime                     @default(now()) @map("created_at")
-
-  @@index([communityId, privacyLevel])
-  @@index([documentId])
-  @@map("community_knowledge_chunks")
-}
-
-model CommunityStrategySession {
-  id                    String                         @id @default(cuid())
-  communityId           String                         @map("community_id")
-  community             Community                      @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  status                CommunityStrategySessionStatus @default(SCHEDULED)
-  scheduledFor          DateTime                       @map("scheduled_for")
-  startedAt             DateTime?                      @map("started_at")
-  completedAt           DateTime?                      @map("completed_at")
-  maxRounds             Int                            @default(2) @map("max_rounds")
-  judgeIterationLimit   Int                            @default(3) @map("judge_iteration_limit")
-  tokenLimit            Int                            @map("token_limit")
-  tokensUsed            Int                            @default(0) @map("tokens_used")
-  costUsd               Float                          @default(0) @map("cost_usd")
-  summary               String?                        @db.Text
-  judgeVerdict          Json?                          @map("judge_verdict")
-  partnershipCandidates Json?                          @map("partnership_candidates")
-  failureReason         String?                        @map("failure_reason") @db.Text
-  createdAt             DateTime                       @default(now()) @map("created_at")
-  updatedAt             DateTime                       @updatedAt @map("updated_at")
-
-  turns           CommunityStrategyTurn[]
-  actionProposals CommunityActionProposal[]
-
-  @@index([communityId, status, scheduledFor])
-  @@map("community_strategy_sessions")
-}
-
-model CommunityStrategyTurn {
-  id           String                    @id @default(cuid())
-  sessionId    String                    @map("session_id")
-  session      CommunityStrategySession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  communityId  String                    @map("community_id")
-  community    Community                 @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  agentId      String?                   @map("agent_id")
-  memberId     String?                   @map("member_id")
-  role         CommunityStrategyTurnRole
-  round        Int
-  inputHash    String?                   @map("input_hash")
-  output       Json
-  tokensInput  Int                       @default(0) @map("tokens_input")
-  tokensOutput Int                       @default(0) @map("tokens_output")
-  createdAt    DateTime                  @default(now()) @map("created_at")
-
-  @@index([sessionId, round, role])
-  @@map("community_strategy_turns")
-}
-
-model CommunityActionProposal {
-  id               String                        @id @default(cuid())
-  communityId      String                        @map("community_id")
-  community        Community                     @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  sessionId        String?                       @map("session_id")
-  session          CommunityStrategySession?     @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  type             CommunityActionProposalType
-  status           CommunityActionProposalStatus @default(PENDING)
-  title            String
-  summary          String                        @db.Text
-  evidenceIds      String[]                      @default([]) @map("evidence_ids")
-  payload          Json
-  judgeConfidence  Float?                        @map("judge_confidence")
-  requiresRole     CommunityMemberRole           @default(ADMIN) @map("requires_role")
-  decidedByOwnerId String?                       @map("decided_by_owner_id")
-  decidedAt        DateTime?                     @map("decided_at")
-  createdAt        DateTime                      @default(now()) @map("created_at")
-
-  @@index([communityId, status, type])
-  @@map("community_action_proposals")
-}
-
-model TeamActivityLog {
-  id          String    @id @default(cuid())
-  communityId String    @map("community_id")
-  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-
-  actorId   String   @map("actor_id")
-  actorType String   @map("actor_type") // "AGENT" | "OWNER" | "SYSTEM"
-  category  String
-  content   String   @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([communityId])
-  @@index([createdAt])
-  @@map("team_activity_logs")
-}
-
-model AgentTask {
-  id          String    @id @default(cuid())
-  communityId String    @map("community_id")
-  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-
-  title       String
-  description String?         @db.Text
-  status      AgentTaskStatus @default(PROPOSED)
-  riskLevel   TaskRiskLevel   @default(LOW) @map("risk_level")
-
-  creatorId  String  @map("creator_id")
-  assigneeId String? @map("assignee_id")
-
-  requiresHitl      Boolean @default(false) @map("requires_hitl")
-  approvalRequested Boolean @default(false) @map("approval_requested")
-
-  approvedByOwnerId String? @map("approved_by_owner_id")
-  approvedByOwner   Owner?  @relation("AgentTaskApprovedByOwner", fields: [approvedByOwnerId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@index([communityId])
-  @@index([status])
-  @@map("agent_tasks")
-}
-
-model CommunityChat {
-  id          String              @id @default(cuid())
-  communityId String              @unique @map("community_id")
-  community   Community           @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  status      CommunityChatStatus @default(OPEN)
-  createdAt   DateTime            @default(now()) @map("created_at")
-  updatedAt   DateTime            @updatedAt @map("updated_at")
-
-  messages CommunityChatMessage[]
-  reads    CommunityChatRead[]
-
-  @@map("community_chats")
-}
-
-model CommunityChatMessage {
-  id          String                   @id @default(cuid())
-  chatId      String                   @map("chat_id")
-  chat        CommunityChat            @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  communityId String                   @map("community_id")
-  fromOwnerId String?                  @map("from_owner_id")
-  fromOwner   Owner?                   @relation("CommunityChatMessageAuthor", fields: [fromOwnerId], references: [id], onDelete: SetNull)
-  kind        CommunityChatMessageKind @default(HUMAN)
-  content     String                   @db.Text
-  metadata    Json?
-  createdAt   DateTime                 @default(now()) @map("created_at")
-
-  @@index([chatId, createdAt])
-  @@index([communityId, createdAt])
-  @@index([fromOwnerId])
-  @@map("community_chat_messages")
-}
-
-model CommunityChatRead {
-  id          String        @id @default(cuid())
-  chatId      String        @map("chat_id")
-  chat        CommunityChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  communityId String        @map("community_id")
-  ownerId     String        @map("owner_id")
-  owner       Owner         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  lastReadAt  DateTime      @default(now()) @map("last_read_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
-
-  @@unique([chatId, ownerId])
-  @@index([ownerId, lastReadAt])
-  @@index([communityId, ownerId])
-  @@map("community_chat_reads")
-}
-
-enum CommunityVisibility {
-  PUBLIC
-  PRIVATE
-}
-
-enum CommunityProfileVisibility {
-  VISIBLE
-  HIDDEN
-}
-
-enum CommunityStatus {
-  ACTIVE
-  ARCHIVED
-}
-
-enum CommunityMemberRole {
-  OWNER
-  ADMIN
-  MEMBER
-}
-
-enum CommunityMemberStatus {
-  ACTIVE
-  REMOVED
-  BANNED
-}
-
-enum CommunityInviteStatus {
-  PENDING
-  ACCEPTED
-  REVOKED
-  EXPIRED
-}
-
-enum CommunityHandshakeStatus {
-  PENDING
-  RUNNING
-  APPROVED
-  REJECTED
-  NEEDS_HUMAN_REVIEW
-  WAITING_OWNER_AGENT
-  FAILED
-  EXPIRED
-}
-
-enum CommunityKnowledgeSourceType {
-  MANUAL
-  GITHUB
-  NOTION
-  CONFLUENCE
-  MEMBER_CONTEXT
-  CHANNEL_SUMMARY
-  STRATEGY_OUTPUT
-}
-
-enum CommunityKnowledgeSourceStatus {
-  ACTIVE
-  PAUSED
-  DEGRADED
-  DISABLED
-}
-
-enum CommunityKnowledgePrivacy {
-  PUBLIC
-  COMMUNITY
-  ADMINS
-  OWNER_ONLY
-}
-
-enum CommunityKnowledgeDocumentStatus {
-  ACTIVE
-  SUPERSEDED
-  DELETED
-  REJECTED
-}
-
-enum CommunityStrategySessionStatus {
-  SCHEDULED
-  RUNNING
-  PARTIAL
-  COMPLETED
-  SKIPPED_BUDGET
-  FAILED
-  CANCELLED
-}
-
-enum CommunityStrategyTurnRole {
-  PARTICIPANT
-  JUDGE
-  CONNECTOR
-  SYSTEM
-}
-
-enum CommunityActionProposalType {
-  ROLE_CHANGE
-  WORKLOAD_REBALANCE
-  PARTNERSHIP_OUTREACH
-  KNOWLEDGE_GAP
-  CONNECTOR_CHANGE
-}
-
-enum CommunityActionProposalStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  APPLIED
-  EXPIRED
-}
-
-enum AgentTaskStatus {
-  PROPOSED
-  ASSIGNED
-  RUNNING
-  APPROVAL_REQUIRED
-  COMPLETED
-  REJECTED
-}
-
-enum TaskRiskLevel {
-  LOW
-  MEDIUM
-  HIGH
-}
-
-enum CommunityChatStatus {
-  OPEN
-  ARCHIVED
-}
-
-enum CommunityChatMessageKind {
-  HUMAN
-  SYSTEM
-  STRATEGY_SUMMARY
-}
-
-enum CommunityCategory {
-  INVESTMENTS
-  SCIENCE
-  TECHNOLOGY
-}
-
-enum CommunitySpecialization {
-  INVESTOR_HUB
-  ANGEL_HUB
-  BIOLOGISTS
-  RESEARCHERS
-  SCIENTISTS
-  SPACE_RESEARCH
-  AI_DEVELOPMENT
-  SOLO_FOUNDERS
-}
-
 model Report {
   id         String   @id @default(cuid())
   chatId     String   @map("chat_id")
@@ -1263,9 +612,6 @@ model AnalyticsEvent {
   beaconId          String?  @map("beacon_id")
   chatId            String?  @map("chat_id")
   adviceSessionId   String?  @map("advice_session_id")
-  communityId       String?  @map("community_id")
-  strategySessionId String?  @map("strategy_session_id")
-  knowledgeSourceId String?  @map("knowledge_source_id")
   metadata          Json?
   createdAt         DateTime @default(now()) @map("created_at")
 
@@ -1276,9 +622,6 @@ model AnalyticsEvent {
   @@index([beaconId, createdAt])
   @@index([chatId, createdAt])
   @@index([adviceSessionId, createdAt])
-  @@index([communityId, createdAt])
-  @@index([strategySessionId, createdAt])
-  @@index([knowledgeSourceId, createdAt])
   @@map("analytics_events")
 }
 
@@ -1295,9 +638,6 @@ model ComputeUsage {
   beaconId          String?  @map("beacon_id")
   chatId            String?  @map("chat_id")
   adviceSessionId   String?  @map("advice_session_id")
-  communityId       String?  @map("community_id")
-  strategySessionId String?  @map("strategy_session_id")
-  knowledgeSourceId String?  @map("knowledge_source_id")
   tokensInput       Int      @default(0) @map("tokens_input")
   tokensOutput      Int      @default(0) @map("tokens_output")
   costUsd           Float    @default(0) @map("cost_usd")
@@ -1312,8 +652,5 @@ model ComputeUsage {
   @@index([beaconId, createdAt])
   @@index([chatId, createdAt])
   @@index([adviceSessionId, createdAt])
-  @@index([communityId, createdAt])
-  @@index([strategySessionId, createdAt])
-  @@index([knowledgeSourceId, createdAt])
   @@map("compute_usage")
 }

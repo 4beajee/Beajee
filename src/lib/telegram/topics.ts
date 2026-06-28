@@ -15,7 +15,7 @@ export interface TelegramApiResult {
   error?: string;
 }
 
-export type TelegramTopicKey = "matches" | "dates" | "settings" | "agent_log" | "team_space";
+export type TelegramTopicKey = "matches" | "dates" | "settings" | "agent_log";
 
 type TelegramTopicDefinition = {
   key: TelegramTopicKey;
@@ -29,7 +29,6 @@ const TOPIC_DEFINITIONS: TelegramTopicDefinition[] = [
   { key: "dates", type: "DATES", title: "Dates", fallbackHeader: "Dates" },
   { key: "settings", type: "SETTINGS", title: "Settings", fallbackHeader: "Settings" },
   { key: "agent_log", type: "AGENT_LOG", title: "Agent Log", fallbackHeader: "Agent Log" },
-  { key: "team_space", type: "TEAM_SPACE", title: "Team Space", fallbackHeader: "Team Space" },
 ];
 
 const TOPIC_ICON_COLORS: Record<TelegramTopicKey, number> = {
@@ -37,7 +36,6 @@ const TOPIC_ICON_COLORS: Record<TelegramTopicKey, number> = {
   dates: 0x6fb9f0,
   settings: 0xcb86db,
   agent_log: 0x8eee98,
-  team_space: 0xff93b2,
 };
 
 type TelegramApiCaller = <T>(method: string, payload: Record<string, unknown>) => Promise<T>;

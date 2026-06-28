@@ -16,12 +16,6 @@ import { getReputationTool } from "@/lib/mcp/tools/get-reputation";
 import { checkInTool } from "@/lib/mcp/tools/check-in";
 import { ackInboxTool } from "@/lib/mcp/tools/ack-inbox";
 import { sendChatMessageTool } from "@/lib/mcp/tools/send-chat-message";
-import { hubEditTool } from "@/lib/mcp/tools/hub-edit";
-import { logActivityTool } from "@/lib/mcp/tools/log-activity";
-import { proposeTaskTool } from "@/lib/mcp/tools/propose-task";
-import { delegateTaskTool } from "@/lib/mcp/tools/delegate-task";
-import { requestApprovalTool } from "@/lib/mcp/tools/request-approval";
-import { getMyInstructionsTool } from "@/lib/mcp/tools/get-my-instructions";
 import { requestZoomCallTool } from "@/lib/mcp/tools/request-zoom-call";
 import { findCallSlotsTool } from "@/lib/mcp/tools/find-call-slots";
 import { proposeCallTimeTool } from "@/lib/mcp/tools/propose-call-time";
@@ -49,12 +43,6 @@ const tools = [
   checkInTool,
   ackInboxTool,
   sendChatMessageTool,
-  hubEditTool,
-  logActivityTool,
-  proposeTaskTool,
-  delegateTaskTool,
-  requestApprovalTool,
-  getMyInstructionsTool,
   requestZoomCallTool,
   findCallSlotsTool,
   proposeCallTimeTool,
@@ -62,9 +50,6 @@ const tools = [
   getCallStatusTool,
   setSchedulingUrlTool,
 ];
-
-const agentRequestedByTools = new Set(["delegate_task", "request_approval"]);
-const agentActorTools = new Set(["log_activity", "propose_task"]);
 
 // JSON-RPC 2.0 handler for MCP protocol
 export async function POST(request: NextRequest) {
@@ -156,14 +141,6 @@ export async function POST(request: NextRequest) {
         try {
           const externalAgentId = typeof args?.agent_id === "string" ? args.agent_id : undefined;
           const internalAgentId = typeof args?.agentId === "string" ? args.agentId : undefined;
-          const requestedBy = typeof args?.requestedBy === "string" ? args.requestedBy : undefined;
-          const actorId =
-            typeof args?.actorId === "string"
-              ? args.actorId
-              : typeof args?.creatorId === "string"
-                ? args.creatorId
-                : undefined;
-
           // Enforce agent identity — if tool args contain agent_id, it must match authenticated agent
           if (externalAgentId && externalAgentId !== agent.agentId) {
             return NextResponse.json({
@@ -185,47 +162,6 @@ export async function POST(request: NextRequest) {
               },
               id,
             });
-          }
-
-          if (requestedBy) {
-            const requestedByMatchesAgent =
-              requestedBy === agent.id || requestedBy === agent.agentId;
-            const requestedByMatchesOwner = requestedBy === agent.ownerId;
-
-            if (agentRequestedByTools.has(name) && !requestedByMatchesAgent) {
-              return NextResponse.json({
-                jsonrpc: "2.0",
-                result: {
-                  content: [{ type: "text", text: JSON.stringify({ error: `Identity mismatch: authenticated as ${agent.agentId} but tool called with requestedBy=${requestedBy}` }) }],
-                  isError: true,
-                },
-                id,
-              });
-            }
-
-            if (!agentRequestedByTools.has(name) && !requestedByMatchesOwner) {
-              return NextResponse.json({
-                jsonrpc: "2.0",
-                result: {
-                  content: [{ type: "text", text: JSON.stringify({ error: `Identity mismatch: authenticated owner is ${agent.ownerId} but tool called with requestedBy=${requestedBy}` }) }],
-                  isError: true,
-                },
-                id,
-              });
-            }
-          }
-
-          if (agentActorTools.has(name)) {
-            if (actorId && ![agent.id, agent.agentId, agent.ownerId].includes(actorId)) {
-              return NextResponse.json({
-                jsonrpc: "2.0",
-                result: {
-                  content: [{ type: "text", text: JSON.stringify({ error: `Identity mismatch: authenticated as ${agent.agentId}/${agent.ownerId} but tool called with actor ${actorId}` }) }],
-                  isError: true,
-                },
-                id,
-              });
-            }
           }
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

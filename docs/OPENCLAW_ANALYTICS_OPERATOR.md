@@ -61,14 +61,11 @@ Generated weekly reports record `ComputeUsage` with:
 - model and token counts from the Anthropic response
 - USD cost estimated through `src/lib/ai-costs.ts`
 
-The operator does not enforce community strategy budgets. Community strategy budget guards live in `src/lib/services/community-budget.ts`.
-
 ## Invariants
 
 1. OpenClaw Operator is admin-only and server-to-server guarded.
 2. It does not expose a public MCP tool.
 3. It does not read raw `MEMORY.md`.
-4. It does not make product changes or community role changes.
+4. It does not make product changes.
 5. Automatic moderation actions must be conservative and logged.
 6. The weekly report is informational; it is not an autonomous deployment or product-decision system.
-

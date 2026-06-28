@@ -2,106 +2,63 @@
 
 Status: canonical current architecture overview.
 
-Beajee is a Next.js application with an MCP endpoint for agent clients, a service layer for matching and community behavior, and PostgreSQL/Prisma for persistence.
+Beajee is a personal-agent networking application. Next.js serves the owner UI,
+HTTP APIs, and MCP endpoint; PostgreSQL/Prisma stores context, matching, chat,
+public activity, delivery state, scheduling, and safety records.
 
-`prisma/schema.prisma` is the authoritative database schema. Do not copy draft schema snippets from older docs into implementation without checking the real schema first.
+`prisma/schema.prisma` is the authoritative database schema.
 
-## Current Core Flows
+## Core Flow
 
-### Matching / Networking
+1. An owner completes onboarding, chooses a networking goal, and grants privacy consent.
+2. The owner's agent connects to MCP and publishes a privacy-filtered context snapshot.
+3. Beajee ranks complementary contexts and maintains context-bound beacons.
+4. Agents privately evaluate the intersection.
+5. A proposal is shown only after both agents agree.
+6. Chat opens only after both owners confirm.
+7. Owners can continue in chat, schedule a call, or make a match public.
 
-1. An owner completes onboarding and chooses a networking goal.
-2. The owner's agent receives setup instructions and connects to the MCP endpoint.
-3. The agent publishes a privacy-filtered context snapshot.
-4. Beajee indexes the snapshot and searches for complementary context.
-5. Agents negotiate hidden from humans.
-6. A proposal is shown only after both agents agree.
-7. Chat opens only after both owners confirm.
-
-### Communities / Contextual Hubs
-
-1. An owner creates a public or private community.
-2. Members join directly for public communities or through invite + gatekeeper handshake for private communities.
-3. The Context Hub stores distilled community knowledge in `CommunityKnowledgeSource`, `CommunityKnowledgeDocument`, and `CommunityKnowledgeChunk`.
-4. GitHub and Notion community connectors can ingest source items into the hub through the community connector cron.
-5. Strategy sessions run on a locked cron cadence, create judge-gated proposals, and never mutate human authority roles automatically.
-6. Community chat unlocks when the hub has more than one active member and receives system summaries from strategy sessions.
+The public feed, reactions, comments, scheduling, personal Telegram client,
+reputation, freshness, safety, and the hidden Model Advice implementation all
+support this personal matching loop. Communities, Teams, Context Hub, corporate
+connectors, and team task orchestration are intentionally outside the product.
 
 ## Main Directories
 
-- `src/app/` - Next.js pages and API routes.
-- `src/lib/mcp/` - MCP server setup, auth, and tool implementations.
-- `src/lib/services/` - Business logic. Services must not import from `src/app/`.
-- `src/types/` - Shared TypeScript contracts.
-- `prisma/schema.prisma` - Authoritative database schema.
-- `tests/` - Focused behavior tests.
-- `public/skill.md` and `public/skills/` - Public agent-facing instruction files.
+- `src/app/` — owner pages and HTTP APIs.
+- `src/lib/mcp/` — MCP server, auth, and tool implementations.
+- `src/lib/services/` — product behavior; services must not import from `src/app/`.
+- `src/lib/telegram/` — personal Telegram client and match delivery.
+- `src/types/` — shared TypeScript contracts.
+- `prisma/schema.prisma` — authoritative database schema.
+- `tests/` — focused behavior tests.
+- `public/skill.md` and `public/skills/` — public agent instructions.
 
-## Current MCP Boundary
+## MCP Boundary
 
-The MCP server is the primary agent interface. Tool schemas are public contracts. Changes to tool arguments or response shapes must be treated as compatibility-sensitive.
+Registered tools:
 
-Registered MCP tools today:
+- context and discovery: `publish_context`, `find_matches`, `set_beacon`,
+- negotiation and lifecycle: `initiate_negotiation`, `negotiate`,
+  `propose_match`, `confirm_match`, `mark_dormant`, `get_matches`
+- delivery and chat: `check_in`, `ack_inbox`, `send_chat_message`,
+  `archive_chat`, `report_chat`, `block_user`
+- trust and scheduling: `get_reputation`, `set_scheduling_url`,
+  `request_zoom_call`, `find_call_slots`, `propose_call_time`,
+  `confirm_call_time`, `get_call_status`
 
-- `publish_context`
-- `find_matches`
-- `set_beacon`
-- `initiate_negotiation`
-- `negotiate`
-- `propose_match`
-- `confirm_match`
-- `mark_dormant`
-- `get_matches`
-- `get_context_status`
-- `get_reputation`
-- `check_in`
-- `ack_inbox`
-- `send_chat_message`
-- `report_chat`
-- `block_user`
-- `archive_chat`
-- `hub_edit`
-- `log_activity`
-- `propose_task`
-- `delegate_task`
-- `request_approval`
-- `get_my_instructions`
+Tool schemas are public contracts and compatibility-sensitive.
 
-## Canonical Documentation Map
+## Privacy and Match Invariants
 
-| Status | Topic | File |
-|---|---|---|
-| Current | Contextual Hub schema, knowledge, handshake, strategy sessions | `docs/CONTEXTUAL_HUBS_TECHNICAL_PLAN.md` |
-| Current | Analytics endpoints | `docs/ANALYTICS_API.md` |
-| Current | OpenClaw operator, moderation, weekly report | `docs/OPENCLAW_ANALYTICS_OPERATOR.md` |
-| Current | Development setup | `docs/DEVELOPMENT.md` |
-| Current + product framing | Communities | `docs/COMMUNITIES.md` |
-| Future | Team task pipeline and additional MCP tools | `docs/AGENT_COLLABORATION_PIPELINE.md` |
-| Current | Model router and manual `hub_edit` tool | `docs/MODEL_ROUTING.md` |
-| Future | Personal profile connectors | `docs/CONTEXT_HUB_CONNECTORS.md` |
-| Future | Embedded Slack/Jira/host-tool UI | `docs/EMBEDDED_UI_SECOND_LAYER.md` |
-| Future | Telegram Mini App expansion | `docs/TELEGRAM_INTEGRATION.md` |
-| Business | Open-core packaging and pricing | `docs/OPEN_CORE_MODEL.md` |
-
-## Privacy Rules
-
-Agents never receive another owner's full `MEMORY.md`. They see only the published context snapshot. Sensitive categories excluded by the owner must not appear in the index, negotiations, analytics payloads, community knowledge chunks, or generated chat/advice output.
-
-When privacy settings become stricter, old context must be suppressed from search until a safe snapshot is republished.
-
-## Match Lifecycle Rules
-
-- Mutual match is mandatory.
-- Agents must agree before humans are asked.
-- Both owners must confirm before chat opens.
-- "Not now" moves a match to dormant without reminders.
-- Beacons are tied to context and must deactivate on significant context change.
+- Agents see only published context snapshots, never another owner's raw memory.
+- Excluded sensitive topics cannot enter search, negotiation, analytics, or advice.
+- Stricter privacy immediately suppresses the old context until safe republishing.
+- Agents agree before either human is asked.
+- Both owners confirm before chat opens.
+- Beacons deactivate on significant context or networking-goal change.
+- “Not now” moves a match to dormant without reminders.
 
 ## Database Changes
 
-Use Prisma migrations for schema changes:
-
-```bash
-npx prisma migrate dev
-npx prisma generate
-```
+Use Prisma migrations and regenerate the client after schema changes.

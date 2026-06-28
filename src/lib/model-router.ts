@@ -1,39 +1,16 @@
-import { getCommunityBudgetStatus } from "@/lib/services/community-budget";
-
 export type ModelTask =
-  | "distillation"
-  | "embedding"
-  | "hub_search_answer"
   | "match_scoring"
-  | "activity_categorization"
-  | "hub_edit_chat"
-  | "strategy_participant"
-  | "strategy_judge"
   | "negotiation"
-  | "handshake_eval"
   | "openclaw_weekly_report";
 
 export interface RoutingOptions {
-  communityId?: string;
   forceQuality?: boolean;
 }
 
-export interface ModelBudgetStatus {
-  monthlySpentPercent: number;
-}
-
-type BudgetStatusLoader = (communityId: string) => Promise<ModelBudgetStatus>;
-
 const QUALITY_TASKS = new Set<ModelTask>([
-  "hub_edit_chat",
-  "strategy_participant",
-  "strategy_judge",
   "negotiation",
-  "handshake_eval",
   "openclaw_weekly_report",
 ]);
-
-let budgetStatusLoader: BudgetStatusLoader = getCommunityBudgetStatus;
 
 export function isQualityModelTask(task: ModelTask) {
   return QUALITY_TASKS.has(task);
@@ -59,25 +36,5 @@ export async function resolveModel(task: ModelTask, options?: RoutingOptions): P
   const cheapModel = getCheapModel();
   const qualityModel = getQualityModel();
 
-  if (options?.forceQuality) return qualityModel;
-  if (!isQualityModelTask(task)) return cheapModel;
-
-  if (options?.communityId) {
-    const budgetStatus = await budgetStatusLoader(options.communityId);
-    if (budgetStatus.monthlySpentPercent >= 95) {
-      console.warn(
-        `[ModelRouter] Community ${options.communityId} is at ${budgetStatus.monthlySpentPercent}% budget. ` +
-          `Degrading quality task '${task}' to cheap model.`
-      );
-      return cheapModel;
-    }
-  }
-
-  return qualityModel;
+  return options?.forceQuality || isQualityModelTask(task) ? qualityModel : cheapModel;
 }
-
-export const __test = {
-  setBudgetStatusLoader(loader: BudgetStatusLoader | null) {
-    budgetStatusLoader = loader ?? getCommunityBudgetStatus;
-  },
-};

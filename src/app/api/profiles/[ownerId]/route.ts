@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedOwner } from "@/lib/auth";
 import { safeErrorResponse } from "@/lib/api-error";
-import { listProfileCommunities } from "@/lib/services/community";
 
 export async function GET(
   _request: Request,
@@ -30,7 +29,6 @@ export async function GET(
 
     const agent = owner.agent;
     const ctx = agent?.context ?? null;
-    const communities = await listProfileCommunities(owner.id, auth.ownerId);
 
     return NextResponse.json({
       id: owner.id,
@@ -75,7 +73,6 @@ export async function GET(
         isActive: agent?.isActive ?? false,
         lastActiveAt: agent?.lastActiveAt ?? null,
       },
-      communities,
     });
   } catch (error) {
     return safeErrorResponse(error, "Failed to load profile");

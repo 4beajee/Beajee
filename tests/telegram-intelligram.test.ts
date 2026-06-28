@@ -53,24 +53,8 @@ function createFakePrisma() {
         image: null,
         onboarded: false,
       },
-      {
-        id: "owner_team",
-        email: "team@beajee.test",
-        name: "Team Owner",
-        telegramId: "100",
-        image: null,
-        onboarded: true,
-      },
     ] as Row[],
     telegramTopics: [] as Row[],
-    communities: [
-      { id: "community_off", name: "Quiet Team", status: "ACTIVE", teamMode: false },
-      { id: "community_on", name: "Active Team", status: "ACTIVE", teamMode: true },
-    ] as Row[],
-    communityMembers: [
-      { communityId: "community_on", ownerId: "owner_team", status: "ACTIVE" },
-      { communityId: "community_off", ownerId: "owner_team", status: "ACTIVE" },
-    ] as Row[],
   };
 
   const shapeSelected = (row: Row | null | undefined, args?: Row) => {
@@ -138,24 +122,6 @@ function createFakePrisma() {
         return { ...topic };
       },
     },
-    community: {
-      findUnique: async (args: Row) => {
-        const row = db.communities.find((community) => community.id === args.where.id) ?? null;
-        return shapeSelected(row ?? null, args);
-      },
-    },
-    communityMember: {
-      findMany: async (args: Row) =>
-        db.communityMembers
-          .filter((member) => {
-            const where = args.where ?? {};
-            return (
-              (!where.communityId || member.communityId === where.communityId) &&
-              (!where.status || member.status === where.status)
-            );
-          })
-          .map((member) => shapeSelected(member, args)),
-    },
   };
 }
 
@@ -168,7 +134,6 @@ async function main() {
   const { createUserTopics, sendOwnerTopicMessage, __test: topicsTest } = await import(
     "../src/lib/telegram/topics"
   );
-  const { __test: teamSpaceTest } = await import("../src/lib/telegram/team-space");
   const { buildMatchCardKeyboard, buildMatchCardCaption } = await import(
     "../src/lib/telegram/match-card"
   );
@@ -179,8 +144,8 @@ async function main() {
     assert.match(schema, /telegramId\s+String\?\s+@unique\s+@map\("telegram_id"\)/);
     assert.match(schema, /model TelegramTopic \{/);
     assert.match(schema, /messageThreadId\s+Int\s+@map\("message_thread_id"\)/);
-    assert.match(schema, /teamMode\s+Boolean\s+@default\(false\)\s+@map\("team_mode"\)/);
-    ok("Prisma schema stores Telegram owner identity, topics, and Team Space flag");
+    assert.doesNotMatch(schema, /TEAM_SPACE|teamMode/);
+    ok("Prisma schema stores personal Telegram identity and topics without Team Space");
   }
 
   {
@@ -248,10 +213,10 @@ async function main() {
 
     const result = await createUserTopics({ ownerId: "owner_telegram", chatId: "-10042" });
     assert.equal(result.mode, "topics");
-    assert.equal(result.created.length, 5);
-    assert.equal((globalThis as any).prisma.__db.telegramTopics.length, 5);
-    assert.equal(calls.filter((call) => call.method === "createForumTopic").length, 5);
-    ok("createUserTopics creates and persists the five private forum topics");
+    assert.equal(result.created.length, 4);
+    assert.equal((globalThis as any).prisma.__db.telegramTopics.length, 4);
+    assert.equal(calls.filter((call) => call.method === "createForumTopic").length, 4);
+    ok("createUserTopics creates and persists the four personal forum topics");
 
     Object.assign(process.env, { NODE_ENV: "development" });
     await sendOwnerTopicMessage({
@@ -264,41 +229,6 @@ async function main() {
     assert.equal(sendPayload.message_thread_id, 11);
     Object.assign(process.env, { NODE_ENV: "test" });
     ok("owner topic messages route to the persisted message_thread_id");
-  }
-
-  {
-    Object.assign(process.env, { NODE_ENV: "development" });
-    let sendCount = 0;
-    topicsTest.setTelegramApiCaller(async <T,>(method: string, payload: Record<string, unknown>) => {
-      if (method === "sendMessage") {
-        sendCount++;
-        assert.equal(payload.message_thread_id, 15);
-        return { message_id: 100 + sendCount } as T;
-      }
-      return { is_forum: true } as T;
-    });
-    (globalThis as any).prisma.__db.telegramTopics.push({
-      id: "topic_team",
-      ownerId: "owner_team",
-      chatId: "-100team",
-      topicType: "TEAM_SPACE",
-      messageThreadId: 15,
-    });
-
-    const skipped = await teamSpaceTest.notifyTeamSpace({
-      communityId: "community_off",
-      kind: "task_proposed",
-      text: "Skipped",
-    });
-    const sent = await teamSpaceTest.notifyTeamSpace({
-      communityId: "community_on",
-      kind: "task_proposed",
-      text: "Sent",
-    });
-    assert.equal(skipped.skipped, true);
-    assert.equal(sent.sent, 1);
-    Object.assign(process.env, { NODE_ENV: "test" });
-    ok("Team Space Telegram alerts are gated by community.teamMode and active membership");
   }
 
   {

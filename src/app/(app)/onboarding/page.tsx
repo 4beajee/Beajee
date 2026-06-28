@@ -67,7 +67,7 @@ Stop and ask me only if:
 - You need an API key that I must generate myself.
   Tell me the exact official page to open, what to click, and then ask me to paste the key here.
 - You need a third-party integration that only I can create or authorize.
-  Examples: Telegram bot, Slack app, Discord bot, login-based provider setup.
+  Examples: Telegram bot, Discord bot, login-based provider setup.
   Walk me through it in chat, then ask me only for the resulting token or credential.
 - You need one real product decision from me that cannot be inferred.
   Example: which communication channel I want OpenClaw to use.

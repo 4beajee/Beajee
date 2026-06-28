@@ -1,5 +1,9 @@
 import { createHash } from "crypto";
-import type { PersonalConnectorItem } from "@/lib/connectors/personal/obsidian";
+export interface PersonalConnectorItem {
+  externalId: string;
+  title: string;
+  rawPayload: Record<string, unknown>;
+}
 
 const CALENDAR_WINDOW_DAYS = 7;
 

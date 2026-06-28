@@ -1,10 +1,7 @@
 import { z } from "zod";
 
-export const PersonalConnectorType = z.enum(["GITHUB", "NOTION", "LINEAR", "OBSIDIAN", "CALENDAR"]);
+export const PersonalConnectorType = z.literal("CALENDAR");
 export type PersonalConnectorType = z.infer<typeof PersonalConnectorType>;
-
-export const PersonalConnectorEventStatus = z.enum(["PENDING", "DISTILLED", "SKIPPED", "PROCESSED"]);
-export type PersonalConnectorEventStatus = z.infer<typeof PersonalConnectorEventStatus>;
 
 export const PersonalConnectorConfigSchema = z.record(z.string(), z.unknown()).default({});
 export type PersonalConnectorConfig = z.infer<typeof PersonalConnectorConfigSchema>;
@@ -17,8 +14,3 @@ export const PersonalConnectorUpsertSchema = z.object({
   config: PersonalConnectorConfigSchema.optional(),
 });
 export type PersonalConnectorUpsertInput = z.infer<typeof PersonalConnectorUpsertSchema>;
-
-export const PersonalWebhookEnvelopeSchema = z.object({
-  connectorId: z.string().min(1).optional(),
-  ownerId: z.string().min(1).optional(),
-});

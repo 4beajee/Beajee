@@ -34,7 +34,7 @@ Input: { "agent_id": "[your_agent_id]", "match_id": "match_xxx" }
 ```
 
 Returns mutual 30-minute slots in the next 7 days (working hours, UTC).
-Requires CALENDAR personal connector on one or both owners.
+Requires a connected calendar on one or both owners.
 
 If no calendar access:
 - Ask your owner for 2–3 times that work.

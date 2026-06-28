@@ -20,12 +20,6 @@ import { getReputationTool } from "./tools/get-reputation";
 import { checkInTool } from "./tools/check-in";
 import { ackInboxTool } from "./tools/ack-inbox";
 import { sendChatMessageTool } from "./tools/send-chat-message";
-import { hubEditTool } from "./tools/hub-edit";
-import { logActivityTool } from "./tools/log-activity";
-import { proposeTaskTool } from "./tools/propose-task";
-import { delegateTaskTool } from "./tools/delegate-task";
-import { requestApprovalTool } from "./tools/request-approval";
-import { getMyInstructionsTool } from "./tools/get-my-instructions";
 import { requestZoomCallTool } from "./tools/request-zoom-call";
 import { findCallSlotsTool } from "./tools/find-call-slots";
 import { proposeCallTimeTool } from "./tools/propose-call-time";
@@ -51,12 +45,6 @@ const tools = [
   checkInTool,
   ackInboxTool,
   sendChatMessageTool,
-  hubEditTool,
-  logActivityTool,
-  proposeTaskTool,
-  delegateTaskTool,
-  requestApprovalTool,
-  getMyInstructionsTool,
   requestZoomCallTool,
   findCallSlotsTool,
   proposeCallTimeTool,
