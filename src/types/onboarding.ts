@@ -2,34 +2,39 @@ import { z } from "zod";
 import { NetworkingGoal } from "./context";
 import { isSupportedCountryCode } from "@/lib/countries";
 import { SchedulingUrlSchema } from "@/lib/scheduling-url";
+import {
+  AGENT_PLATFORM_OPTIONS,
+} from "@/lib/agent-platform";
 
-export const AgentPlatform = z.enum([
-  "open_claw",
-  "nemo_claw",
-  "zero_claw",
-  "nano_claw",
-]);
+export {
+  AGENT_PLATFORM_OPTIONS,
+  PLATFORM_LABELS,
+  isOpenClawPlatform,
+} from "@/lib/agent-platform";
+
+export const AgentPlatform = z.enum(AGENT_PLATFORM_OPTIONS);
 export type AgentPlatform = z.infer<typeof AgentPlatform>;
 
 export const PLATFORM_FILE_NAMES: Record<AgentPlatform, string> = {
   open_claw: "SOUL.md",
+  codex: "SOUL.md",
+  manus: "SOUL.md",
+  claude_desktop: "SOUL.md",
   nemo_claw: "SOUL.md",
   zero_claw: "SOUL.md",
   nano_claw: "SOUL.md",
+  custom: "SOUL.md",
 };
 
 export const PLATFORM_TEMPLATE_FILES: Record<AgentPlatform, string> = {
   open_claw: "open-claw.md",
+  codex: "open-claw.md",
+  manus: "open-claw.md",
+  claude_desktop: "open-claw.md",
   nemo_claw: "open-claw.md",
   zero_claw: "open-claw.md",
   nano_claw: "open-claw.md",
-};
-
-export const PLATFORM_LABELS: Record<AgentPlatform, string> = {
-  open_claw: "Open Claw",
-  nemo_claw: "Nemo Claw",
-  zero_claw: "Zero Claw",
-  nano_claw: "Nano-Claw",
+  custom: "open-claw.md",
 };
 
 export const OnboardingSchema = z.object({

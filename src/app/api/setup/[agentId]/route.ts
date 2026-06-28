@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import {
+  AgentPlatform,
   PLATFORM_FILE_NAMES,
+  PLATFORM_LABELS,
   PLATFORM_TEMPLATE_FILES,
-  type AgentPlatform,
+  isOpenClawPlatform,
 } from "@/types/onboarding";
 import fs from "fs";
 import path from "path";
@@ -11,6 +13,7 @@ import {
   buildOpenClawBridgeConfig,
   getOpenClawBridgePaths,
 } from "@/lib/onboarding/openclaw-bridge";
+import { personalizeAgentInstructions } from "@/lib/onboarding/agent-instructions";
 
 /**
  * GET /api/setup/[agentId]?key=API_KEY
@@ -47,7 +50,7 @@ export async function GET(
   }
 
   // Determine platform
-  const platform = (agent.owner.agentPlatform ?? "open_claw") as AgentPlatform;
+  const platform = AgentPlatform.catch("open_claw").parse(agent.owner.agentPlatform);
   const templateFile =
     PLATFORM_TEMPLATE_FILES[platform] ?? PLATFORM_TEMPLATE_FILES.open_claw;
   const fileName =
@@ -67,23 +70,14 @@ export async function GET(
 
   const excludedTopics: string[] =
     (agent.owner.excludedTopics as string[]) ?? [];
-  const excludedBlock =
-    excludedTopics.length > 0
-      ? excludedTopics.map((t) => `- ${t}`).join("\n")
-      : "None — owner chose to share all categories.";
-
-  const fileContent = templateContent
-    .replace(/\[agent_id\]/g, agent.agentId)
-    .replace(/\[api_key\]/g, agent.apiKey)
-    .replace(
-      /\[networking_goal\]/g,
-      agent.owner.networkingGoal ?? "collaboration"
-    )
-    .replace(
-      /\[partnership \| collaboration \| mentor \| peer\]/g,
-      agent.owner.networkingGoal ?? "collaboration"
-    )
-    .replace(/\[excluded_topics\]/g, excludedBlock);
+  const fileContent = personalizeAgentInstructions({
+    template: templateContent,
+    platform,
+    agentId: agent.agentId,
+    apiKey: agent.apiKey,
+    networkingGoal: agent.owner.networkingGoal,
+    excludedTopics,
+  });
 
   // Build MCP config snippet per platform
   const mcpConfig = getMcpConfig(platform, agent.apiKey);
@@ -95,6 +89,7 @@ export async function GET(
     mcpConfig,
     agentId: agent.agentId,
     apiKey: agent.apiKey,
+    platform,
   });
 
   return new NextResponse(setupDoc, {
@@ -106,7 +101,8 @@ export async function GET(
 }
 
 function getMcpConfig(_platform: AgentPlatform, apiKey: string): string | null {
-  // All Claw agents connect via MCP with the same config
+  // Portable connection values. The receiving agent applies them using the
+  // current configuration format supported by its own runtime.
   return JSON.stringify(
     {
       mcpServers: {
@@ -128,15 +124,17 @@ function buildSetupDocument(opts: {
   mcpConfig: string | null;
   agentId: string;
   apiKey: string;
+  platform: AgentPlatform;
 }): string {
-  const { fileName, fileContent, mcpConfig, agentId, apiKey } = opts;
+  const { fileName, fileContent, mcpConfig, agentId, apiKey, platform } = opts;
+  const platformLabel = PLATFORM_LABELS[platform];
   const { appOrigin, bridgeConfigPath, bridgeDocsUrl, bridgeScriptUrl } = getOpenClawBridgePaths();
   const bridgeConfig = buildOpenClawBridgeConfig({ agentId, apiKey });
   const statusUrl = `${appOrigin}/api/setup/${agentId}/wake`;
 
   const sections: string[] = [];
 
-  sections.push(`# Beajee Agent Setup\n`);
+  sections.push(`# Beajee Agent Setup for ${platformLabel}\n`);
   sections.push(
     `Follow these steps to set up the Beajee networking agent. Do all steps in order.\n`
   );
@@ -153,7 +151,7 @@ function buildSetupDocument(opts: {
   if (mcpConfig) {
     sections.push(`## Step 2 — Configure MCP server\n`);
     sections.push(
-      `Add this MCP server to your agent configuration. Create or edit the \`.mcp.json\` file in the project root:\n`
+      `Configure this remote HTTP MCP server using the current configuration method supported by ${platformLabel}. The JSON below contains the connection values; adapt only the surrounding runtime-specific config shape if needed:\n`
     );
     sections.push("```json");
     sections.push(mcpConfig);
@@ -161,37 +159,42 @@ function buildSetupDocument(opts: {
   }
 
   const wakeStep = mcpConfig ? 3 : 2;
-  sections.push(`## Step ${wakeStep} — Install the Beajee OpenClaw Bridge\n`);
-  sections.push(
-    `Use the local bridge so Beajee can wake OpenClaw without a public inbound URL. The bridge opens the outbound wake stream, runs \`check_in\`, routes owner-facing notifications through native OpenClaw delivery, and only calls \`ack_inbox\` after successful delivery.\n`
-  );
-  sections.push("```bash");
-  sections.push(`mkdir -p ~/.config/beajee`);
-  sections.push(`curl -fsSL ${bridgeScriptUrl} \\`);
-  sections.push(`  -o ~/.config/beajee/beajee-openclaw-bridge.mjs`);
-  sections.push("```\n");
-  sections.push(`Create \`${bridgeConfigPath}\` with this content:\n`);
-  sections.push("```json");
-  sections.push(bridgeConfig);
-  sections.push("```\n");
-  sections.push(
-    `Start the bridge in the background:\n`
-  );
-  sections.push("```bash");
-  sections.push(`nohup node ~/.config/beajee/beajee-openclaw-bridge.mjs \\`);
-  sections.push(`  --config ${bridgeConfigPath} \\`);
-  sections.push(`  >/tmp/beajee-openclaw-bridge.log 2>&1 &`);
-  sections.push("```\n");
-  sections.push(
-    `Reference documentation: ${bridgeDocsUrl}\n`
-  );
+  if (isOpenClawPlatform(platform)) {
+    sections.push(`## Step ${wakeStep} — Install the Beajee OpenClaw Bridge\n`);
+    sections.push(
+      `Use the local bridge so Beajee can wake ${platformLabel} without a public inbound URL. The bridge opens the outbound wake stream, runs \`check_in\`, routes owner-facing notifications through native delivery, and only calls \`ack_inbox\` after successful delivery.\n`
+    );
+    sections.push("```bash");
+    sections.push(`mkdir -p ~/.config/beajee`);
+    sections.push(`curl -fsSL ${bridgeScriptUrl} \\`);
+    sections.push(`  -o ~/.config/beajee/beajee-openclaw-bridge.mjs`);
+    sections.push("```\n");
+    sections.push(`Create \`${bridgeConfigPath}\` with this content:\n`);
+    sections.push("```json");
+    sections.push(bridgeConfig);
+    sections.push("```\n");
+    sections.push(`Start the bridge in the background:\n`);
+    sections.push("```bash");
+    sections.push(`nohup node ~/.config/beajee/beajee-openclaw-bridge.mjs \\`);
+    sections.push(`  --config ${bridgeConfigPath} \\`);
+    sections.push(`  >/tmp/beajee-openclaw-bridge.log 2>&1 &`);
+    sections.push("```\n");
+    sections.push(`Reference documentation: ${bridgeDocsUrl}\n`);
+  } else {
+    sections.push(`## Step ${wakeStep} — Enable reliable check-ins\n`);
+    sections.push(
+      `This runtime does not use the OpenClaw bridge. Call \`check_in({ agent_id: "${agentId}" })\` when a session starts and at least every 15 minutes while it is running. Treat \`check_in\` as the authoritative source of pending Beajee work.\n`
+    );
+  }
 
   // Step 4: Verify
   const verifyStep = wakeStep + 1;
   sections.push(`## Step ${verifyStep} — Verify connection\n`);
 
   sections.push(
-    `Confirm the bridge is connected at \`${statusUrl}\`. Success means the wake stream is live and OpenClaw can now process Beajee inbox events through its normal runtime.\n`
+    isOpenClawPlatform(platform)
+      ? `Confirm the bridge is connected at \`${statusUrl}\`. Success means the wake stream is live and ${platformLabel} can now process Beajee inbox events through its normal runtime.\n`
+      : `Call \`check_in({ agent_id: "${agentId}" })\` through the configured MCP server. Success means ${platformLabel} is authenticated and can retrieve Beajee work.\n`
   );
 
   sections.push(`---\n`);

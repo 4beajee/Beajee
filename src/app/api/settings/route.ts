@@ -51,7 +51,7 @@ export async function GET() {
       // P1
       networkingGoal: owner.networkingGoal,
       agentId: owner.agent?.agentId ?? null,
-      agentPlatform: owner.agentPlatform,
+      agentPlatform: owner.agent ? owner.agentPlatform ?? "open_claw" : null,
       wakeWebhookEnabled: owner.agent?.wakeWebhookEnabled ?? false,
       webhookUrl: owner.agent?.webhookUrl ?? "",
       webhookTokenSet: !!owner.agent?.webhookToken,

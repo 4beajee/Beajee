@@ -48,7 +48,12 @@ export async function GET(request: NextRequest) {
           data: {
             wakeStreamLastSeenAt: disconnectedAt,
             wakeStreamLastDisconnectedAt: disconnectedAt,
-            wakeStreamLastError: reason === "connection_rotation" || reason === "client_cancelled" ? null : reason,
+            wakeStreamLastError:
+              reason === "connection_rotation" ||
+              reason === "client_cancelled" ||
+              reason === "platform_changed"
+                ? null
+                : reason,
           },
         })
         .catch((error) => console.error("[wake-stream] Failed to persist disconnect:", error));

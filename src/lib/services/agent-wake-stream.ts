@@ -65,6 +65,15 @@ export function getWakeStreamConnectionCount(agentInternalId: string) {
   return wakeStreams.get(agentInternalId)?.size ?? 0;
 }
 
+export function closeAgentWakeStreams(agentInternalId: string, reason: string) {
+  const connections = wakeStreams.get(agentInternalId);
+  if (!connections) return 0;
+
+  const activeConnections = Array.from(connections.values());
+  for (const connection of activeConnections) connection.close(reason);
+  return activeConnections.length;
+}
+
 export function emitWakeStreamEvent(
   agentInternalId: string,
   payload: WakeStreamPayload

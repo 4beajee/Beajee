@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import {
+  AgentPlatform,
   PLATFORM_FILE_NAMES,
   PLATFORM_TEMPLATE_FILES,
-  type AgentPlatform,
 } from "@/types/onboarding";
+import { personalizeAgentInstructions } from "@/lib/onboarding/agent-instructions";
 import fs from "fs";
 import path from "path";
 
@@ -30,7 +31,7 @@ export async function GET(
   }
 
   // Determine platform — fall back to open_claw
-  const platform = (agent.owner.agentPlatform ?? "open_claw") as AgentPlatform;
+  const platform = AgentPlatform.catch("open_claw").parse(agent.owner.agentPlatform);
   const templateFile =
     PLATFORM_TEMPLATE_FILES[platform] ?? PLATFORM_TEMPLATE_FILES.open_claw;
   const fileName =
@@ -48,27 +49,16 @@ export async function GET(
     );
   }
 
-  // Build excluded topics block
   const excludedTopics: string[] =
     (agent.owner.excludedTopics as string[]) ?? [];
-  const excludedBlock =
-    excludedTopics.length > 0
-      ? excludedTopics.map((t) => `- ${t}`).join("\n")
-      : "None — owner chose to share all categories.";
-
-  // Replace placeholders with agent-specific values
-  const personalized = templateContent
-    .replace(/\[agent_id\]/g, agent.agentId)
-    .replace(/\[api_key\]/g, agent.apiKey)
-    .replace(
-      /\[networking_goal\]/g,
-      agent.owner.networkingGoal ?? "collaboration"
-    )
-    .replace(
-      /\[partnership \| collaboration \| mentor \| peer\]/g,
-      agent.owner.networkingGoal ?? "collaboration"
-    )
-    .replace(/\[excluded_topics\]/g, excludedBlock);
+  const personalized = personalizeAgentInstructions({
+    template: templateContent,
+    platform,
+    agentId: agent.agentId,
+    apiKey: agent.apiKey,
+    networkingGoal: agent.owner.networkingGoal,
+    excludedTopics,
+  });
 
   return new NextResponse(personalized, {
     headers: {

@@ -5,6 +5,7 @@ const tests = [
   "tests/agent-wake.test.ts",
   "tests/agent-wake-stream.test.ts",
   "tests/agent-search-pause.test.ts",
+  "tests/agent-platform-switch.test.ts",
   "tests/consent.test.ts",
   "tests/match-confirmation.test.ts",
   "tests/model-advice.test.ts",
