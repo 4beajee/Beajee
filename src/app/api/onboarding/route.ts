@@ -10,7 +10,6 @@ import { resolveLocale } from "@/i18n/config";
 import { getCountryName } from "@/lib/countries";
 import { ZodError } from "zod";
 import crypto from "crypto";
-import { sendTelegramNotification } from "@/lib/services/telegram";
 import { normalizeSchedulingUrl } from "@/lib/scheduling-url";
 
 export async function POST(request: NextRequest) {
@@ -114,41 +113,6 @@ export async function POST(request: NextRequest) {
 
       return { owner: o, agent: a };
     });
-
-    // Telegram alert — fire-and-forget
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-      request.headers.get("x-real-ip") ??
-      "unknown";
-    const geo = [
-      request.headers.get("x-vercel-ip-city"),
-      request.headers.get("x-vercel-ip-country-region"),
-      request.headers.get("x-vercel-ip-country"),
-    ].filter(Boolean).join(", ");
-
-    const tgLines = [
-      `<b>Onboarding Completed</b>`,
-      ``,
-      `Name: ${owner.name ?? "—"}`,
-      `Email: <code>${owner.email}</code>`,
-      ``,
-      `<b>Choices</b>`,
-      `Platform: ${agentPlatform}`,
-      `Goal: ${networkingGoal}`,
-      `Country: ${countryName} (${countryCode})`,
-      `Privacy consent: ${privacyConsent ? "Yes" : "No"}`,
-      `Research consent: ${researchConsent ? "Yes" : "No"}`,
-      `Excluded topics: ${excludedTopics?.length ? excludedTopics.join(", ") : "none"}`,
-      ``,
-      `<b>Agent</b>`,
-      `Agent ID: <code>${agent.agentId}</code>`,
-      `Agent type: OPENCLAW`,
-      ``,
-      `IP: <code>${ip}</code>`,
-      geo ? `Location: ${geo}` : null,
-    ].filter((l): l is string => l !== null);
-
-    sendTelegramNotification(tgLines.join("\n")).catch(() => {});
 
     const fileName = PLATFORM_FILE_NAMES[agentPlatform as AgentPlatform] ?? PLATFORM_FILE_NAMES.open_claw;
 

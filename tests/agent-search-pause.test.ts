@@ -35,12 +35,12 @@ function ok(label: string) {
 
   assert.match(settingsSource, /setAgentSearchPaused\(/);
   assert.match(agentSearchSource, /type = args\.paused \? "AGENT_SEARCH_PAUSED" : "AGENT_SEARCH_RESUMED"/);
-  assert.match(agentSearchSource, /sendTelegramNotification\(/);
+  assert.doesNotMatch(agentSearchSource, /sendTelegramNotification\(/);
   assert.match(telegramRouteSource, /"\/pause_search"/);
   assert.match(telegramRouteSource, /"\/resume_search"/);
   assert.match(telegramRouteSource, /setAgentSearchPausedByExternalId\(/);
 
-  ok("settings and Telegram both drive the same search pause service");
+  ok("settings and Telegram drive search pause without leaking admin alerts to the user bot");
 }
 
 {

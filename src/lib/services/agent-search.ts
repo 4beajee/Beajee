@@ -2,38 +2,8 @@ import { prisma } from "@/lib/db";
 import { recordAnalyticsEvent } from "@/lib/analytics-tracking";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
 import { createInboxEvent } from "@/lib/services/inbox";
-import {
-  escapeTelegramHtml,
-  sendTelegramNotification,
-} from "@/lib/services/telegram";
 
 export type AgentSearchPauseSource = "settings" | "telegram";
-
-function formatSource(source: AgentSearchPauseSource) {
-  return source === "telegram" ? "Telegram" : "settings";
-}
-
-function buildTelegramText(args: {
-  paused: boolean;
-  ownerName: string | null;
-  ownerEmail: string;
-  agentExternalId: string;
-  source: AgentSearchPauseSource;
-}) {
-  const status = args.paused ? "Search paused" : "Search resumed";
-  return [
-    `<b>${status}</b>`,
-    "",
-    `Owner: ${escapeTelegramHtml(args.ownerName ?? "—")}`,
-    `Email: <code>${escapeTelegramHtml(args.ownerEmail)}</code>`,
-    `Agent ID: <code>${escapeTelegramHtml(args.agentExternalId)}</code>`,
-    `Source: ${escapeTelegramHtml(formatSource(args.source))}`,
-    "",
-    args.paused
-      ? "The agent will not search for matches, set active beacons, or propose new matches until search is resumed."
-      : "The agent can search for matches and resume preserved beacons.",
-  ].join("\n");
-}
 
 export async function setAgentSearchPaused(args: {
   agentInternalId: string;
@@ -111,35 +81,6 @@ export async function setAgentSearchPaused(args: {
       console.error("[agent-search] Failed to signal agent:", error);
     });
   }
-
-  sendTelegramNotification(
-    buildTelegramText({
-      paused: args.paused,
-      ownerName: updated.owner.name,
-      ownerEmail: updated.owner.email,
-      agentExternalId: updated.agentId,
-      source: args.source,
-    }),
-    {
-      replyMarkup: {
-        inline_keyboard: [
-          [
-            args.paused
-              ? {
-                  text: "Resume search",
-                  callback_data: `resume_search_id:${updated.id}`,
-                }
-              : {
-                  text: "Pause search",
-                  callback_data: `pause_search_id:${updated.id}`,
-                },
-          ],
-        ],
-      },
-    }
-  ).catch((error) => {
-    console.error("[agent-search] Telegram notification failed:", error);
-  });
 
   return {
     agentId: updated.agentId,

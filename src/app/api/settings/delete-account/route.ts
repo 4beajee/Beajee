@@ -4,6 +4,7 @@ import { getAuthenticatedOwner } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { DeleteAccountSchema } from "@/types/settings";
 import { ZodError } from "zod";
+import { DAILY_TELEGRAM_REPORT } from "@/lib/services/daily-telegram-report";
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,6 +55,11 @@ export async function POST(request: NextRequest) {
       });
 
       await prisma.$transaction(async (tx) => {
+        const owner = await tx.owner.findUnique({
+          where: { id: auth.ownerId },
+          select: { onboarded: true },
+        });
+
         if (agent) {
           const matches = await tx.match.findMany({
             where: { OR: [{ agentAId: agent.id }, { agentBId: agent.id }] },
@@ -92,6 +98,16 @@ export async function POST(request: NextRequest) {
         });
         await tx.report.deleteMany({ where: { reporterId: auth.ownerId } });
         await tx.account.deleteMany({ where: { userId: auth.ownerId } });
+        await tx.analyticsEvent.create({
+          data: {
+            type: DAILY_TELEGRAM_REPORT.deletionEventType,
+            metadata: {
+              onboarded: owner?.onboarded ?? false,
+              hadAgent: !!agent,
+              source: "settings",
+            },
+          },
+        });
         await tx.owner.delete({ where: { id: auth.ownerId } });
       }, { timeout: 30_000 });
     });

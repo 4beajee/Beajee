@@ -60,7 +60,7 @@ export async function answerTelegramCallbackQuery(
   }
 }
 
-export async function sendTelegramNotification(
+export async function sendOperatorTelegramNotification(
   text: string,
   options?: { replyMarkup?: { inline_keyboard: TelegramInlineKeyboard } }
 ): Promise<{ sent: boolean; error?: string }> {
@@ -68,11 +68,11 @@ export async function sendTelegramNotification(
     return { sent: false, error: "Telegram disabled in test environment" };
   }
 
-  const botToken = process.env.TELEGRAM_BOT_TOKEN ?? "";
-  const chatId = process.env.TELEGRAM_CHAT_ID ?? "";
+  const botToken = process.env.OPENCLAW_REPORT_TELEGRAM_BOT_TOKEN ?? "";
+  const chatId = process.env.OPENCLAW_REPORT_TELEGRAM_CHAT_ID ?? "";
 
   if (!botToken || !chatId) {
-    console.warn("[telegram] BOT_TOKEN or CHAT_ID not configured — skipping");
+    console.warn("[telegram] OpenClaw report bot is not configured — skipping");
     return { sent: false, error: "Telegram not configured" };
   }
 

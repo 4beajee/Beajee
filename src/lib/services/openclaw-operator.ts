@@ -19,7 +19,7 @@ import { estimateAnthropicCostUsd, getAnthropicSonnetModel, aiPricing } from "@/
 import { recordAnalyticsEvent, recordComputeUsage } from "@/lib/analytics-tracking";
 import {
   escapeTelegramHtml,
-  sendTelegramNotification,
+  sendOperatorTelegramNotification,
 } from "@/lib/services/telegram";
 import { sendOperatorReportEmail } from "@/lib/services/notification";
 
@@ -1110,7 +1110,7 @@ async function deliverWeeklyReport(report: string, periodKey: string) {
         chunks.length > 1
           ? `<b>OpenClaw weekly report ${periodKey}</b> (${i + 1}/${chunks.length})\n\n`
           : `<b>OpenClaw weekly report ${periodKey}</b>\n\n`;
-      const result = await sendTelegramNotification(`${prefix}${escapeTelegramHtml(chunks[i])}`);
+      const result = await sendOperatorTelegramNotification(`${prefix}${escapeTelegramHtml(chunks[i])}`);
       delivery.push({ channel: "telegram", ...result });
       if (!result.sent) break;
     }

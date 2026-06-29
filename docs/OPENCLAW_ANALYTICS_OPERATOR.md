@@ -38,7 +38,7 @@ The report combines:
 Delivery targets:
 
 - Email via `OPENCLAW_REPORT_EMAIL`.
-- Telegram via `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`, unless `OPENCLAW_REPORT_TELEGRAM_DISABLED=1`.
+- Telegram via `OPENCLAW_REPORT_TELEGRAM_BOT_TOKEN` and `OPENCLAW_REPORT_TELEGRAM_CHAT_ID`, unless `OPENCLAW_REPORT_TELEGRAM_DISABLED=1`. The personal Beajee bot is never used for operator reports.
 
 ## Market Search
 
