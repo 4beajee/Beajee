@@ -3,18 +3,11 @@ import { prisma } from "@/lib/db";
 import { safeErrorResponse } from "@/lib/api-error";
 import { buildMiniAppReplyMarkup } from "@/lib/telegram/bot";
 import { redactTelegramSecrets } from "@/lib/telegram/auth";
-import {
-  createUserTopics,
-  sendTelegramMessageToChat,
-} from "@/lib/telegram/topics";
+import { sendTelegramMessageToChat } from "@/lib/telegram/topics";
 import {
   answerTelegramCallbackQuery,
   isConfiguredTelegramChat,
 } from "@/lib/services/telegram";
-import {
-  setAgentSearchPaused,
-  setAgentSearchPausedByExternalId,
-} from "@/lib/services/agent-search";
 import { confirmMatch, markDormant } from "@/lib/services/negotiation";
 import { requestZoomCall } from "@/lib/services/match-call";
 import { consumeTelegramLink } from "@/lib/telegram/link";
@@ -71,28 +64,11 @@ function parseTextCommand(text: string) {
       ? { kind: "telegram_sync" as const, rawToken: agentId.slice("sync_".length) }
       : { kind: "start" as const };
   }
-  if (command === "/setup_topics") return { kind: "setup_topics" as const };
-
-  if (!agentId) return null;
-  if (command === "/pause_search" || command === "/stop_matches") {
-    return { kind: "search_pause" as const, paused: true, agentId };
-  }
-  if (command === "/resume_search" || command === "/start_matches") {
-    return { kind: "search_pause" as const, paused: false, agentId };
-  }
-
   return null;
 }
 
 function parseCallbackCommand(data: string) {
   const [action, id] = data.split(":");
-  if (data === "telegram:setup_topics") return { kind: "setup_topics" as const };
-  if (action === "pause_search_id" && id) {
-    return { kind: "search_pause" as const, paused: true, agentInternalId: id };
-  }
-  if (action === "resume_search_id" && id) {
-    return { kind: "search_pause" as const, paused: false, agentInternalId: id };
-  }
   if (action === "match_start" && id) return { kind: "match_confirm" as const, matchId: id };
   if (action === "match_skip" && id) return { kind: "match_skip" as const, matchId: id };
   if (action === "match_dialogue" && id) return { kind: "match_dialogue" as const, matchId: id };
@@ -102,28 +78,6 @@ function parseCallbackCommand(data: string) {
   if (action === "context_save" && id) return { kind: "context_save" as const, batchId: id };
   if (action === "context_discard" && id) return { kind: "context_discard" as const, batchId: id };
   return null;
-}
-
-async function applySearchCommand(command: {
-  paused: boolean;
-  agentId?: string;
-  agentInternalId?: string;
-}) {
-  if (command.agentInternalId) {
-    await setAgentSearchPaused({
-      agentInternalId: command.agentInternalId,
-      paused: command.paused,
-      source: "telegram",
-    });
-    return;
-  }
-
-  if (!command.agentId) throw new Error("Agent ID is required");
-  await setAgentSearchPausedByExternalId({
-    agentExternalId: command.agentId,
-    paused: command.paused,
-    source: "telegram",
-  });
 }
 
 async function ownerIdFromTelegramUser(telegramUserId: number | string | undefined) {
@@ -244,41 +198,6 @@ async function handleContextAnswer(message: TelegramMessage) {
   return true;
 }
 
-async function handleTopicSetup(message: TelegramMessage, telegramUserId?: number) {
-  if (!message.chat?.id) return "No chat found";
-
-  const ownerId = await ownerIdFromTelegramUser(telegramUserId ?? message.from?.id);
-  if (!ownerId) {
-    return "Open the Mini App first so Beajee can connect this Telegram account.";
-  }
-
-  if (message.chat.type === "private") {
-    await sendTelegramMessageToChat({
-      chatId: message.chat.id,
-      text:
-        "<b>Private workspace required</b>\n" +
-        "Create a private supergroup, add this bot, enable Topics, then run /setup_topics inside that group.",
-    });
-    return "Workspace instructions sent";
-  }
-
-  const result = await createUserTopics({
-    ownerId,
-    chatId: message.chat.id,
-  });
-
-  await sendTelegramMessageToChat({
-    chatId: message.chat.id,
-    text:
-      result.mode === "topics"
-        ? `<b>Beajee topics ready</b>\nCreated ${result.created.length} private workspace topic(s).`
-        : `<b>Beajee single-channel mode</b>\n${result.reason}`,
-    ...(message.message_thread_id ? { messageThreadId: message.message_thread_id } : {}),
-  });
-
-  return result.mode;
-}
-
 async function handleMatchCallback(command: { kind: string; matchId: string }, telegramUserId?: number) {
   const ownerId = await ownerIdFromTelegramUser(telegramUserId);
   if (!ownerId) return "Open the Mini App first to connect your Telegram account.";
@@ -341,14 +260,6 @@ export async function POST(request: NextRequest) {
     } else if (command.kind === "telegram_sync" && update.message) {
       await handleTelegramSync(update.message, command.rawToken);
       callbackAnswer = "Telegram connected";
-    } else if (command.kind === "setup_topics") {
-      callbackAnswer = await handleTopicSetup(
-        update.callback_query?.message ?? update.message ?? {},
-        update.callback_query?.from?.id
-      );
-    } else if (command.kind === "search_pause") {
-      await applySearchCommand(command);
-      callbackAnswer = command.paused ? "Search paused" : "Search resumed";
     } else if (
       command.kind === "match_confirm" ||
       command.kind === "match_skip" ||

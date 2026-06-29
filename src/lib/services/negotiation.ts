@@ -6,6 +6,7 @@ import { createInboxEvent } from "@/lib/services/inbox";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
 import { areNetworkingGoalsCompatible } from "@/lib/networking-goal";
 import type { NetworkingGoal } from "@/types/context";
+import { sendTelegramMatchCard } from "@/lib/telegram/match-card";
 import { recordAnalyticsEvent } from "@/lib/analytics-tracking";
 import {
   buildSchedulingDeliveryPayload,
@@ -506,6 +507,27 @@ export async function proposeMatch(matchId: string) {
     referenceId: matchId,
     urgency: "high",
   }).catch((error) => console.error("[negotiation] Failed to signal agent B:", error));
+
+  Promise.allSettled([
+    sendTelegramMatchCard({
+      ownerId: ownerA.id,
+      matchId,
+      otherOwnerName: ownerB.name,
+      otherAgentDisplayName: match.agentB.displayName,
+      framing: match.framingForA,
+      overlapSummary: match.overlapSummary,
+      similarity: match.matchSimilarity,
+    }),
+    sendTelegramMatchCard({
+      ownerId: ownerB.id,
+      matchId,
+      otherOwnerName: ownerA.name,
+      otherAgentDisplayName: match.agentA.displayName,
+      framing: match.framingForB,
+      overlapSummary: match.overlapSummary,
+      similarity: match.matchSimilarity,
+    }),
+  ]).catch(() => undefined);
 
   return {
     matchId,

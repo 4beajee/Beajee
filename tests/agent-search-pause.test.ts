@@ -28,19 +28,15 @@ function ok(label: string) {
     path.join(ROOT, "src/lib/services/agent-search.ts"),
     "utf8"
   );
-  const telegramRouteSource = fs.readFileSync(
-    path.join(ROOT, "src/app/api/telegram/route.ts"),
-    "utf8"
-  );
+  const telegramRouteSource = fs.readFileSync(path.join(ROOT, "src/app/api/telegram/route.ts"), "utf8");
 
   assert.match(settingsSource, /setAgentSearchPaused\(/);
   assert.match(agentSearchSource, /type = args\.paused \? "AGENT_SEARCH_PAUSED" : "AGENT_SEARCH_RESUMED"/);
   assert.doesNotMatch(agentSearchSource, /sendTelegramNotification\(/);
-  assert.match(telegramRouteSource, /"\/pause_search"/);
-  assert.match(telegramRouteSource, /"\/resume_search"/);
-  assert.match(telegramRouteSource, /setAgentSearchPausedByExternalId\(/);
+  assert.match(telegramRouteSource, /webhook\/route/);
+  assert.doesNotMatch(telegramRouteSource, /pause_search|resume_search|agentId/);
 
-  ok("settings and Telegram drive search pause without leaking admin alerts to the user bot");
+  ok("settings drive search pause without exposing agent-ID commands in the personal bot");
 }
 
 {

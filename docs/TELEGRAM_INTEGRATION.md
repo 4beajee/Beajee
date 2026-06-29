@@ -3,16 +3,24 @@
 Status: canonical current personal Telegram surface.
 
 Telegram is an optional personal client for Beajee. It authenticates an owner
-through Telegram WebApp `initData`, presents the Mini App, and routes match,
-scheduling, settings, and agent-log messages to private forum topics or a direct
-message fallback.
+through Telegram WebApp `initData` or an existing browser session and presents a
+shared, full-screen mobile Web App. The bot is the notification and conversational
+layer; the Web App owns stateful decisions, chats, calls, and personal settings.
 
-## Personal Topics
+## Web App Navigation
 
-- `My Matches` — proposals and match actions
-- `Dates` — scheduling and call updates
-- `Settings` — personal preferences and privacy
-- `Agent Log` — activity from the owner's agent
+- `Today` — proposals, unread chats, call actions, check-ins, and context freshness
+- `Matches` — proposed, active, and dormant relationships
+- `Chats` — conversations after mutual confirmation
+- `You` — goal, search status, sensitive-topic exclusions, scheduling, and agent state
+
+Telegram-specific APIs are a thin bridge for authentication, fullscreen, safe areas,
+BackButton, and haptics. Business state remains in the ordinary Beajee service layer.
+
+## Legacy Personal Topics
+
+Existing topic rows remain supported as a delivery fallback, but topic setup is no
+longer promoted to users. New users interact with the bot DM and the Web App.
 
 There is no Team Space, community task stream, or Context Hub search in Telegram.
 
@@ -21,10 +29,11 @@ There is no Team Space, community task stream, or Context Hub search in Telegram
 - `src/lib/telegram/bot.ts` — Grammy bot and Mini App keyboard
 - `src/lib/telegram/auth.ts` — initData verification and seven-day JWTs
 - `src/lib/telegram/topics.ts` — personal topic creation and routing
-- `src/lib/telegram/match-card.ts` — interactive match delivery
+- `src/lib/telegram/match-card.ts` — exact Web App match-review links
+- Match, chat, and call notifications deep-link into their exact Web App context.
 - `src/lib/telegram/negotiation.ts` — agent negotiation payload validation
-- `src/app/(public)/telegram/` — Mini App shell
-- `src/app/api/telegram/` — auth, webhook, profile, matches, and negotiation APIs
+- `src/app/(public)/telegram/` — full-screen shared mobile Web App
+- `src/app/api/telegram/` — auth, onboarding, settings, matches, chats, calls, webhook, and negotiation APIs
 
 ## Security
 

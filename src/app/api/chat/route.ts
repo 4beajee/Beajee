@@ -6,6 +6,7 @@ import { SendMessageSchema } from "@/types/chat-input";
 import { createInboxEvent } from "@/lib/services/inbox";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
 import { ZodError } from "zod";
+import { sendTelegramChatNotification } from "@/lib/telegram/match-card";
 
 // GET /api/chat?matchId=xxx — get chat messages (requires auth)
 export async function GET(request: NextRequest) {
@@ -207,6 +208,13 @@ export async function POST(request: NextRequest) {
     referenceId: match.chat.id,
     urgency: "high",
   }).catch((err) => console.error("[chat] Failed to signal recipient agent:", err));
+
+  sendTelegramChatNotification({
+    ownerId: recipientOwner.id,
+    matchId: match.id,
+    senderName: senderOwner.name,
+    preview: content,
+  }).catch((err) => console.error("[chat] Failed to send Telegram notification:", err));
 
   return NextResponse.json({
     id: message.id,

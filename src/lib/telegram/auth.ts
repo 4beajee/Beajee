@@ -180,13 +180,28 @@ export async function issueUnifiedToken(verified: VerifiedTelegramInitData) {
     },
   });
 
+  return issueOwnerToken(owner, verified.telegramId);
+}
+
+type TokenOwner = {
+  id: string;
+  email: string;
+  name: string | null;
+  image: string | null;
+  onboarded: boolean;
+  telegramId: string | null;
+  schedulingUrl: string | null;
+};
+
+function issueOwnerToken(owner: TokenOwner, telegramId: string | null) {
+
   const now = Math.floor(Date.now() / 1000);
   const payload = {
     iss: "beajee",
     aud: "beajee.telegram-mini-app",
     sub: owner.id,
     ownerId: owner.id,
-    telegramId: verified.telegramId,
+    telegramId,
     iat: now,
     exp: now + TELEGRAM_JWT_TTL_SECONDS,
   };
@@ -200,6 +215,23 @@ export async function issueUnifiedToken(verified: VerifiedTelegramInitData) {
     expiresAt: new Date(payload.exp * 1000),
     owner,
   };
+}
+
+export async function issueUnifiedTokenForOwner(ownerId: string) {
+  const owner = await prisma.owner.findUnique({
+    where: { id: ownerId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      image: true,
+      onboarded: true,
+      telegramId: true,
+      schedulingUrl: true,
+    },
+  });
+  if (!owner) throw new TelegramAuthError("Owner not found", 404);
+  return issueOwnerToken(owner, owner.telegramId);
 }
 
 export function verifyUnifiedToken(token: string) {

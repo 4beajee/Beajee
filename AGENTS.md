@@ -297,7 +297,7 @@ not the real schema.
 6. Chats / Chat detail — after mutual confirmation
 7. Profile / Settings — identity, agent credentials, privacy, scheduling
 8. Public Feed — public matches, reactions, comments
-9. Telegram Mini App — personal matches, scheduling, settings, agent log
+9. Telegram Web App — full-screen Today, matches, chats, calls, onboarding, and personal settings
 
 Model Advice code and APIs remain available but the ordinary user entry point
 must stay hidden until the feature is explicitly enabled.

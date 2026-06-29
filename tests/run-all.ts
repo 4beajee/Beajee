@@ -14,6 +14,7 @@ const tests = [
   "tests/model-router.test.ts",
   "tests/telegram-intelligram.test.ts",
   "tests/telegram-link.test.ts",
+  "tests/telegram-web-app.test.ts",
   "tests/daily-telegram-report.test.ts",
   "tests/scheduling-match.test.ts",
   "tests/match-call.test.ts",

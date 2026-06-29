@@ -4,6 +4,7 @@ import { createInboxEvent } from "@/lib/services/inbox";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
 import { findOverlappingCallSlots } from "@/lib/services/calendar-slots";
 import type { MatchCallStatus, Prisma } from "@prisma/client";
+import { sendTelegramCallRequest } from "@/lib/telegram/match-card";
 
 interface MatchParticipants {
   matchId: string;
@@ -236,6 +237,14 @@ export async function requestZoomCall(matchId: string, ownerId: string) {
 
   const bothWant = updated.wantsCallByA && updated.wantsCallByB;
   const finalCall = (bothWant ? await maybeGenerateZoomLink(matchId, call.id) : updated) ?? updated;
+
+  if (!alreadyWanted) {
+    sendTelegramCallRequest({
+      ownerId: participants.isOwnerA ? participants.ownerBId : participants.ownerAId,
+      matchId,
+      requesterName: participants.isOwnerA ? participants.ownerAName : participants.ownerBName,
+    }).catch(() => undefined);
+  }
 
   return {
     matchId,

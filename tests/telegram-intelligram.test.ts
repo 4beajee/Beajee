@@ -3,7 +3,19 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-type Row = Record<string, any>;
+type Row = Record<string, unknown>;
+type SelectEntry = boolean | { where?: { topicType?: unknown }; take?: number };
+type PrismaArgs = {
+  where: {
+    id?: string;
+    telegramId?: string;
+    ownerId?: string;
+    ownerId_topicType?: { ownerId: string; topicType: string };
+  };
+  select?: Record<string, SelectEntry>;
+  create?: Row;
+  update?: Row;
+};
 
 const ROOT = path.resolve(__dirname, "..");
 const previousNodeEnv = process.env.NODE_ENV;
@@ -27,7 +39,7 @@ function restoreEnv() {
   else process.env.TELEGRAM_BOT_TOKEN = previousTelegramToken;
   if (previousNextAuthSecret === undefined) Reflect.deleteProperty(process.env, "NEXTAUTH_SECRET");
   else process.env.NEXTAUTH_SECRET = previousNextAuthSecret;
-  delete (globalThis as any).prisma;
+  delete testGlobal.prisma;
 }
 
 function signInitData(fields: Record<string, string>, botToken: string) {
@@ -57,7 +69,7 @@ function createFakePrisma() {
     telegramTopics: [] as Row[],
   };
 
-  const shapeSelected = (row: Row | null | undefined, args?: Row) => {
+  const shapeSelected = (row: Row | null | undefined, args?: Pick<PrismaArgs, "select">) => {
     if (!row) return null;
     if (!args?.select) return { ...row };
     return Object.fromEntries(
@@ -65,13 +77,14 @@ function createFakePrisma() {
         .filter(([, enabled]) => enabled)
         .map(([key, enabled]) => {
           if (key === "telegramTopics") {
-            const where = (enabled as Row).where ?? {};
+            const config = typeof enabled === "object" ? enabled : {};
+            const where = config.where ?? {};
             const topics = db.telegramTopics.filter(
               (topic) =>
                 topic.ownerId === row.id &&
                 (!where.topicType || topic.topicType === where.topicType)
             );
-            return [key, topics.slice(0, (enabled as Row).take ?? topics.length)];
+            return [key, topics.slice(0, config.take ?? topics.length)];
           }
           return [key, row[key]];
         })
@@ -81,7 +94,7 @@ function createFakePrisma() {
   return {
     __db: db,
     owner: {
-      findUnique: async (args: Row) => {
+      findUnique: async (args: PrismaArgs) => {
         const where = args.where ?? {};
         const row =
           ("id" in where && db.owners.find((owner) => owner.id === where.id)) ||
@@ -90,7 +103,7 @@ function createFakePrisma() {
           null;
         return shapeSelected(row ?? null, args);
       },
-      upsert: async (args: Row) => {
+      upsert: async (args: PrismaArgs) => {
         let owner = db.owners.find((item) => item.telegramId === args.where.telegramId);
         if (!owner) {
           const newOwner: Row = { id: `owner_${db.owners.length + 1}`, ...args.create };
@@ -103,12 +116,12 @@ function createFakePrisma() {
       },
     },
     telegramTopic: {
-      findMany: async (args: Row) =>
+      findMany: async (args: PrismaArgs) =>
         db.telegramTopics
           .filter((topic) => !args.where?.ownerId || topic.ownerId === args.where.ownerId)
           .map((topic) => shapeSelected(topic, args)),
-      upsert: async (args: Row) => {
-        const key = args.where.ownerId_topicType;
+      upsert: async (args: PrismaArgs) => {
+        const key = args.where.ownerId_topicType!;
         let topic = db.telegramTopics.find(
           (item) => item.ownerId === key.ownerId && item.topicType === key.topicType
         );
@@ -125,8 +138,12 @@ function createFakePrisma() {
   };
 }
 
+const testGlobal = globalThis as typeof globalThis & {
+  prisma?: ReturnType<typeof createFakePrisma>;
+};
+
 async function main() {
-  (globalThis as any).prisma = createFakePrisma();
+  testGlobal.prisma = createFakePrisma();
 
   const { verifyInitData, issueUnifiedToken, __test: authTest } = await import(
     "../src/lib/telegram/auth"
@@ -216,7 +233,7 @@ async function main() {
     const result = await createUserTopics({ ownerId: "owner_telegram", chatId: "-10042" });
     assert.equal(result.mode, "topics");
     assert.equal(result.created.length, 4);
-    assert.equal((globalThis as any).prisma.__db.telegramTopics.length, 4);
+    assert.equal(testGlobal.prisma!.__db.telegramTopics.length, 4);
     assert.equal(calls.filter((call) => call.method === "createForumTopic").length, 4);
     ok("createUserTopics creates and persists the four personal forum topics");
 
@@ -235,8 +252,8 @@ async function main() {
 
   {
     const keyboard = buildMatchCardKeyboard("match_123");
-    assert.equal(keyboard.inline_keyboard[0][0].callback_data, "match_start:match_123");
-    assert.equal(keyboard.inline_keyboard[2][1].callback_data, "match_skip:match_123");
+    assert.match(keyboard.inline_keyboard[0][0].web_app?.url ?? "", /tab=matches/);
+    assert.match(keyboard.inline_keyboard[0][0].web_app?.url ?? "", /matchId=match_123/);
     const caption = buildMatchCardCaption({
       otherOwnerName: "Grace",
       otherAgentDisplayName: null,
@@ -245,8 +262,8 @@ async function main() {
       similarity: 0.82,
     });
     assert.match(caption, /Meet Grace/);
-    assert.match(caption, /Compatibility: 82%/);
-    ok("Match Cards expose start, dialogue, schedule, and skip actions");
+    assert.doesNotMatch(caption, /Compatibility/);
+    ok("Match Cards open the exact Web App review state without false precision");
   }
 
   {

@@ -29,8 +29,6 @@ export function buildMiniAppKeyboard(origin?: string) {
   if (miniAppUrl) {
     keyboard.webApp("Open Beajee", miniAppUrl);
   }
-
-  keyboard.row().text("Set up workspace topics", "telegram:setup_topics");
   return keyboard;
 }
 
@@ -42,7 +40,6 @@ export function buildMiniAppReplyMarkup(origin?: string) {
     inlineKeyboard.push([{ text: "Open Beajee", web_app: { url: miniAppUrl } }]);
   }
 
-  inlineKeyboard.push([{ text: "Set up workspace topics", callback_data: "telegram:setup_topics" }]);
   return { inline_keyboard: inlineKeyboard };
 }
 

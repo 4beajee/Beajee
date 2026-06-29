@@ -5,25 +5,31 @@ import {
 } from "@/lib/telegram/topics";
 import { escapeTelegramHtml, type TelegramInlineKeyboard } from "@/lib/services/telegram";
 
+function buildMiniAppKeyboard(
+  text: string,
+  params: Record<string, string>
+): { inline_keyboard: TelegramInlineKeyboard } | undefined {
+  const miniAppUrl = getTelegramMiniAppUrl();
+  if (!miniAppUrl) return undefined;
+  const url = new URL(miniAppUrl);
+  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+  return { inline_keyboard: [[{ text, web_app: { url: url.toString() } }]] };
+}
+
 export function buildMatchCardKeyboard(matchId: string): { inline_keyboard: TelegramInlineKeyboard } {
   const miniAppUrl = getTelegramMiniAppUrl();
-  const dialogueUrl = miniAppUrl
-    ? `${miniAppUrl}/matches?matchId=${encodeURIComponent(matchId)}&view=dialogue`
-    : "";
+  let reviewUrl = "";
+  if (miniAppUrl) {
+    const url = new URL(miniAppUrl);
+    url.searchParams.set("tab", "matches");
+    url.searchParams.set("matchId", matchId);
+    reviewUrl = url.toString();
+  }
 
   return {
-    inline_keyboard: [
-      [{ text: "Start Chat", callback_data: `match_start:${matchId}` }],
-      [
-        dialogueUrl
-          ? { text: "Agent Dialogue", web_app: { url: dialogueUrl } }
-          : { text: "Agent Dialogue", callback_data: `match_dialogue:${matchId}` },
-      ],
-      [
-        { text: "Schedule Call", callback_data: `match_schedule:${matchId}` },
-        { text: "Skip", callback_data: `match_skip:${matchId}` },
-      ],
-    ],
+    inline_keyboard: reviewUrl
+      ? [[{ text: "Review introduction", web_app: { url: reviewUrl } }]]
+      : [[{ text: "Review introduction", callback_data: `match_dialogue:${matchId}` }]],
   };
 }
 
@@ -35,16 +41,12 @@ export function buildMatchCardCaption(args: {
   similarity?: number | null;
 }) {
   const name = args.otherOwnerName ?? args.otherAgentDisplayName ?? "a relevant match";
-  const score =
-    typeof args.similarity === "number" ? `\nCompatibility: ${Math.round(args.similarity * 100)}%` : "";
-
   return [
     `<b>Meet ${escapeTelegramHtml(name)}</b>`,
     escapeTelegramHtml(args.framing),
     "",
     `<b>Why now</b>`,
     escapeTelegramHtml(args.overlapSummary),
-    score,
   ]
     .filter(Boolean)
     .join("\n");
@@ -79,5 +81,41 @@ export async function sendTelegramMatchCard(args: {
     livePhotoUrl: process.env.TELEGRAM_MATCH_CARD_LIVE_PHOTO_URL ?? null,
     photoUrl: process.env.TELEGRAM_MATCH_CARD_PHOTO_URL ?? null,
     replyMarkup: buildMatchCardKeyboard(args.matchId),
+  });
+}
+
+export async function sendTelegramChatNotification(args: {
+  ownerId: string;
+  matchId: string;
+  senderName: string | null;
+  preview: string;
+}) {
+  const sender = escapeTelegramHtml(args.senderName ?? "Your connection");
+  const preview = escapeTelegramHtml(args.preview.slice(0, 240));
+  return sendOwnerTopicMessage({
+    ownerId: args.ownerId,
+    topic: "matches",
+    text: `<b>${sender}</b> sent you a message\n${preview}`,
+    replyMarkup: buildMiniAppKeyboard("Open chat", {
+      tab: "chats",
+      matchId: args.matchId,
+    }),
+  });
+}
+
+export async function sendTelegramCallRequest(args: {
+  ownerId: string;
+  matchId: string;
+  requesterName: string | null;
+}) {
+  const requester = escapeTelegramHtml(args.requesterName ?? "Your connection");
+  return sendOwnerTopicMessage({
+    ownerId: args.ownerId,
+    topic: "dates",
+    text: `<b>${requester}</b> would like to schedule a call.`,
+    replyMarkup: buildMiniAppKeyboard("Review call", {
+      tab: "matches",
+      matchId: args.matchId,
+    }),
   });
 }

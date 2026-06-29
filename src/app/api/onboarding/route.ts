@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, withDbRetry } from "@/lib/db";
 import { getAuthenticatedOwner } from "@/lib/auth";
 import { safeErrorResponse } from "@/lib/api-error";
 import { rateLimit } from "@/lib/rate-limit";
-import { OnboardingSchema, PLATFORM_FILE_NAMES, type AgentPlatform } from "@/types/onboarding";
-import { getConnectionInstructions, buildSetupPrompt } from "@/lib/onboarding/connection-instructions";
+import { OnboardingSchema } from "@/types/onboarding";
 import { loadMessages } from "@/i18n/messages";
 import { resolveLocale } from "@/i18n/config";
-import { getCountryName } from "@/lib/countries";
 import { ZodError } from "zod";
-import crypto from "crypto";
-import { normalizeSchedulingUrl } from "@/lib/scheduling-url";
+import { completeOwnerOnboarding } from "@/lib/services/owner-onboarding";
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,109 +40,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: messages.onboarding.errors.invalidInput }, { status: 400 });
     }
 
-    const {
-      agentPlatform,
-      networkingGoal,
-      countryCode,
-      privacyConsent,
-      researchConsent,
-      excludedTopics,
-      schedulingUrl,
-    } = validated;
-    const countryName = getCountryName(countryCode, locale) ?? countryCode;
-
-    // Update existing owner with onboarding data (retry on transient DB drops)
-    const normalizedSchedulingUrl =
-      schedulingUrl && schedulingUrl.trim()
-        ? normalizeSchedulingUrl(schedulingUrl.trim())
-        : null;
-
-    const { owner, agent } = await withDbRetry(async () => {
-      const o = await prisma.owner.update({
-        where: { id: auth.ownerId },
-        data: {
-          agentPlatform,
-          networkingGoal,
-          countryCode,
-          privacyConsent,
-          researchConsent: researchConsent ?? false,
-          excludedTopics: excludedTopics ?? [],
-          ...(schedulingUrl !== undefined ? { schedulingUrl: normalizedSchedulingUrl } : {}),
-          onboarded: true,
-        },
-      });
-
-      // Immutable consent log — Purpose A (networking)
-      await prisma.consentLog.create({
-        data: { ownerId: o.id, purpose: "A" },
-      });
-
-      // Purpose B (research) — only if consented
-      if (researchConsent) {
-        await prisma.consentLog.create({
-          data: { ownerId: o.id, purpose: "B" },
-        });
-      }
-
-      // Generate agent credentials
-      const nameSlug = (o.name ?? o.email.split("@")[0]).toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
-      const agentId = `agent_${nameSlug}_${Date.now().toString(36)}`;
-      const apiKey = `gny_${crypto.randomBytes(32).toString("hex")}`;
-
-      // Create agent if not exists
-      let a = await prisma.agent.findUnique({
-        where: { ownerId: o.id },
-      });
-
-      if (!a) {
-        a = await prisma.agent.create({
-          data: {
-            agentId,
-            ownerId: o.id,
-            apiKey,
-            isActive: true,
-            agentType: "OPENCLAW",
-            integrationMethod: "MCP",
-          },
-        });
-      }
-
-      return { owner: o, agent: a };
-    });
-
-    const fileName = PLATFORM_FILE_NAMES[agentPlatform as AgentPlatform] ?? PLATFORM_FILE_NAMES.open_claw;
-
-    // Generate connection instructions + one-line setup prompt
-    const connectionInstructions = getConnectionInstructions(
-      agent.agentId,
-      agent.apiKey,
-      agentPlatform as AgentPlatform,
-      locale
-    );
     const baseUrl = request.headers.get("x-forwarded-proto") && request.headers.get("host")
       ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get("host")}`
       : process.env.NEXTAUTH_URL ?? "https://beajee.com";
-    const setupPrompt = buildSetupPrompt(agent.agentId, agent.apiKey, baseUrl, locale);
-
-    return NextResponse.json({
-      owner: {
-        id: owner.id,
-        email: owner.email,
-        name: owner.name,
-        networkingGoal: owner.networkingGoal,
-        countryCode: owner.countryCode,
-        agentPlatform,
-      },
-      agent: {
-        agentId: agent.agentId,
-        apiKey: agent.apiKey,
-      },
-      agentType: "OPENCLAW",
-      fileName,
-      soulMdEndpoint: `/api/soul/${agent.agentId}`,
-      setupPrompt,
-      connectionInstructions,
-    });
+    return NextResponse.json(await completeOwnerOnboarding({
+      ownerId: auth.ownerId,
+      input: validated,
+      locale,
+      baseUrl,
+    }));
   } catch (error) {
     const locale = resolveLocale({
       cookie: request.headers.get("cookie"),

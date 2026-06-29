@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   useCookieConsent,
   type ConsentCategories,
@@ -64,6 +65,7 @@ function Toggle({
 /* ─── Main banner ──────────────────────────────────────────── */
 
 export function CookieConsent() {
+  const pathname = usePathname();
   const t = useTranslations("cookie");
   const { hasConsented, submitConsent } = useCookieConsent();
   const [hiding, setHiding] = useState(false);
@@ -82,7 +84,7 @@ export function CookieConsent() {
     [submitConsent]
   );
 
-  if (hasConsented) return null;
+  if (pathname === "/telegram" || hasConsented) return null;
 
   const categories: {
     key: string;
