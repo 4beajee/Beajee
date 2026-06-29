@@ -14,11 +14,20 @@ function ok(label: string) {
 {
   const page = read("src/app/(public)/telegram/page.tsx");
   const layout = read("src/app/(public)/telegram/layout.tsx");
+  const styles = read("src/app/(public)/telegram/telegram.css");
   assert.match(page, /requestFullscreen/);
   assert.match(page, /safe-area-inset-bottom/);
   assert.match(layout, /viewportFit:\s*"cover"/);
   assert.doesNotMatch(page, />Mini App</);
   ok("Web App uses fullscreen safe-area layout without the legacy internal header");
+
+  assert.match(page, /telegram-float/);
+  assert.match(page, /rounded-full/);
+  assert.doesNotMatch(page, /#d9ff7a|red-|green-|amber-|emerald-/);
+  assert.doesNotMatch(page, /<nav className="fixed|className="sticky/);
+  assert.match(styles, /prefers-reduced-motion/);
+  assert.match(layout, /themeColor:\s*"#000000"/);
+  ok("the visual system stays monochrome, rounded, floating, and free of fixed navigation blocks");
 }
 
 {

@@ -1,0 +1,42 @@
+.telegram-float {
+  animation: telegram-float 6s ease-in-out infinite;
+  will-change: translate;
+}
+
+.telegram-float-delayed {
+  animation: telegram-float 7s ease-in-out -2.4s infinite;
+  will-change: translate;
+}
+
+.telegram-lift {
+  transform: translateZ(0);
+}
+
+@media (hover: hover) {
+  .telegram-lift:hover {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes telegram-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .telegram-float,
+  .telegram-float-delayed {
+    animation: none;
+    translate: none;
+  }
+
+  .telegram-lift,
+  .telegram-lift:hover {
+    transform: none;
+  }
+}

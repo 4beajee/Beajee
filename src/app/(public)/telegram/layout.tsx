@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import "./telegram.css";
 
 export const metadata: Metadata = {
   title: "Beajee Mini App",
@@ -10,7 +11,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0b0d0c",
+  themeColor: "#000000",
   colorScheme: "dark",
 };
 
