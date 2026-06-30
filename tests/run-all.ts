@@ -11,6 +11,7 @@ const tests = [
   "tests/consent.test.ts",
   "tests/match-confirmation.test.ts",
   "tests/match-initiator.test.ts",
+  "tests/matching-blocks.test.ts",
   "tests/model-advice.test.ts",
   "tests/model-router.test.ts",
   "tests/telegram-intelligram.test.ts",

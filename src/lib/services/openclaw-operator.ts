@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { blockOwner } from "@/lib/services/owner-block";
 import type { AnalyticsRange } from "@/lib/admin-analytics/range";
 import {
   getAdviceAnalytics,
@@ -382,60 +383,11 @@ function countRepeatReportsForTarget(
 }
 
 async function applyOwnerBlock(blockerId: string, blockedId: string) {
-  const [blocker, blocked] = await Promise.all([
-    prisma.owner.findUnique({ where: { id: blockerId }, include: { agent: true } }),
-    prisma.owner.findUnique({ where: { id: blockedId }, include: { agent: true } }),
-  ]);
-
-  if (!blocker || !blocked || blockerId === blockedId) {
+  try {
+    return await blockOwner(blockerId, blockedId);
+  } catch {
     return { applied: false, sharedMatchesClosed: 0 };
   }
-
-  await prisma.block.upsert({
-    where: {
-      blockerId_blockedId: {
-        blockerId,
-        blockedId,
-      },
-    },
-    create: {
-      blockerId,
-      blockedId,
-    },
-    update: {},
-  });
-
-  let sharedMatchesClosed = 0;
-  if (blocker.agent && blocked.agent) {
-    const sharedMatches = await prisma.match.findMany({
-      where: {
-        OR: [
-          { agentAId: blocker.agent.id, agentBId: blocked.agent.id },
-          { agentAId: blocked.agent.id, agentBId: blocker.agent.id },
-        ],
-      },
-      select: { id: true, status: true },
-    });
-
-    const matchIds = sharedMatches.map((match) => match.id);
-    if (matchIds.length > 0) {
-      const chatResult = await prisma.chat.updateMany({
-        where: { matchId: { in: matchIds } },
-        data: { status: "BLOCKED" },
-      });
-      sharedMatchesClosed = chatResult.count;
-
-      await prisma.match.updateMany({
-        where: {
-          id: { in: matchIds },
-          status: { in: ["NEGOTIATING", "PROPOSED"] },
-        },
-        data: { status: "DECLINED" },
-      });
-    }
-  }
-
-  return { applied: true, sharedMatchesClosed };
 }
 
 async function pauseTargetAgent(targetOwnerId: string) {

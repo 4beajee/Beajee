@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/db";
 import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
+import { blockOwner } from "@/lib/services/owner-block";
 
 export const blockUserTool = {
   name: "block_user" as const,
@@ -21,68 +21,16 @@ export const blockUserTool = {
     actor?: McpActor
   ) => {
     const authenticated = requireMcpActor(actor);
-    const ownerId = authenticated.ownerId;
-    const [blocker, blocked] = await Promise.all([
-      prisma.owner.findUnique({ where: { id: ownerId }, include: { agent: true } }),
-      prisma.owner.findUnique({ where: { id: args.blocked_owner_id }, include: { agent: true } }),
-    ]);
-
-    if (!blocker || !blocked) {
+    try {
+      await blockOwner(authenticated.ownerId, args.blocked_owner_id);
+    } catch (error) {
       return {
-        content: [{ type: "text" as const, text: JSON.stringify({ error: "Owner not found" }) }],
+        content: [{
+          type: "text" as const,
+          text: JSON.stringify({ error: error instanceof Error ? error.message : "Block failed" }),
+        }],
         isError: true,
       };
-    }
-
-    if (ownerId === args.blocked_owner_id) {
-      return {
-        content: [{ type: "text" as const, text: JSON.stringify({ error: "Cannot block yourself" }) }],
-        isError: true,
-      };
-    }
-
-    // Create block record (upsert to avoid duplicate errors)
-    await prisma.block.upsert({
-      where: {
-        blockerId_blockedId: {
-          blockerId: ownerId,
-          blockedId: args.blocked_owner_id,
-        },
-      },
-      create: {
-        blockerId: ownerId,
-        blockedId: args.blocked_owner_id,
-      },
-      update: {},
-    });
-
-    // Close any shared chats by setting status to BLOCKED
-    if (blocker.agent && blocked.agent) {
-      const sharedMatches = await prisma.match.findMany({
-        where: {
-          OR: [
-            { agentAId: blocker.agent.id, agentBId: blocked.agent.id },
-            { agentAId: blocked.agent.id, agentBId: blocker.agent.id },
-          ],
-        },
-        include: { chat: true },
-      });
-
-      for (const match of sharedMatches) {
-        if (match.chat) {
-          await prisma.chat.update({
-            where: { id: match.chat.id },
-            data: { status: "BLOCKED" },
-          });
-        }
-        // Decline any active negotiations
-        if (match.status === "NEGOTIATING" || match.status === "PROPOSED") {
-          await prisma.match.update({
-            where: { id: match.id },
-            data: { status: "DECLINED" },
-          });
-        }
-      }
     }
 
     return {

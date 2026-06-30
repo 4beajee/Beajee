@@ -34,37 +34,33 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const existing = await prisma.matchReaction.findUnique({
-    where: { matchId_ownerId: { matchId, ownerId } },
-  });
-
-  let userReaction: string | null = null;
-
-  if (existing) {
-    if (existing.type === type) {
-      // Same type → remove reaction
-      await prisma.matchReaction.delete({ where: { id: existing.id } });
-    } else {
-      // Different type → switch
-      await prisma.matchReaction.update({
-        where: { id: existing.id },
-        data: { type },
-      });
-      userReaction = type;
-    }
-  } else {
-    // No existing → create
-    await prisma.matchReaction.create({
-      data: { matchId, ownerId, type },
+  const { likes, dislikes, userReaction } = await prisma.$transaction(async (tx) => {
+    // Serialize toggles for one owner/match pair so duplicate requests cannot race
+    // through the read-then-create branch.
+    await tx.$executeRaw`
+      SELECT pg_advisory_xact_lock(hashtextextended(${`${matchId}:${ownerId}`}, 0))
+    `;
+    const existing = await tx.matchReaction.findUnique({
+      where: { matchId_ownerId: { matchId, ownerId } },
     });
-    userReaction = type;
-  }
+    let nextReaction: string | null = null;
 
-  // Return updated counts
-  const [likes, dislikes] = await Promise.all([
-    prisma.matchReaction.count({ where: { matchId, type: "LIKE" } }),
-    prisma.matchReaction.count({ where: { matchId, type: "DISLIKE" } }),
-  ]);
+    if (existing && existing.type === type) {
+      await tx.matchReaction.delete({ where: { id: existing.id } });
+    } else if (existing) {
+      await tx.matchReaction.update({ where: { id: existing.id }, data: { type } });
+      nextReaction = type;
+    } else {
+      await tx.matchReaction.create({ data: { matchId, ownerId, type } });
+      nextReaction = type;
+    }
+
+    const [likeCount, dislikeCount] = await Promise.all([
+      tx.matchReaction.count({ where: { matchId, type: "LIKE" } }),
+      tx.matchReaction.count({ where: { matchId, type: "DISLIKE" } }),
+    ]);
+    return { likes: likeCount, dislikes: dislikeCount, userReaction: nextReaction };
+  });
 
   return NextResponse.json({ likes, dislikes, userReaction });
 }

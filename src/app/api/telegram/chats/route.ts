@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { prisma } from "@/lib/db";
+import { blockOwner } from "@/lib/services/owner-block";
 import { SendMessageSchema } from "@/types/chat-input";
 import { rateLimit } from "@/lib/rate-limit";
 import { createInboxEvent } from "@/lib/services/inbox";
@@ -137,14 +138,7 @@ export async function POST(request: NextRequest) {
       }
       if (body.action === "block") {
         const blockedOwner = isOwnerA ? match.agentB.owner : match.agentA.owner;
-        await prisma.$transaction([
-          prisma.block.upsert({
-            where: { blockerId_blockedId: { blockerId: auth.ownerId, blockedId: blockedOwner.id } },
-            create: { blockerId: auth.ownerId, blockedId: blockedOwner.id },
-            update: {},
-          }),
-          prisma.chat.update({ where: { id: match.chat!.id }, data: { status: "BLOCKED" } }),
-        ]);
+        await blockOwner(auth.ownerId, blockedOwner.id);
         return NextResponse.json({ ok: true, status: "BLOCKED" });
       }
       if (body.action === "report") {

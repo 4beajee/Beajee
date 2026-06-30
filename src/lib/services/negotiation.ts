@@ -18,6 +18,7 @@ import {
   canRevealMatchSocialProfiles,
 } from "@/lib/services/match-card-view";
 import { socialProfilesFromOwner } from "@/lib/social-profile";
+import { lockOwnerPair, ownerPairIsBlocked } from "@/lib/services/owner-block";
 
 /**
  * NegotiationFSM — state machine for agent-to-agent match negotiation
@@ -89,13 +90,10 @@ export async function initiateNegotiation(
   const [normalizedAId, normalizedBId] =
     agentA.id < agentB.id ? [agentA.id, agentB.id] : [agentB.id, agentA.id];
 
-  // Check for existing active negotiation between these two agents
-  const existing = await prisma.match.findFirst({
-    where: {
-      agentAId: normalizedAId,
-      agentBId: normalizedBId,
-      status: { in: ["NEGOTIATING", "PROPOSED", "MATCHED"] },
-    },
+  // A pair has one lifecycle record. DORMANT means "not now" without reminders;
+  // it is not silently bypassed by creating a second attempt.
+  const existing = await prisma.match.findUnique({
+    where: { agentAId_agentBId: { agentAId: normalizedAId, agentBId: normalizedBId } },
   });
 
   if (existing) {
@@ -103,7 +101,7 @@ export async function initiateNegotiation(
       matchId: existing.id,
       status: existing.status,
       alreadyExists: true,
-      message: `Active match already exists between ${initiatorAgentId} and ${targetAgentId}`,
+      message: `Match lifecycle already exists between ${initiatorAgentId} and ${targetAgentId}`,
     };
   }
 
@@ -128,20 +126,45 @@ export async function initiateNegotiation(
   const discoverySource =
     options?.discoverySource ?? (options?.sourceBeaconId ? "BEACON" : "UNKNOWN");
 
-  const match = await prisma.match.create({
-    data: {
-      agentAId: normalizedAId,
-      agentBId: normalizedBId,
-      initiatorAgentId: agentA.id,
-      overlapSummary: "",
-      framingForA: "",
-      framingForB: "",
-      matchSimilarity,
-      discoverySource,
-      sourceBeaconId: options?.sourceBeaconId ?? null,
-      status: "NEGOTIATING",
+  const creation = await prisma.$transaction(
+    async (tx) => {
+      await lockOwnerPair(tx, agentA.ownerId, agentB.ownerId);
+      if (await ownerPairIsBlocked(tx, agentA.ownerId, agentB.ownerId)) {
+        throw new Error("Cannot initiate negotiation: one owner has blocked the other.");
+      }
+      const racedExisting = await tx.match.findUnique({
+        where: { agentAId_agentBId: { agentAId: normalizedAId, agentBId: normalizedBId } },
+      });
+      if (racedExisting) return { match: racedExisting, created: false };
+
+      const match = await tx.match.create({
+        data: {
+          agentAId: normalizedAId,
+          agentBId: normalizedBId,
+          initiatorAgentId: agentA.id,
+          overlapSummary: "",
+          framingForA: "",
+          framingForB: "",
+          matchSimilarity,
+          discoverySource,
+          sourceBeaconId: options?.sourceBeaconId ?? null,
+          status: "NEGOTIATING",
+        },
+      });
+      return { match, created: true };
     },
-  });
+    { isolationLevel: "Serializable" }
+  );
+
+  if (!creation.created) {
+    return {
+      matchId: creation.match.id,
+      status: creation.match.status,
+      alreadyExists: true,
+      message: `Match lifecycle already exists between ${initiatorAgentId} and ${targetAgentId}`,
+    };
+  }
+  const match = creation.match;
 
   // Log reasoning step if provided
   if (reasoning) {

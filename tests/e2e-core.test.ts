@@ -148,6 +148,7 @@ function createFakePrisma() {
   const db = {
     owners: [] as Row[],
     agents: [] as Row[],
+    blocks: [] as Row[],
     agentContexts: [] as Row[],
     beacons: [] as Row[],
     matches: [] as Row[],
@@ -360,7 +361,12 @@ function createFakePrisma() {
         return shapeMatch(match, args);
       },
       findUnique: async (args: Row) => {
-        const match = db.matches.find((item) => item.id === args.where.id) ?? null;
+        const pair = args.where.agentAId_agentBId;
+        const match = db.matches.find((item) =>
+          pair
+            ? item.agentAId === pair.agentAId && item.agentBId === pair.agentBId
+            : item.id === args.where.id
+        ) ?? null;
         return shapeMatch(match, args);
       },
       create: async (args: Row) => {
@@ -388,6 +394,13 @@ function createFakePrisma() {
           .filter((match) => matchesWhere(match, args.where))
           .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
           .map((match) => shapeMatch(match, args)),
+    },
+
+    block: {
+      findFirst: async (args: Row) => {
+        const block = db.blocks.find((item) => matchesWhere(item, args.where)) ?? null;
+        return shapeSelected(block, args);
+      },
     },
 
     negotiationLog: {
@@ -579,6 +592,7 @@ function createFakePrisma() {
 
     $executeRaw: async (strings: TemplateStringsArray, ...values: any[]) => {
       const sql = strings.join("?");
+      if (sql.includes("pg_advisory_xact_lock")) return 1;
       if (sql.includes("INSERT INTO agent_contexts")) {
         const agentId = values[1];
         let context = db.agentContexts.find((item) => item.agentId === agentId);
@@ -642,8 +656,8 @@ function createFakePrisma() {
 
       if (sql.includes("FROM beacons b")) {
         const publishingAgentId = values[0];
-        const effectiveGoal = values[1];
-        const embedding = values[2];
+        const effectiveGoal = values[3];
+        const embedding = values[4];
         return db.beacons
           .filter(
             (beacon) =>
@@ -671,9 +685,9 @@ function createFakePrisma() {
       if (sql.includes("FROM agent_contexts ac") && sql.includes("a.reputation_score")) {
         const queryEmbedding = values[0];
         const seekerAgentId = values[1];
-        const livenessCutoff = values[2];
-        const minSimilarity = Number(values[4]);
-        const limit = Number(values[5]);
+        const livenessCutoff = values[4];
+        const minSimilarity = Number(values[6]);
+        const limit = Number(values[7]);
         return db.agentContexts
           .filter((context) => context.agentId !== seekerAgentId)
           .map((context) => {
@@ -723,7 +737,7 @@ function createFakePrisma() {
       if (sql.includes("FROM agent_contexts ac")) {
         const beaconEmbedding = values[0];
         const settingAgentId = values[1];
-        const goalFilter = values[2] ?? null;
+        const goalFilter = values[4] ?? null;
         return db.agentContexts
           .filter((context) => context.agentId !== settingAgentId)
           .map((context) => {
@@ -1029,6 +1043,13 @@ async function main() {
       () => confirmMatch(second.matchId, alpha.owner.id),
       /PROPOSED state/
     );
+    const dormantRetry = await initiateNegotiation("agent_delta_e2e", "agent_alpha_e2e");
+    assert.equal(dormantRetry.matchId, second.matchId);
+    assert.equal(dormantRetry.status, "DORMANT");
+    assert.equal(prisma.__db.matches.filter((match) =>
+      [match.agentAId, match.agentBId].includes(alpha.agent.id) &&
+      [match.agentAId, match.agentBId].includes(delta.agent.id)
+    ).length, 1);
 
     ok("RBAC, malformed lifecycle actions, and dormant path reject unsafe state changes");
   }

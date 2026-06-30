@@ -70,6 +70,11 @@ export async function setBeacon(
     WHERE ac.agent_id != ${agent.id}
       AND a.is_active = true
       AND a.search_paused = false
+      AND NOT EXISTS (
+        SELECT 1 FROM blocks block
+        WHERE (block.blocker_id = ${agent.ownerId} AND block.blocked_id = a.owner_id)
+           OR (block.blocker_id = a.owner_id AND block.blocked_id = ${agent.ownerId})
+      )
       AND ac.embedding IS NOT NULL
       AND (${effectiveGoalFilter}::text IS NULL OR ac.networking_goal = ${effectiveGoalFilter})
       AND (1 - (ac.embedding <=> ${embedding}::vector)) > 0.75

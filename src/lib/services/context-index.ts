@@ -184,6 +184,11 @@ export async function publishContext(agentId: string, rawContext: RawContextInpu
           AND b.triggered_at IS NULL
           AND beacon_agent.search_paused = false
           AND b.agent_id != ${agent.id}
+          AND NOT EXISTS (
+            SELECT 1 FROM blocks block
+            WHERE (block.blocker_id = ${agent.ownerId} AND block.blocked_id = beacon_agent.owner_id)
+               OR (block.blocker_id = beacon_agent.owner_id AND block.blocked_id = ${agent.ownerId})
+          )
           AND b.embedding IS NOT NULL
           AND (b.networking_goal_filter IS NULL OR b.networking_goal_filter = ${effectiveNetworkingGoal})
           AND (1 - (b.embedding <=> ${embedding}::vector)) > 0.75
