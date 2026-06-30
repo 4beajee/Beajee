@@ -6,6 +6,7 @@ import {
   encryptConnectorSecret,
 } from "@/lib/connectors/personal/crypto";
 import { PersonalConnectorUpsertSchema } from "@/types/personal-connectors";
+import { validateExternalHttpsUrl } from "@/lib/safe-external-fetch";
 
 function toInputJson(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value ?? {})) as Prisma.InputJsonValue;
@@ -42,6 +43,10 @@ export async function listPersonalConnectors(ownerId: string) {
 export async function upsertPersonalConnector(ownerId: string, input: unknown) {
   const parsed = PersonalConnectorUpsertSchema.parse(input);
   assertConnectorCryptoReady();
+  const icsUrl = parsed.config?.icsUrl;
+  if (typeof icsUrl === "string" && icsUrl.trim()) {
+    validateExternalHttpsUrl(icsUrl.trim());
+  }
 
   const tokenFields =
     parsed.token !== undefined

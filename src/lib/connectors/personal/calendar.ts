@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import { safeFetchText } from "@/lib/safe-external-fetch";
 export interface PersonalConnectorItem {
   externalId: string;
   title: string;
@@ -19,12 +20,14 @@ function hashEvent(value: unknown) {
   return createHash("sha256").update(JSON.stringify(value ?? {})).digest("hex").slice(0, 20);
 }
 
+function isCancelledEvent(event: Record<string, unknown>) {
+  return (asString(event.status) ?? "").toLowerCase() === "cancelled";
+}
+
 function isPrivateOrBusyEvent(event: Record<string, unknown>) {
   const summary = (asString(event.summary) ?? asString(event.title) ?? "").toLowerCase();
   const visibility = (asString(event.visibility) ?? asString(event.class) ?? "").toLowerCase();
-  const status = (asString(event.status) ?? "").toLowerCase();
   return (
-    status === "cancelled" ||
     visibility === "private" ||
     summary === "busy" ||
     summary === "private" ||
@@ -33,13 +36,14 @@ function isPrivateOrBusyEvent(event: Record<string, unknown>) {
 }
 
 function normalizeCalendarEvent(event: Record<string, unknown>): PersonalConnectorItem | null {
-  if (isPrivateOrBusyEvent(event)) return null;
+  if (isCancelledEvent(event)) return null;
 
   const startValue = asObject(event.start);
   const endValue = asObject(event.end);
   const start = asString(startValue.dateTime) ?? asString(startValue.date) ?? asString(event.start);
   const end = asString(endValue.dateTime) ?? asString(endValue.date) ?? asString(event.end);
-  const summary = asString(event.summary) ?? asString(event.title);
+  const isPrivate = isPrivateOrBusyEvent(event);
+  const summary = isPrivate ? "Busy" : asString(event.summary) ?? asString(event.title);
   if (!summary || !start) return null;
 
   const id = asString(event.id) ?? asString(event.uid) ?? `${summary}:${start}`;
@@ -51,8 +55,8 @@ function normalizeCalendarEvent(event: Record<string, unknown>): PersonalConnect
     rawPayload: {
       id,
       summary,
-      description: asString(event.description),
-      location: asString(event.location),
+      description: isPrivate ? null : asString(event.description),
+      location: isPrivate ? null : asString(event.location),
       start,
       end,
       updated,
@@ -169,9 +173,9 @@ export async function fetchCalendarPersonalItems(config: Record<string, unknown>
 
   const icsUrl = asString(config.icsUrl);
   if (icsUrl) {
-    const response = await fetch(icsUrl, { headers: { Accept: "text/calendar,*/*" } });
-    if (!response.ok) throw new Error(`Calendar ICS fetch failed: ${response.status}`);
-    return parseIcsEvents(await response.text());
+    return parseIcsEvents(
+      await safeFetchText(icsUrl, { headers: { Accept: "text/calendar,*/*" } })
+    );
   }
 
   return [];
