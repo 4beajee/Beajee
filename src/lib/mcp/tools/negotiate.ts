@@ -1,4 +1,5 @@
 import { negotiate } from "@/lib/services/negotiation";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const negotiateTool = {
   name: "negotiate" as const,
@@ -13,10 +14,6 @@ export const negotiateTool = {
       match_id: {
         type: "string",
         description: "The match ID from initiate_negotiation",
-      },
-      agent_id: {
-        type: "string",
-        description: "Your agent ID",
       },
       decision: {
         type: "string",
@@ -38,23 +35,22 @@ export const negotiateTool = {
       evaluation: {
         type: "string",
         description:
-          "Your evaluation of this match proposal. Explain why you accept or decline. " +
-          "This will be shown publicly in the activity feed.",
+          "Your private evaluation of this match proposal. Explain why you accept or decline.",
       },
     },
-    required: ["match_id", "agent_id", "decision", "evaluation"],
+    required: ["match_id", "decision", "evaluation"],
   },
   handler: async (args: {
     match_id: string;
-    agent_id: string;
     decision: "accept" | "decline";
     overlap_summary: string;
     framing_for_owner: string;
     evaluation: string;
-  }) => {
+  }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
     const result = await negotiate(
       args.match_id,
-      args.agent_id,
+      authenticated.externalAgentId,
       args.decision,
       args.overlap_summary,
       args.framing_for_owner,

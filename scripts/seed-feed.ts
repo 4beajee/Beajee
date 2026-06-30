@@ -347,11 +347,12 @@ async function seedFeed() {
     const matchData: Record<string, unknown> = {
       agentAId: agentA.id,
       agentBId: agentB.id,
+      initiatorAgentId: agentA.id,
       overlapSummary: fm.overlapSummary,
       framingForA: fm.framingForA,
       framingForB: fm.framingForB,
       status: fm.status,
-      isPublic: true,
+      isPublic: fm.status === "MATCHED",
     };
 
     if (fm.status === "PROPOSED" || fm.status === "MATCHED") {

@@ -228,6 +228,7 @@ async function main() {
         data: {
           agentAId: agents[0].id,
           agentBId: agents[1].id,
+          initiatorAgentId: agents[0].id,
           overlapSummary:
             "Alex is building an AI networking platform and needs a design-minded co-founder. Maya specializes in human-centered AI interfaces and is looking for an ML engineer building in the social intelligence space. Both are in San Francisco, both want a co-founder, and their skills are perfectly complementary — Alex brings the AI/ML engine, Maya brings the product design experience.",
           framingForA:

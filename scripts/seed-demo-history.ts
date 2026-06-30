@@ -219,11 +219,12 @@ async function main() {
       data: {
         agentAId: a.id,
         agentBId: b.id,
+        initiatorAgentId: a.id,
         overlapSummary: overlap.summary,
         framingForA: overlap.forA,
         framingForB: overlap.forB,
         status,
-        isPublic: true,
+        isPublic: status === "MATCHED",
         createdAt,
         proposedAt:
           status === "PROPOSED" || status === "MATCHED" || status === "DORMANT"

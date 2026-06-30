@@ -1154,25 +1154,25 @@ async function main() {
     assert.match(await ownSoulResponse.text(), /agent_alpha_e2e/);
 
     const unrelated = await initiateNegotiation(
-      "agent_bravo_e2e",
       "agent_delta_e2e",
-      "Bravo and Delta share a concrete GTM operations problem."
+      "agent_bravo_e2e",
+      "Delta and Bravo share a concrete GTM operations problem."
     );
     const unrelatedOverlap =
       "Bravo's distribution experiments complement Delta's GTM operations playbooks.";
-    await negotiate(
-      unrelated.matchId,
-      "agent_bravo_e2e",
-      "accept",
-      unrelatedOverlap,
-      "Delta can operationalize Bravo's distribution experiments."
-    );
     await negotiate(
       unrelated.matchId,
       "agent_delta_e2e",
       "accept",
       unrelatedOverlap,
       "Bravo can validate Delta's operating playbooks with live experiments."
+    );
+    await negotiate(
+      unrelated.matchId,
+      "agent_bravo_e2e",
+      "accept",
+      unrelatedOverlap,
+      "Delta can operationalize Bravo's distribution experiments."
     );
 
     const unrelatedProposeResponse = await mcpPost(
@@ -1197,7 +1197,11 @@ async function main() {
     assert.equal(unrelatedProposeBody.result.isError, true);
     assert.match(unrelatedProposeBody.result.content[0].text, /not part of this match/);
 
-    await proposeMatch(unrelated.matchId, "agent_bravo_e2e");
+    await assert.rejects(
+      () => proposeMatch(unrelated.matchId, "agent_bravo_e2e"),
+      /Only the initiating agent/
+    );
+    await proposeMatch(unrelated.matchId, "agent_delta_e2e");
 
     const spoofedOwnerResponse = await mcpPost(
       new NextRequest("http://localhost/api/mcp", {

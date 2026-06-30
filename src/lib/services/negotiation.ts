@@ -25,14 +25,21 @@ import { socialProfilesFromOwner } from "@/lib/social-profile";
  * States: NEGOTIATING → PROPOSED → MATCHED | DORMANT | DECLINED
  *
  * Flow:
- * 1. Agent A calls initiate_negotiation(agent_b_id) → creates Match in NEGOTIATING
- * 2. Agent B calls negotiate(match_id, "accept", framing) → both agents agreed
- * 3. Agent A calls propose_match(match_id) → status becomes PROPOSED, owners notified
+ * 1. Initiator calls initiate_negotiation(agent_b_id) → creates Match in NEGOTIATING
+ * 2. Both participants call negotiate(match_id, "accept", framing)
+ * 3. Initiator calls propose_match(match_id) → status becomes PROPOSED, owners notified
  * 4. Each owner confirms or declines:
  *    - Both confirm → MATCHED, chat opens
  *    - Either says "not now" → DORMANT
  *    - Either declines → DECLINED
  */
+
+export function negotiationRole(
+  match: { initiatorAgentId: string },
+  agentId: string
+): "initiator" | "responder" {
+  return match.initiatorAgentId === agentId ? "initiator" : "responder";
+}
 
 export async function initiateNegotiation(
   initiatorAgentId: string, // external agent_id like "agent_arlan_001"
@@ -238,6 +245,7 @@ export async function negotiate(
   if (!isAgentA && !isAgentB) {
     throw new Error(`Agent ${agentExternalId} is not part of this match`);
   }
+  const role = negotiationRole(match, agent.id);
 
   if (decision === "decline") {
     await prisma.match.update({
@@ -250,16 +258,13 @@ export async function negotiate(
       data: {
         matchId,
         agentId: agent.id,
-        role: isAgentA ? "initiator" : "responder",
+        role,
         type: "decline",
         content: evaluation || "Declined without explanation.",
       },
     });
 
-    // Record reputation event for the initiating agent (negotiation was declined)
-    // Find the initiator — the other agent from the one who declined
-    const initiatorId = isAgentA ? match.agentBId : match.agentAId;
-    await recordEvent(initiatorId, "NEGOTIATION_DECLINED");
+    await recordEvent(match.initiatorAgentId, "NEGOTIATION_DECLINED");
 
     await recordAnalyticsEvent({
       type: "NEGOTIATION_DECLINED",
@@ -267,7 +272,7 @@ export async function negotiate(
       agentId: agent.id,
       matchId,
       metadata: {
-        role: isAgentA ? "initiator" : "responder",
+        role,
         evaluation: evaluation ?? null,
       },
     });
@@ -293,7 +298,7 @@ export async function negotiate(
       data: {
         matchId,
         agentId: agent.id,
-        role: isAgentA ? "initiator" : "responder",
+        role,
         type: "evaluation",
         content: evaluation,
       },
@@ -306,7 +311,7 @@ export async function negotiate(
     agentId: agent.id,
     matchId,
     metadata: {
-      role: isAgentA ? "initiator" : "responder",
+      role,
       overlap_summary: overlapSummary ?? null,
       framing_for_owner: framingForOwner ?? null,
       evaluation: evaluation ?? null,
@@ -319,7 +324,7 @@ export async function negotiate(
       data: {
         matchId,
         agentId: agent.id,
-        role: isAgentA ? "initiator" : "responder",
+        role,
         type: "proposal",
         content: `Overlap: ${overlapSummary}\n\nFraming for owner: ${framingForOwner}`,
       },
@@ -336,9 +341,10 @@ export async function negotiate(
     overlapSummary: updated?.overlapSummary,
     framingForA: updated?.framingForA,
     framingForB: updated?.framingForB,
-    message: isAgentA
-      ? "Agent A accepted. Waiting for Agent B to negotiate."
-      : "Agent B accepted. Agent A can now propose the match.",
+    message:
+      updated?.agentAAcceptedAt && updated.agentBAcceptedAt
+        ? "Both agents accepted. The initiator can now propose the match."
+        : "Acceptance recorded. Waiting for the other agent.",
   };
 }
 
@@ -358,6 +364,11 @@ export async function proposeMatch(matchId: string, proposingAgentExternalId?: s
     match.agentB.agentId !== proposingAgentExternalId
   ) {
     throw new Error(`Agent ${proposingAgentExternalId} is not part of this match`);
+  }
+  const initiator =
+    match.initiatorAgentId === match.agentAId ? match.agentA : match.agentB;
+  if (proposingAgentExternalId && initiator.agentId !== proposingAgentExternalId) {
+    throw new Error("Only the initiating agent can propose this match");
   }
   if (match.status !== "NEGOTIATING") {
     throw new Error(`Match must be in NEGOTIATING state to propose (current: ${match.status})`);
@@ -414,15 +425,14 @@ export async function proposeMatch(matchId: string, proposingAgentExternalId?: s
   await prisma.negotiationLog.create({
     data: {
       matchId,
-      agentId: match.agentAId,
+      agentId: match.initiatorAgentId,
       role: "initiator",
       type: "agreement",
       content: `Mutual agreement reached. Both agents confirmed real value.\n\nOverlap: ${match.overlapSummary}\n\nProposal sent to both owners.`,
     },
   });
 
-  // Record negotiation agreed for the initiating agent (agentA)
-  await recordEvent(match.agentAId, "NEGOTIATION_AGREED");
+  await recordEvent(match.initiatorAgentId, "NEGOTIATION_AGREED");
 
   // Record MATCH_PROPOSED for both agents (increments totalProposedMatches)
   await Promise.all([

@@ -1,4 +1,5 @@
 import { initiateNegotiation } from "@/lib/services/negotiation";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const initiateNegotiationTool = {
   name: "initiate_negotiation" as const,
@@ -10,10 +11,6 @@ export const initiateNegotiationTool = {
   inputSchema: {
     type: "object" as const,
     properties: {
-      agent_id: {
-        type: "string",
-        description: "Your agent ID (the initiator)",
-      },
       target_agent_id: {
         type: "string",
         description: "The other agent's ID you want to negotiate with",
@@ -22,7 +19,7 @@ export const initiateNegotiationTool = {
         type: "string",
         description:
           "Explain your reasoning: why you think this match is valuable. " +
-          "Be specific — this will be shown publicly in the activity feed.",
+          "Be specific. This remains private between the negotiating agents.",
       },
       candidate_similarity: {
         type: "number",
@@ -38,18 +35,18 @@ export const initiateNegotiationTool = {
         description: "Optional beacon ID if this negotiation came from a triggered beacon.",
       },
     },
-    required: ["agent_id", "target_agent_id", "reasoning"],
+    required: ["target_agent_id", "reasoning"],
   },
   handler: async (args: {
-    agent_id: string;
     target_agent_id: string;
     reasoning: string;
     candidate_similarity?: number;
     discovery_source?: "UNKNOWN" | "SEARCH" | "BEACON";
     source_beacon_id?: string;
-  }) => {
+  }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
     const result = await initiateNegotiation(
-      args.agent_id,
+      authenticated.externalAgentId,
       args.target_agent_id,
       args.reasoning,
       {

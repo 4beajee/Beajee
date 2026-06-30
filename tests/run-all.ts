@@ -10,6 +10,7 @@ const tests = [
   "tests/context-question-workflow.test.ts",
   "tests/consent.test.ts",
   "tests/match-confirmation.test.ts",
+  "tests/match-initiator.test.ts",
   "tests/model-advice.test.ts",
   "tests/model-router.test.ts",
   "tests/telegram-intelligram.test.ts",
