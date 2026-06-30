@@ -224,10 +224,10 @@ export default function OnboardingPage() {
   ];
 
   const SENSITIVE_CATEGORIES = [
-    t("sensitiveTopics.health"),
-    t("sensitiveTopics.finances"),
-    t("sensitiveTopics.relationships"),
-    t("sensitiveTopics.psychological"),
+    { value: "Health & personal issues", label: t("sensitiveTopics.health") },
+    { value: "Finances & debts", label: t("sensitiveTopics.finances") },
+    { value: "Personal relationships", label: t("sensitiveTopics.relationships") },
+    { value: "Psychological topics", label: t("sensitiveTopics.psychological") },
   ];
   const countryOptions = getCountryOptions(locale);
   const filteredCountries = countryQuery.trim()
@@ -950,18 +950,18 @@ export default function OnboardingPage() {
 
             <div className="space-y-2 mb-8">
               {SENSITIVE_CATEGORIES.map((topic) => {
-                const excluded = excludedTopics.includes(topic);
+                const excluded = excludedTopics.includes(topic.value);
                 return (
                   <button
-                    key={topic}
-                    onClick={() => toggleExcluded(topic)}
+                    key={topic.value}
+                    onClick={() => toggleExcluded(topic.value)}
                     className={`flex w-full items-center justify-between rounded-xl border p-4 text-sm transition-all ${
                       excluded
                         ? "border-red-900/50 bg-red-950/30 text-red-300"
                         : "border-white/[0.08] text-neutral-300 hover:border-white/[0.14] hover:bg-white/[0.03]"
                     }`}
                   >
-                    <span>{topic}</span>
+                    <span>{topic.label}</span>
                     <span
                       className={`text-xs font-medium ${
                         excluded ? "text-red-400" : "text-neutral-400"

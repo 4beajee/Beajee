@@ -11,6 +11,7 @@ import { recordEvent } from "@/lib/services/reputation";
 import { recordAnalyticsEvent } from "@/lib/analytics-tracking";
 import { createInboxEvent } from "@/lib/services/inbox";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
+import { assertContextRespectsExclusions } from "@/lib/sensitive-topics";
 
 interface RawContextInput {
   // From USER.md
@@ -46,6 +47,12 @@ export async function publishContext(agentId: string, rawContext: RawContextInpu
   });
 
   if (!agent) throw new Error(`Agent not found: ${agentId}`);
+
+  // This must run before hashing, persistence, analytics, or the embedding call.
+  assertContextRespectsExclusions(
+    context as unknown as Record<string, unknown>,
+    agent.owner.excludedTopics ?? []
+  );
 
   const privacySync = await getPrivacySyncStatus(agent.id);
   const effectiveNetworkingGoal = agent.owner.networkingGoal ?? context.networking_goal;

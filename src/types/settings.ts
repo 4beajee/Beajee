@@ -2,11 +2,12 @@ import { z } from "zod";
 import { NetworkingGoal } from "./context";
 import { SchedulingUrlSchema } from "@/lib/scheduling-url";
 import { SocialProfilePatchSchema } from "@/lib/social-profile";
+import { SensitiveTopicSchema } from "@/lib/sensitive-topics";
 
 export const SettingsUpdateSchema = z
   .object({
     agentActive: z.boolean().optional(),
-    excludedTopics: z.array(z.string().max(100)).max(20).optional(),
+    excludedTopics: z.array(SensitiveTopicSchema).max(4).optional(),
     researchConsent: z.boolean().optional(),
     networkingGoal: NetworkingGoal.optional(),
     wakeWebhookEnabled: z.boolean().optional(),

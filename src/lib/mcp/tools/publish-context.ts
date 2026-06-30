@@ -1,5 +1,6 @@
 import { publishContext } from "@/lib/services/context-index";
 import { maybePromptForSocialProfiles } from "@/lib/services/social-profile-prompt";
+import { SensitiveContextError } from "@/lib/sensitive-topics";
 
 export const publishContextTool = {
   name: "publish_context" as const,
@@ -139,7 +140,27 @@ export const publishContextTool = {
       networking_goal: string;
     };
   }) => {
-    const result = await publishContext(args.agent_id, args.context);
+    let result;
+    try {
+      result = await publishContext(args.agent_id, args.context);
+    } catch (error) {
+      if (error instanceof SensitiveContextError) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({
+                error: error.code,
+                message: error.message,
+                violations: error.violations,
+              }),
+            },
+          ],
+        };
+      }
+      throw error;
+    }
     const socialProfilePrompt = await maybePromptForSocialProfilesByAgent(args.agent_id);
     return {
       content: [

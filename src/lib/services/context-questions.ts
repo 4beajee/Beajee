@@ -6,6 +6,7 @@ import {
   isExcludedSensitiveAnswer,
   shouldAskClarifyingQuestion,
 } from "@/lib/context-questions";
+import { assertContextRespectsExclusions } from "@/lib/sensitive-topics";
 import { getContextQuestionDeliveryMode } from "@/lib/agent-platform";
 import { createInboxEvent } from "@/lib/services/inbox";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
@@ -237,7 +238,15 @@ export async function answerContextQuestion(args: {
 
   const question = await prisma.contextQuestion.findUnique({
     where: { id: args.questionId },
-    include: { batch: { include: { questions: true, agent: true } } },
+    include: {
+      batch: {
+        include: {
+          questions: true,
+          agent: true,
+          owner: { select: { excludedTopics: true } },
+        },
+      },
+    },
   });
   if (!question) throw new Error("Context question not found");
   if (args.ownerId && question.batch.ownerId !== args.ownerId) throw new Error("Context question not found");
@@ -254,6 +263,11 @@ export async function answerContextQuestion(args: {
   if (question.batch.status !== "ACTIVE") throw new Error("This batch is not accepting answers");
   const expected = nextUnanswered(question.batch);
   if (!expected || expected.id !== question.id) throw new Error("Answer the current question first");
+
+  assertContextRespectsExclusions(
+    { answer },
+    question.batch.owner?.excludedTopics ?? []
+  );
 
   await prisma.contextQuestion.update({
     where: { id: question.id },

@@ -1,4 +1,5 @@
 import { answerContextQuestion } from "@/lib/services/context-questions";
+import { SensitiveContextError } from "@/lib/sensitive-topics";
 
 export const answerContextQuestionTool = {
   name: "answer_context_question" as const,
@@ -16,11 +17,29 @@ export const answerContextQuestionTool = {
     required: ["agent_id", "question_id", "answer"],
   },
   handler: async (args: { agent_id: string; question_id: string; answer: string }) => {
-    const result = await answerContextQuestion({
-      agentExternalId: args.agent_id,
-      questionId: args.question_id,
-      answer: args.answer,
-    });
+    let result;
+    try {
+      result = await answerContextQuestion({
+        agentExternalId: args.agent_id,
+        questionId: args.question_id,
+        answer: args.answer,
+      });
+    } catch (error) {
+      if (error instanceof SensitiveContextError) {
+        return {
+          isError: true,
+          content: [{
+            type: "text" as const,
+            text: JSON.stringify({
+              error: error.code,
+              message: error.message,
+              violations: error.violations,
+            }),
+          }],
+        };
+      }
+      throw error;
+    }
     return {
       content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
     };

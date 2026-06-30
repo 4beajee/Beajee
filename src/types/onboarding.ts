@@ -5,6 +5,7 @@ import { SchedulingUrlSchema } from "@/lib/scheduling-url";
 import {
   AGENT_PLATFORM_OPTIONS,
 } from "@/lib/agent-platform";
+import { SensitiveTopicSchema } from "@/lib/sensitive-topics";
 
 export {
   AGENT_PLATFORM_OPTIONS,
@@ -54,7 +55,7 @@ export const OnboardingSchema = z.object({
     message: "Privacy consent is required to use Beajee",
   }),
   researchConsent: z.boolean().optional(),
-  excludedTopics: z.array(z.string().max(100)).max(20).optional(),
+  excludedTopics: z.array(SensitiveTopicSchema).max(4).optional(),
   schedulingUrl: z.union([z.literal(""), SchedulingUrlSchema]).optional(),
 });
 

@@ -68,13 +68,7 @@ export function getQuestionCadenceKey(now: Date) {
   return `${date.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
-const SENSITIVE_PATTERNS: Record<string, RegExp> = {
-  "Health & personal issues": /\b(health|medical|diagnos|doctor|hospital|medication|illness|disability)\b/i,
-  "Finances & debts": /\b(debt|salary|income|savings|bankruptcy|mortgage|personal finances?)\b/i,
-  "Personal relationships": /\b(spouse|marriage|divorce|breakup|boyfriend|girlfriend|family conflict)\b/i,
-  "Psychological topics": /\b(therapy|depression|anxiety|burnout|trauma|mental health|diagnosis)\b/i,
-};
-
 export function isExcludedSensitiveAnswer(answer: string, excludedTopics: string[]) {
-  return excludedTopics.some((topic) => SENSITIVE_PATTERNS[topic]?.test(answer) ?? false);
+  return findSensitiveContextViolations({ answer }, excludedTopics).length > 0;
 }
+import { findSensitiveContextViolations } from "@/lib/sensitive-topics";
