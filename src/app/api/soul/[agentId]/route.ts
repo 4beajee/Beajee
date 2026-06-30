@@ -83,7 +83,7 @@ export async function GET(
     template: templateContent,
     platform,
     agentId: agent.agentId,
-    apiKey: agent.apiKey,
+    apiKey: "$BEAJEE_API_KEY",
     networkingGoal: agent.owner.networkingGoal,
     excludedTopics,
   });

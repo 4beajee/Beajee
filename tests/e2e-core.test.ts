@@ -1195,7 +1195,9 @@ async function main() {
     );
     assert.equal(ownSoulResponse.status, 200);
     assert.equal(ownSoulResponse.headers.get("cache-control"), "no-store, private");
-    assert.match(await ownSoulResponse.text(), /agent_alpha_e2e/);
+    const ownSoulBody = await ownSoulResponse.text();
+    assert.match(ownSoulBody, /agent_alpha_e2e/);
+    assert.doesNotMatch(ownSoulBody, /gny_alpha_e2e/);
 
     const unrelated = await initiateNegotiation(
       "agent_delta_e2e",

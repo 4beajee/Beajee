@@ -4,6 +4,7 @@ import { normalizeSchedulingUrl } from "@/lib/scheduling-url";
 import { buildSetupPrompt, getConnectionInstructions } from "@/lib/onboarding/connection-instructions";
 import { PLATFORM_FILE_NAMES, type AgentPlatform, type OnboardingInput } from "@/types/onboarding";
 import type { Locale } from "@/i18n/config";
+import { createSetupGrant } from "@/lib/setup-grants";
 
 export async function completeOwnerOnboarding(args: {
   ownerId: string;
@@ -77,6 +78,7 @@ export async function completeOwnerOnboarding(args: {
   });
 
   const fileName = PLATFORM_FILE_NAMES[agentPlatform as AgentPlatform] ?? PLATFORM_FILE_NAMES.open_claw;
+  const setupGrant = await createSetupGrant(agent.id);
   return {
     owner: {
       id: owner.id,
@@ -91,7 +93,7 @@ export async function completeOwnerOnboarding(args: {
     agentType: "OPENCLAW" as const,
     fileName,
     soulMdEndpoint: `/api/soul/${agent.agentId}`,
-    setupPrompt: buildSetupPrompt(agent.agentId, agent.apiKey, args.baseUrl, args.locale),
+    setupPrompt: buildSetupPrompt(agent.agentId, setupGrant, args.baseUrl, args.locale),
     connectionInstructions: getConnectionInstructions(
       agent.agentId,
       agent.apiKey,

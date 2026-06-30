@@ -12,6 +12,7 @@ import {
 } from "@/types/onboarding";
 import { buildSetupPrompt, getConnectionInstructions } from "@/lib/onboarding/connection-instructions";
 import { resolveLocale } from "@/i18n/config";
+import { createSetupGrant } from "@/lib/setup-grants";
 
 export async function GET(request: NextRequest) {
   try {
@@ -64,7 +65,8 @@ export async function GET(request: NextRequest) {
     const baseUrl = host
       ? `${proto}://${host}`
       : process.env.NEXTAUTH_URL ?? "https://beajee.com";
-    const prompt = buildSetupPrompt(agent.agentId, agent.apiKey, baseUrl, locale);
+    const setupGrant = await createSetupGrant(agent.id);
+    const prompt = buildSetupPrompt(agent.agentId, setupGrant, baseUrl, locale);
     const connectionInstructions = getConnectionInstructions(
       agent.agentId,
       agent.apiKey,
@@ -79,7 +81,7 @@ export async function GET(request: NextRequest) {
       platformLabel: PLATFORM_LABELS[platform],
       fileName: PLATFORM_FILE_NAMES[platform],
       soulMdEndpoint: `/api/soul/${agent.agentId}`,
-      setupUrl: `${baseUrl.replace(/\/$/, "")}/api/setup/${agent.agentId}?key=${agent.apiKey}`,
+      setupUrl: `${baseUrl.replace(/\/$/, "")}/api/setup/${agent.agentId}`,
       connectionInstructions,
     });
   } catch (error) {

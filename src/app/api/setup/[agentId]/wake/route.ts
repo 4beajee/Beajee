@@ -45,9 +45,6 @@ const WakeSetupSchema = z.object({
 });
 
 function getAgentSetupKey(request: NextRequest) {
-  const queryKey = request.nextUrl.searchParams.get("key");
-  if (queryKey) return queryKey;
-
   const authHeader = request.headers.get("authorization");
   if (!authHeader) return null;
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
@@ -60,7 +57,7 @@ async function getAuthenticatedAgent(request: NextRequest, agentId: string) {
   if (!key) {
     return {
       error: NextResponse.json(
-        { error: "Missing setup key. Use ?key=... or Authorization: Bearer <agent_api_key>" },
+        { error: "Missing setup key. Use Authorization: Bearer <agent_api_key>" },
         { status: 401 }
       ),
       agent: null,

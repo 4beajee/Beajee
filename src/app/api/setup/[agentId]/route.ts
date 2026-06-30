@@ -14,9 +14,10 @@ import {
   getOpenClawBridgePaths,
 } from "@/lib/onboarding/openclaw-bridge";
 import { personalizeAgentInstructions } from "@/lib/onboarding/agent-instructions";
+import { consumeSetupGrant } from "@/lib/setup-grants";
 
 /**
- * GET /api/setup/[agentId]?key=API_KEY
+ * GET /api/setup/[agentId] with Authorization: Bearer <one-use setup grant>
  *
  * Returns a markdown document that an AI agent can follow
  * to self-install Beajee: create instruction file, configure MCP, verify.
@@ -28,11 +29,12 @@ export async function GET(
   { params }: { params: Promise<{ agentId: string }> }
 ) {
   const { agentId } = await params;
-  const key = request.nextUrl.searchParams.get("key");
+  const authorization = request.headers.get("authorization") ?? "";
+  const grant = authorization.match(/^Bearer\s+(setup_[A-Za-z0-9]+)$/)?.[1] ?? null;
 
-  if (!key) {
+  if (!grant) {
     return NextResponse.json(
-      { error: "Missing key parameter" },
+      { error: "Missing setup grant" },
       { status: 401 }
     );
   }
@@ -42,7 +44,7 @@ export async function GET(
     include: { owner: true },
   });
 
-  if (!agent || agent.apiKey !== key) {
+  if (!agent || !(await consumeSetupGrant(grant, agent.id))) {
     return NextResponse.json(
       { error: "Invalid agent or key" },
       { status: 401 }
@@ -74,7 +76,7 @@ export async function GET(
     template: templateContent,
     platform,
     agentId: agent.agentId,
-    apiKey: agent.apiKey,
+    apiKey: "$BEAJEE_API_KEY",
     networkingGoal: agent.owner.networkingGoal,
     excludedTopics,
   });
@@ -95,7 +97,8 @@ export async function GET(
   return new NextResponse(setupDoc, {
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
-      "Cache-Control": "no-store",
+      "Cache-Control": "no-store, private",
+      "Referrer-Policy": "no-referrer",
     },
   });
 }

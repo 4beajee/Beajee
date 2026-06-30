@@ -232,7 +232,7 @@ src/lib/telegram/
 
 | Area | Models / enums |
 |---|---|
-| Owner/auth | `Owner`, `Account`, `VerificationToken`, `OAuthAccessToken`, `LoginAttempt`, `RateLimitBucket` |
+| Owner/auth | `Owner`, `Account`, `VerificationToken`, `OAuthAccessToken`, `SetupGrant`, `LoginAttempt`, `RateLimitBucket` |
 | Agent/context | `Agent`, `AgentContext`, `ContextQuestionBatch`, `ContextQuestion`, related enums, `AgentType`, `IntegrationMethod`, `FreshnessState` |
 | Discovery | `Beacon` |
 | Matching | `Match`, `MatchStatus`, `MatchDiscoverySource`, `NegotiationLog` |

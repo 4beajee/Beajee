@@ -29,6 +29,7 @@ const tests = [
   "tests/privacy-sync.test.ts",
   "tests/public-match-privacy.test.ts",
   "tests/sensitive-topics.test.ts",
+  "tests/setup-credentials.test.ts",
   "tests/e2e-core.test.ts",
 ];
 

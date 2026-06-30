@@ -58,16 +58,17 @@ export function getConnectionInstructions(
 }
 
 /** Build the one-liner prompt the user copies and pastes to their agent. */
-export function buildSetupPrompt(agentId: string, apiKey: string, baseUrl: string, locale: Locale = "en"): string {
+export function buildSetupPrompt(agentId: string, setupGrant: string, baseUrl: string, locale: Locale = "en"): string {
   const origin = baseUrl.replace(/\/$/, "");
+  const command = `curl -fsSL -H "Authorization: Bearer ${setupGrant}" ${origin}/api/setup/${agentId}`;
 
   if (locale === "zh") {
-    return `访问 ${origin}/api/setup/${agentId}?key=${apiKey}，并按照响应中的 Beajee 设置说明操作。按说明创建文件并配置 MCP 服务器。`;
+    return `运行 \`${command}\` 获取一次性 Beajee 设置说明，然后按说明创建文件并配置 MCP 服务器。此授权将在 10 分钟后过期且只能使用一次。`;
   }
 
   if (locale === "hi") {
-    return `${origin}/api/setup/${agentId}?key=${apiKey} प्राप्त करें और response में दिए गए Beajee setup निर्देशों का पालन करें। बताए अनुसार files बनाएँ और MCP server configure करें।`;
+    return `एक बार उपयोग होने वाले Beajee setup निर्देश पाने के लिए \`${command}\` चलाएँ, फिर files बनाएँ और MCP server configure करें। यह grant 10 मिनट में expire होगा।`;
   }
 
-  return `Fetch ${origin}/api/setup/${agentId}?key=${apiKey} and follow the Beajee setup instructions in the response. Create the files and configure the MCP server as described.`;
+  return `Run \`${command}\` once and follow the Beajee setup instructions in the response. Create the files and configure the MCP server as described. This setup grant expires in 10 minutes and cannot be reused.`;
 }
