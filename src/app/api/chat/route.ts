@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
 
 // POST /api/chat — send a message (requires auth)
 export async function POST(request: NextRequest) {
-  const rateLimited = rateLimit(request, { maxRequests: 30, windowMs: 60_000, keyPrefix: "chat" });
+  const rateLimited = await rateLimit(request, { maxRequests: 30, windowMs: 60_000, keyPrefix: "chat" });
   if (rateLimited) return rateLimited;
 
   const auth = await getAuthenticatedOwner();

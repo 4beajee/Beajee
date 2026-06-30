@@ -12,7 +12,7 @@ const ChangeAgentPlatformSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const rateLimited = rateLimit(request, {
+  const rateLimited = await rateLimit(request, {
     maxRequests: 3,
     windowMs: 300_000,
     keyPrefix: "change-agent-platform",

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth-options";
+import { normalizeEmail } from "@/lib/email";
 
 /**
  * Validate owner authentication from request headers.
@@ -36,6 +37,7 @@ export async function getAuthenticatedOwner(): Promise<{ ownerId: string; email:
   const sessionOwnerId = session?.user?.id;
   const sessionEmail = session?.user?.email;
 
+  if (session?.revoked) return null;
   if (!sessionOwnerId && !sessionEmail) return null;
 
   try {
@@ -52,7 +54,7 @@ export async function getAuthenticatedOwner(): Promise<{ ownerId: string; email:
 
     if (sessionEmail) {
       const owner = await prisma.owner.findUnique({
-        where: { email: sessionEmail },
+        where: { email: normalizeEmail(sessionEmail) },
         select: { id: true, email: true },
       });
 

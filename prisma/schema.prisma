@@ -31,6 +31,7 @@ model Owner {
   socialProfilesPromptDismissedAt DateTime? @map("social_profiles_prompt_dismissed_at")
   telegramId                      String?   @unique @map("telegram_id")
   onboarded                       Boolean   @default(false)
+  sessionVersion                  Int       @default(0) @map("session_version")
 
   // Demo network — simulated accounts driven by the server-side responder.
   // Filtered out of production analytics and reputation leaderboards.
@@ -48,6 +49,7 @@ model Owner {
   telegramTopics         TelegramTopic[]
   personalConnectors     PersonalConnector[]
   contextQuestionBatches ContextQuestionBatch[]
+  loginAttempts          LoginAttempt[]
 
   @@index([isDemo])
   @@map("owners")
@@ -109,10 +111,12 @@ model Agent {
   ownerId      String   @unique @map("owner_id")
   owner        Owner    @relation(fields: [ownerId], references: [id])
   apiKey       String   @unique @map("api_key")
+  credentialVersion Int @default(0) @map("credential_version")
   isActive     Boolean  @default(true) @map("is_active")
   searchPaused Boolean  @default(false) @map("search_paused")
   createdAt    DateTime @default(now()) @map("created_at")
   lastActiveAt DateTime @default(now()) @map("last_active_at")
+  oauthAccessTokens OAuthAccessToken[]
 
   displayName String? @map("display_name") // public name for activity feed
 
@@ -162,6 +166,42 @@ model Agent {
   @@index([isDemo])
   @@index([isDemo, lastDemoTickAt])
   @@map("agents")
+}
+
+model OAuthAccessToken {
+  id                String    @id @default(cuid())
+  tokenHash         String    @unique @map("token_hash")
+  agentId           String    @map("agent_id")
+  agent             Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  credentialVersion Int       @map("credential_version")
+  expiresAt         DateTime  @map("expires_at")
+  revokedAt         DateTime? @map("revoked_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  @@index([agentId, expiresAt])
+  @@map("oauth_access_tokens")
+}
+
+model LoginAttempt {
+  key         String   @id
+  ownerId     String?  @map("owner_id")
+  owner       Owner?   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  failures    Int      @default(0)
+  lockedUntil DateTime @map("locked_until")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([lockedUntil])
+  @@map("login_attempts")
+}
+
+model RateLimitBucket {
+  key       String   @id
+  count     Int      @default(0)
+  resetAt   DateTime @map("reset_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([resetAt])
+  @@map("rate_limit_buckets")
 }
 
 model AgentContext {

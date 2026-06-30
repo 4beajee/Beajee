@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 
 const tests = [
+  "tests/auth-security.test.ts",
   "tests/calendar-security.test.ts",
   "tests/agent-wake.test.ts",
   "tests/agent-wake-stream.test.ts",

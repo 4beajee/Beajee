@@ -4,6 +4,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { createPasswordResetToken } from "@/lib/tokens";
 import { sendPasswordResetEmail } from "@/lib/services/notification";
 import { z } from "zod";
+import { normalizeEmail } from "@/lib/email";
 
 const ForgotPasswordSchema = z.object({
   email: z.string().email(),
@@ -11,7 +12,7 @@ const ForgotPasswordSchema = z.object({
 
 export async function POST(request: NextRequest) {
   // Strict rate limit: 3 requests per 60 seconds per IP
-  const rateLimited = rateLimit(request, {
+  const rateLimited = await rateLimit(request, {
     maxRequests: 3,
     windowMs: 60_000,
     keyPrefix: "forgot-password",
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { email } = parsed.data;
-  const trimmedEmail = email.trim();
+  const trimmedEmail = normalizeEmail(email);
 
   // Always return the same response regardless of whether the email exists.
   // This prevents user enumeration attacks.

@@ -149,6 +149,7 @@ function createFakePrisma() {
     owners: [] as Row[],
     agents: [] as Row[],
     blocks: [] as Row[],
+    rateLimitBuckets: [] as Row[],
     agentContexts: [] as Row[],
     beacons: [] as Row[],
     matches: [] as Row[],
@@ -400,6 +401,28 @@ function createFakePrisma() {
       findFirst: async (args: Row) => {
         const block = db.blocks.find((item) => matchesWhere(item, args.where)) ?? null;
         return shapeSelected(block, args);
+      },
+    },
+
+    oAuthAccessToken: {
+      findUnique: async () => null,
+    },
+
+    rateLimitBucket: {
+      findUnique: async (args: Row) => {
+        const bucket = db.rateLimitBuckets.find((item) => item.key === args.where.key) ?? null;
+        return bucket ? { ...bucket } : null;
+      },
+      upsert: async (args: Row) => {
+        let bucket = db.rateLimitBuckets.find((item) => item.key === args.where.key);
+        if (!bucket) {
+          bucket = { updatedAt: new Date(), ...args.create };
+          db.rateLimitBuckets.push(bucket);
+        } else {
+          applyData(bucket, args.update);
+          bucket.updatedAt = new Date();
+        }
+        return { ...bucket };
       },
     },
 

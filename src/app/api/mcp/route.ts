@@ -60,7 +60,7 @@ const tools = [
 
 // JSON-RPC 2.0 handler for MCP protocol
 export async function POST(request: NextRequest) {
-  const rateLimited = rateLimit(request, { maxRequests: 60, windowMs: 60_000, keyPrefix: "mcp" });
+  const rateLimited = await rateLimit(request, { maxRequests: 60, windowMs: 60_000, keyPrefix: "mcp" });
   if (rateLimited) return rateLimited;
 
   try {

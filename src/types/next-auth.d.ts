@@ -2,6 +2,7 @@ import "next-auth";
 
 declare module "next-auth" {
   interface Session {
+    revoked?: boolean;
     user: {
       id: string;
       email: string;
@@ -25,5 +26,7 @@ declare module "next-auth/jwt" {
     id: string;
     email: string;
     onboarded: boolean;
+    sessionVersion: number;
+    revoked?: boolean;
   }
 }

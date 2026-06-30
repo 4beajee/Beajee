@@ -29,27 +29,26 @@ export async function createPasswordResetToken(email: string): Promise<string> {
   return rawToken;
 }
 
-/**
- * Validate a password reset token.
- * Returns the email (identifier) if valid, or null if invalid/expired/missing.
- * Deletes the token after successful validation (one-time use).
- */
-export async function consumePasswordResetToken(rawToken: string): Promise<string | null> {
+export async function resetPasswordWithToken(
+  rawToken: string,
+  passwordHash: string
+): Promise<string | null> {
   const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
-
-  const record = await prisma.verificationToken.findUnique({
-    where: { token: hashedToken },
+  return prisma.$transaction(async (tx) => {
+    const consumed = await tx.$queryRaw<Array<{ identifier: string }>>`
+      DELETE FROM verification_tokens
+      WHERE token = ${hashedToken}
+        AND expires > NOW()
+      RETURNING identifier
+    `;
+    const email = consumed[0]?.identifier;
+    if (!email) return null;
+    const owner = await tx.owner.findUnique({ where: { email }, select: { id: true } });
+    if (!owner) return null;
+    await tx.owner.update({
+      where: { id: owner.id },
+      data: { passwordHash, sessionVersion: { increment: 1 } },
+    });
+    return email;
   });
-
-  if (!record) return null;
-
-  // Always delete the token (consumed or expired)
-  await prisma.verificationToken.delete({
-    where: { token: hashedToken },
-  });
-
-  // Check expiry
-  if (record.expires < new Date()) return null;
-
-  return record.identifier;
 }

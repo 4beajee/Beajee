@@ -19,7 +19,7 @@ const ReportChatSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const rateLimited = rateLimit(request, {
+  const rateLimited = await rateLimit(request, {
     maxRequests: 8,
     windowMs: 60_000,
     keyPrefix: "chat-report",

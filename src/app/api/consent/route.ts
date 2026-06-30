@@ -5,6 +5,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth-options";
 import { getSupabaseService } from "@/lib/supabase-service";
 import { POLICY_VERSION } from "@/constants/consent";
+import { rateLimit } from "@/lib/rate-limit";
 
 const VALID_ACTIONS = ["accepted", "rejected", "partial", "withdrawn"] as const;
 
@@ -103,6 +104,13 @@ function isDuplicateEvent(error: { code?: string; message?: string } | null): bo
 
 export async function POST(request: NextRequest) {
   try {
+    const limited = await rateLimit(request, {
+      maxRequests: 20,
+      windowMs: 60_000,
+      keyPrefix: "consent",
+    });
+    if (limited) return limited;
+
     const parsed = consentBodySchema.safeParse(await request.json());
     if (!parsed.success) {
       return NextResponse.json(

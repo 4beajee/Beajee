@@ -8,7 +8,7 @@ import { DAILY_TELEGRAM_REPORT } from "@/lib/services/daily-telegram-report";
 
 export async function POST(request: NextRequest) {
   try {
-    const rateLimited = rateLimit(request, {
+    const rateLimited = await rateLimit(request, {
       maxRequests: 3,
       windowMs: 300_000,
       keyPrefix: "delete-account",

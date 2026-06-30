@@ -6,7 +6,7 @@ import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
-    const rateLimited = rateLimit(request, {
+    const rateLimited = await rateLimit(request, {
       maxRequests: 3,
       windowMs: 300_000,
       keyPrefix: "regen-key",
@@ -28,9 +28,15 @@ export async function POST(request: NextRequest) {
 
     const newKey = `gny_${crypto.randomBytes(32).toString("hex")}`;
 
-    await prisma.agent.update({
-      where: { id: agent.id },
-      data: { apiKey: newKey },
+    await prisma.$transaction(async (tx) => {
+      await tx.agent.update({
+        where: { id: agent.id },
+        data: { apiKey: newKey, credentialVersion: { increment: 1 } },
+      });
+      await tx.oAuthAccessToken.updateMany({
+        where: { agentId: agent.id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
     });
 
     return NextResponse.json({ apiKey: newKey });

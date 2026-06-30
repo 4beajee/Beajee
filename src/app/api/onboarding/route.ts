@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     });
     const messages = await loadMessages(locale);
 
-    const rateLimited = rateLimit(request, { maxRequests: 5, windowMs: 60_000, keyPrefix: "onboarding" });
+    const rateLimited = await rateLimit(request, { maxRequests: 5, windowMs: 60_000, keyPrefix: "onboarding" });
     if (rateLimited) return rateLimited;
 
     const auth = await getAuthenticatedOwner();

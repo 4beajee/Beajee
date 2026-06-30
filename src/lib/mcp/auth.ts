@@ -5,7 +5,7 @@ export async function authenticateAgent(apiKey: string | null) {
   if (!apiKey) return null;
 
   // Try OAuth 2.1 token first (short-lived tokens from /api/oauth/token)
-  const oauthResult = validateOAuthToken(apiKey);
+  const oauthResult = apiKey.startsWith("gny_") ? null : await validateOAuthToken(apiKey);
   if (oauthResult) {
     const agent = await prisma.agent.findUnique({
       where: { id: oauthResult.agentInternalId },

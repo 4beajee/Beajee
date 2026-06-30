@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
-import { consumePasswordResetToken } from "@/lib/tokens";
+import { resetPasswordWithToken } from "@/lib/tokens";
 import { sendPasswordChangedEmail } from "@/lib/services/notification";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -15,7 +14,7 @@ const ResetPasswordSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const rateLimited = rateLimit(request, {
+  const rateLimited = await rateLimit(request, {
     maxRequests: 5,
     windowMs: 60_000,
     keyPrefix: "reset-password",
@@ -37,36 +36,15 @@ export async function POST(request: NextRequest) {
 
   const { token, password } = parsed.data;
 
-  // Consume token (one-time use — deleted regardless of outcome)
-  const email = await consumePasswordResetToken(token);
-
-  if (!email) {
-    return NextResponse.json(
-      { error: "This reset link is invalid or has expired. Please request a new one." },
-      { status: 400 }
-    );
-  }
-
   try {
-    const owner = await prisma.owner.findUnique({
-      where: { email },
-      select: { id: true },
-    });
-
-    if (!owner) {
-      // Edge case: account deleted between token creation and use
+    const passwordHash = await bcrypt.hash(password, 12);
+    const email = await resetPasswordWithToken(token, passwordHash);
+    if (!email) {
       return NextResponse.json(
-        { error: "This reset link is no longer valid. Please request a new one." },
+        { error: "This reset link is invalid or has expired. Please request a new one." },
         { status: 400 }
       );
     }
-
-    const passwordHash = await bcrypt.hash(password, 12);
-
-    await prisma.owner.update({
-      where: { id: owner.id },
-      data: { passwordHash },
-    });
 
     // Notify user that password was changed (fire-and-forget)
     sendPasswordChangedEmail(email).catch((err) => {

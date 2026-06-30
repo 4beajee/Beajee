@@ -15,7 +15,7 @@ import { resolveLocale } from "@/i18n/config";
 
 export async function GET(request: NextRequest) {
   try {
-    const rateLimited = rateLimit(request, {
+    const rateLimited = await rateLimit(request, {
       maxRequests: 10,
       windowMs: 60_000,
       keyPrefix: "settings-agent-setup-prompt",

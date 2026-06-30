@@ -41,7 +41,7 @@ async function waitForWakeTestOutcome(eventId: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const rateLimited = rateLimit(request, {
+    const rateLimited = await rateLimit(request, {
       maxRequests: 5,
       windowMs: 60_000,
       keyPrefix: "settings-wake-test",

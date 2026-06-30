@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { normalizeEmail } from "@/lib/email";
 
 const SignupSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -11,7 +12,7 @@ const SignupSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const rateLimited = rateLimit(request, { maxRequests: 5, windowMs: 60_000, keyPrefix: "signup" });
+  const rateLimited = await rateLimit(request, { maxRequests: 5, windowMs: 60_000, keyPrefix: "signup" });
   if (rateLimited) return rateLimited;
 
   let body;
@@ -29,7 +30,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { email, password, name } = parsed.data;
+  const { password, name } = parsed.data;
+  const email = normalizeEmail(parsed.data.email);
 
   const existing = await prisma.owner.findUnique({ where: { email } });
   if (existing) {

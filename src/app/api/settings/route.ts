@@ -85,7 +85,7 @@ export async function GET() {
 // PATCH /api/settings — update one or more settings
 export async function PATCH(request: NextRequest) {
   try {
-    const rateLimited = rateLimit(request, {
+    const rateLimited = await rateLimit(request, {
       maxRequests: 10,
       windowMs: 60_000,
       keyPrefix: "settings",

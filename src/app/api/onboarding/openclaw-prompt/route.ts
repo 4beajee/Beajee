@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const messages = await loadMessages(locale);
     const mode = request.nextUrl.searchParams.get("mode");
 
-    const rateLimited = rateLimit(request, { maxRequests: 10, windowMs: 60_000, keyPrefix: "openclaw-prompt" });
+    const rateLimited = await rateLimit(request, { maxRequests: 10, windowMs: 60_000, keyPrefix: "openclaw-prompt" });
     if (rateLimited) return rateLimited;
 
     const auth = await getAuthenticatedOwner();

@@ -9,7 +9,7 @@ import { ZodError } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
-    const rateLimited = rateLimit(request, {
+    const rateLimited = await rateLimit(request, {
       maxRequests: 5,
       windowMs: 60_000,
       keyPrefix: "change-password",
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const newHash = await bcrypt.hash(validated.newPassword, 12);
     await prisma.owner.update({
       where: { id: auth.ownerId },
-      data: { passwordHash: newHash },
+      data: { passwordHash: newHash, sessionVersion: { increment: 1 } },
     });
 
     // Notify — fire-and-forget

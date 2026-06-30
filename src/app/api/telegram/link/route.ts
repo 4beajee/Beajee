@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const limited = rateLimit(request, {
+    const limited = await rateLimit(request, {
       maxRequests: 5,
       windowMs: 60_000,
       keyPrefix: "telegram-link",

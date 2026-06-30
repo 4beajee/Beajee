@@ -14,7 +14,7 @@ import {
 import { ZodError } from "zod";
 
 export async function POST(request: NextRequest) {
-  const rateLimited = rateLimit(request, {
+  const rateLimited = await rateLimit(request, {
     maxRequests: 6,
     windowMs: 60_000,
     keyPrefix: "chat-advice-request",
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const rateLimited = rateLimit(request, {
+  const rateLimited = await rateLimit(request, {
     maxRequests: 6,
     windowMs: 60_000,
     keyPrefix: "chat-advice-respond",

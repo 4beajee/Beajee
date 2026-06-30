@@ -11,7 +11,7 @@ import { createOAuthToken } from "@/lib/oauth-tokens";
 // Returns: { access_token, token_type: "Bearer", expires_in }
 
 export async function POST(request: NextRequest) {
-  const rateLimited = rateLimit(request, { maxRequests: 10, windowMs: 60_000, keyPrefix: "oauth" });
+  const rateLimited = await rateLimit(request, { maxRequests: 10, windowMs: 60_000, keyPrefix: "oauth" });
   if (rateLimited) return rateLimited;
 
   try {
@@ -58,7 +58,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tokenResponse = createOAuthToken(agent.id, agent.agentId);
+    const tokenResponse = await createOAuthToken(
+      agent.id,
+      agent.agentId,
+      agent.credentialVersion
+    );
 
     return NextResponse.json(tokenResponse);
   } catch {

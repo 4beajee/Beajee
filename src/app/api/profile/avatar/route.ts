@@ -12,7 +12,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 // POST /api/profile/avatar — upload a profile photo
 export async function POST(request: NextRequest) {
   try {
-    const rateLimited = rateLimit(request, {
+    const rateLimited = await rateLimit(request, {
       maxRequests: 5,
       windowMs: 60_000,
       keyPrefix: "avatar-upload",
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 // DELETE /api/profile/avatar — remove profile photo
 export async function DELETE(request: NextRequest) {
   try {
-    const rateLimited = rateLimit(request, {
+    const rateLimited = await rateLimit(request, {
       maxRequests: 5,
       windowMs: 60_000,
       keyPrefix: "avatar-delete",

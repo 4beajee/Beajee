@@ -33,7 +33,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const rateLimited = rateLimit(request, {
+    const rateLimited = await rateLimit(request, {
       maxRequests: 12,
       windowMs: 60_000,
       keyPrefix: "profile:connectors",

@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const limited = rateLimit(request, { maxRequests: 30, windowMs: 60_000, keyPrefix: "telegram-chat" });
+  const limited = await rateLimit(request, { maxRequests: 30, windowMs: 60_000, keyPrefix: "telegram-chat" });
   if (limited) return limited;
   try {
     const auth = verifyUnifiedToken(bearer(request));

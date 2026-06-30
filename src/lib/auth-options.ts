@@ -3,6 +3,13 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { normalizeEmail } from "@/lib/email";
+import {
+  clearLoginFailures,
+  isLoginBlocked,
+  loginThrottleKey,
+  recordLoginFailure,
+} from "@/lib/login-throttle";
 
 // Cookie domain for cross-subdomain session sharing (e.g. ".beajee.com")
 // Strip surrounding quotes to be safe across different env-file parsers
@@ -72,17 +79,31 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        const email = normalizeEmail(credentials.email);
+        const forwarded = request.headers?.["x-forwarded-for"];
+        const ip = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(",")[0]?.trim() ??
+          request.headers?.["x-real-ip"] ?? "unknown";
+        const throttleKey = loginThrottleKey(email, ip);
+        if (await isLoginBlocked(throttleKey)) return null;
+
         const owner = await prisma.owner.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         });
 
-        if (!owner || !owner.passwordHash) return null;
+        if (!owner || !owner.passwordHash) {
+          await recordLoginFailure(throttleKey, owner?.id ?? null);
+          return null;
+        }
 
         const valid = await bcrypt.compare(credentials.password, owner.passwordHash);
-        if (!valid) return null;
+        if (!valid) {
+          await recordLoginFailure(throttleKey, owner.id);
+          return null;
+        }
+        await clearLoginFailures(throttleKey);
 
         return {
           id: owner.id,
@@ -121,9 +142,11 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
+          if (!user.email) return false;
+          const normalizedEmail = normalizeEmail(user.email);
           // Link Google account to existing or new Owner
           const existing = await prisma.owner.findUnique({
-            where: { email: user.email! },
+            where: { email: normalizedEmail },
           });
 
           if (existing) {
@@ -168,7 +191,7 @@ export const authOptions: NextAuthOptions = {
             // Create new Owner from Google profile
             const newOwner = await prisma.owner.create({
               data: {
-                email: user.email!,
+                email: normalizedEmail,
                 name: user.name,
                 image: user.image,
                 emailVerified: new Date(),
@@ -209,6 +232,11 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.email = user.email;
         token.onboarded = user.onboarded;
+        const owner = await prisma.owner.findUnique({
+          where: { id: user.id },
+          select: { sessionVersion: true },
+        });
+        token.sessionVersion = owner?.sessionVersion ?? 0;
       }
 
       // Allow session update to refresh onboarded status
@@ -216,17 +244,18 @@ export const authOptions: NextAuthOptions = {
         token.onboarded = session.onboarded;
       }
 
-      // Safety net: if JWT says not onboarded, verify from DB.
-      // Handles the case where updateSession() fails (NextAuth v4 + App Router).
-      // Only runs for non-onboarded users — once true, never queries again.
-      if (!token.onboarded && token.id) {
+      // Check the credential version on every refresh so password changes revoke old JWTs.
+      if (token.id) {
         try {
           const owner = await prisma.owner.findUnique({
             where: { id: token.id as string },
-            select: { onboarded: true },
+            select: { onboarded: true, sessionVersion: true },
           });
-          if (owner?.onboarded) {
-            token.onboarded = true;
+          if (!owner || owner.sessionVersion !== token.sessionVersion) {
+            token.revoked = true;
+            token.id = "";
+          } else {
+            token.onboarded = owner.onboarded;
           }
         } catch {
           // Ignore — next request will retry
@@ -240,6 +269,7 @@ export const authOptions: NextAuthOptions = {
       session.user.id = token.id;
       session.user.email = token.email;
       session.user.onboarded = token.onboarded;
+      session.revoked = token.revoked === true;
       return session;
     },
   },
