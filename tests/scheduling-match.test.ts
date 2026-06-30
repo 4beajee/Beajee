@@ -104,4 +104,17 @@ function ok(label: string) {
   ok("MCP route registers set_scheduling_url");
 }
 
+{
+  const migration = fs.readFileSync(
+    path.join(
+      ROOT,
+      "prisma/migrations/20260628190000_remove_community_and_team_surface/migration.sql"
+    ),
+    "utf8"
+  );
+  assert.match(migration, /to_regclass\('public\.personal_connectors'\) IS NULL/);
+  assert.match(migration, /CREATE TABLE "personal_connectors"/);
+  ok("community removal migration repairs a missing calendar connector table");
+}
+
 console.log(`\nAll ${passed} scheduling tests passed.`);

@@ -25,6 +25,35 @@ DROP TABLE IF EXISTS "communities" CASCADE;
 
 -- Profile-enrichment connectors are gone. Calendar credentials remain because
 -- they power the personal scheduling flow.
+-- Some early production databases recorded the connector migration as applied
+-- after the connector tables had already been removed manually. Recreate the
+-- calendar credential table when it is missing so this migration also repairs
+-- that schema drift instead of leaving scheduling unusable.
+DO $$
+BEGIN
+  IF to_regclass('public.personal_connectors') IS NULL THEN
+    CREATE TABLE "personal_connectors" (
+      "id" TEXT NOT NULL,
+      "owner_id" TEXT NOT NULL,
+      "type" TEXT NOT NULL,
+      "enabled" BOOLEAN NOT NULL DEFAULT true,
+      "encrypted_token" TEXT,
+      "token_iv" TEXT,
+      "config" JSONB,
+      "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updated_at" TIMESTAMP(3) NOT NULL,
+      CONSTRAINT "personal_connectors_pkey" PRIMARY KEY ("id"),
+      CONSTRAINT "personal_connectors_owner_id_fkey"
+        FOREIGN KEY ("owner_id") REFERENCES "owners"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    );
+
+    CREATE UNIQUE INDEX "personal_connectors_owner_id_type_key"
+      ON "personal_connectors"("owner_id", "type");
+    CREATE INDEX "personal_connectors_type_enabled_idx"
+      ON "personal_connectors"("type", "enabled");
+  END IF;
+END $$;
+
 DELETE FROM "personal_connectors" WHERE "type" <> 'CALENDAR';
 DROP TABLE IF EXISTS "personal_connector_events" CASCADE;
 DROP TABLE IF EXISTS "profile_audit_logs" CASCADE;
