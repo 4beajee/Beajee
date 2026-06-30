@@ -281,11 +281,11 @@ block_user({ blocked_owner_id })
 archive_chat({ match_id })
 set_scheduling_url({ agent_id, scheduling_url })
 set_social_profiles({ agent_id, linkedin_url?, twitter_url? })
-request_zoom_call({ agent_id, match_id })
-find_call_slots({ agent_id, match_id })
-propose_call_time({ agent_id, match_id, slots })
-confirm_call_time({ agent_id, match_id, proposal_id })
-get_call_status({ agent_id, match_id })
+request_zoom_call({ match_id })
+find_call_slots({ match_id })
+propose_call_time({ match_id, slots })
+confirm_call_time({ match_id, proposal_id })
+get_call_status({ match_id })
 ```
 
 `publish_context` requires the `context` wrapper. A bare context object is

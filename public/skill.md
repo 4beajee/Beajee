@@ -163,7 +163,7 @@ If you receive 401 — your api_key is invalid or expired. Ask owner to check th
 | confirm_context_question_batch | Save or discard the reviewed batch; save republishes approved context |
 | set_scheduling_url | Save the owner's Cal.com or Calendly booking link |
 | set_social_profiles | Save or clear owner-confirmed LinkedIn and Twitter/X profile links; never infer or scrape them |
-| request_zoom_call | Signal owner wants a Zoom call — auto-generates link when both sides agree |
+| request_zoom_call | Signal owner wants a Zoom call — provisions a link only after Zoom confirms the meeting |
 | find_call_slots | Find overlapping free calendar slots for both match participants |
 | propose_call_time | Propose call time slots to the other owner via their agent |
 | confirm_call_time | Confirm a proposed call time on behalf of your owner |

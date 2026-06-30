@@ -1,10 +1,10 @@
-import { createHash } from "crypto";
 import { prisma } from "@/lib/db";
 import { createInboxEvent } from "@/lib/services/inbox";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
 import { findOverlappingCallSlots } from "@/lib/services/calendar-slots";
 import type { MatchCallStatus, Prisma } from "@prisma/client";
 import { sendTelegramCallRequest } from "@/lib/telegram/match-card";
+import { createZoomMeeting, isZoomConfigured } from "@/lib/zoom-provider";
 
 interface MatchParticipants {
   matchId: string;
@@ -60,11 +60,10 @@ async function loadMatchParticipants(matchId: string, ownerId?: string): Promise
 }
 
 export async function getOrCreateMatchCall(matchId: string) {
-  const existing = await prisma.matchCall.findUnique({ where: { matchId } });
-  if (existing) return existing;
-
-  return prisma.matchCall.create({
-    data: { matchId, status: "IDLE" },
+  return prisma.matchCall.upsert({
+    where: { matchId },
+    create: { matchId, status: "IDLE" },
+    update: {},
   });
 }
 
@@ -133,36 +132,35 @@ async function notifyAgent(args: {
   }).catch((err) => console.error("[match-call] wake signal failed:", err));
 }
 
-export function generateZoomMeeting(matchId: string) {
-  const salt = process.env.ZOOM_LINK_SALT ?? "beajee";
-  const hash = createHash("sha256").update(`${matchId}:${salt}`).digest("hex");
-  const meetingId = String((parseInt(hash.slice(0, 12), 16) % 9_000_000_000) + 1_000_000_000);
-  const password = createHash("sha256").update(`${matchId}:${salt}:pwd`).digest("hex").slice(0, 6);
-  const zoomUrl = `https://zoom.us/j/${meetingId}?pwd=${password}`;
-
-  return { zoomUrl, zoomMeetingId: meetingId, zoomPassword: password };
-}
-
 async function maybeGenerateZoomLink(matchId: string, callId: string) {
-  const call = await prisma.matchCall.findUnique({ where: { id: callId } });
-  if (!call || call.zoomUrl) return call;
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`
+      SELECT pg_advisory_xact_lock(hashtextextended(${`zoom-provision:${callId}`}, 0))
+    `;
+    const call = await tx.matchCall.findUnique({ where: { id: callId } });
+    if (!call || call.zoomUrl || !call.wantsCallByA || !call.wantsCallByB) return call;
+    if (!isZoomConfigured()) return call;
 
-  const bothWant = call.wantsCallByA && call.wantsCallByB;
-  if (!bothWant) return call;
-
-  const { zoomUrl, zoomMeetingId, zoomPassword } = generateZoomMeeting(matchId);
-  const now = new Date();
-
-  const updated = await prisma.matchCall.update({
-    where: { id: callId },
-    data: {
-      zoomUrl,
-      zoomMeetingId,
-      zoomPassword,
-      status: call.scheduledAt ? "CONFIRMED" : "LINK_READY",
-      linkGeneratedAt: now,
-    },
+    const { zoomUrl, zoomMeetingId, zoomPassword } = await createZoomMeeting({
+      matchId,
+      scheduledAt: call.scheduledAt,
+      durationMinutes: call.durationMinutes,
+    });
+    return tx.matchCall.update({
+      where: { id: callId },
+      data: {
+        zoomUrl,
+        zoomMeetingId,
+        zoomPassword,
+        status: call.scheduledAt ? "CONFIRMED" : "LINK_READY",
+        linkGeneratedAt: new Date(),
+      },
+    });
   });
+  if (!updated?.zoomUrl) return updated;
+  const zoomUrl = updated.zoomUrl;
+  const zoomMeetingId = updated.zoomMeetingId;
+  const zoomPassword = updated.zoomPassword;
 
   const participants = await loadMatchParticipants(matchId);
   const scheduledNote = updated.scheduledAt
@@ -252,6 +250,8 @@ export async function requestZoomCall(matchId: string, ownerId: string) {
     wantsCallByOther: participants.isOwnerA ? finalCall.wantsCallByB : finalCall.wantsCallByA,
     bothWantCall: bothWant,
     zoomUrl: finalCall.zoomUrl,
+    meetingProvisioned: Boolean(finalCall.zoomUrl),
+    providerConfigured: isZoomConfigured(),
     status: finalCall.status,
     newlyRequested: !alreadyWanted,
   };
@@ -279,12 +279,38 @@ export async function findCallSlotsForMatch(matchId: string, agentExternalId?: s
   return findOverlappingCallSlots(match.agentA.owner.id, match.agentB.owner.id);
 }
 
+export function validateCallSlots(slots: Array<{ start: string; end: string }>, now = new Date()) {
+  if (slots.length < 1 || slots.length > 5) throw new Error("Provide between 1 and 5 time slots");
+  const horizon = now.getTime() + 90 * 24 * 60 * 60 * 1000;
+  const normalized = slots.map((slot) => {
+    const start = new Date(slot.start);
+    const end = new Date(slot.end);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      throw new Error("Call slots must use valid ISO 8601 timestamps");
+    }
+    const duration = end.getTime() - start.getTime();
+    if (start.getTime() <= now.getTime() || start.getTime() > horizon) {
+      throw new Error("Call slots must be in the future and within 90 days");
+    }
+    if (duration < 15 * 60_000 || duration > 120 * 60_000) {
+      throw new Error("Call slots must be between 15 and 120 minutes");
+    }
+    return { start, end };
+  });
+  for (let index = 1; index < normalized.length; index++) {
+    if (normalized[index].start <= normalized[index - 1].start) {
+      throw new Error("Call slots must be unique and ordered by start time");
+    }
+  }
+  return normalized;
+}
+
 export async function proposeCallTime(
   matchId: string,
   proposedByOwnerId: string,
   slots: Array<{ start: string; end: string }>
 ) {
-  if (!slots.length) throw new Error("At least one time slot is required");
+  const validatedSlots = validateCallSlots(slots);
 
   const participants = await loadMatchParticipants(matchId, proposedByOwnerId);
   const call = await getOrCreateMatchCall(matchId);
@@ -292,31 +318,32 @@ export async function proposeCallTime(
   const recipientAgentId = participants.isOwnerA ? participants.agentBId : participants.agentAId;
   const proposerName = participants.isOwnerA ? participants.ownerAName : participants.ownerBName;
 
-  await prisma.matchCallProposal.updateMany({
-    where: { matchCallId: call.id, status: "PENDING" },
-    data: { status: "EXPIRED" },
-  });
-
-  const created = await Promise.all(
-    slots.slice(0, 5).map((slot) =>
-      prisma.matchCallProposal.create({
-        data: {
-          matchCallId: call.id,
-          proposedByOwnerId,
-          slotStart: new Date(slot.start),
-          slotEnd: new Date(slot.end),
-          status: "PENDING",
-        },
-      })
-    )
-  );
-
-  await prisma.matchCall.update({
-    where: { id: call.id },
-    data: {
-      status: "TIME_PROPOSED",
-      proposedByOwnerId,
-    },
+  const created = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`
+      SELECT pg_advisory_xact_lock(hashtextextended(${`call-proposals:${call.id}`}, 0))
+    `;
+    await tx.matchCallProposal.updateMany({
+      where: { matchCallId: call.id, status: "PENDING" },
+      data: { status: "EXPIRED" },
+    });
+    const proposals = await Promise.all(
+      validatedSlots.map((slot) =>
+        tx.matchCallProposal.create({
+          data: {
+            matchCallId: call.id,
+            proposedByOwnerId,
+            slotStart: slot.start,
+            slotEnd: slot.end,
+            status: "PENDING",
+          },
+        })
+      )
+    );
+    await tx.matchCall.update({
+      where: { id: call.id },
+      data: { status: "TIME_PROPOSED", proposedByOwnerId },
+    });
+    return proposals;
   });
 
   const slotLabels = created.map((p) => formatSlotLabel(p.slotStart.toISOString(), p.slotEnd.toISOString()));
@@ -364,42 +391,45 @@ export async function proposeCallTime(
 
 export async function confirmCallTime(matchId: string, ownerId: string, proposalId: string) {
   const participants = await loadMatchParticipants(matchId, ownerId);
-  const call = await prisma.matchCall.findUnique({
-    where: { matchId },
-    include: { proposals: { where: { id: proposalId, status: "PENDING" } } },
-  });
-  if (!call) throw new Error("Call record not found");
-  const proposal = call.proposals[0];
-  if (!proposal) throw new Error("Proposal not found or already resolved");
-  if (proposal.proposedByOwnerId === ownerId) {
-    throw new Error("You cannot confirm your own proposal — wait for the other owner");
-  }
-
-  const now = new Date();
-  const durationMinutes = Math.max(
-    15,
-    Math.round((proposal.slotEnd.getTime() - proposal.slotStart.getTime()) / 60_000)
-  );
-
-  await prisma.matchCallProposal.update({
-    where: { id: proposalId },
-    data: { status: "ACCEPTED", confirmedAt: now },
-  });
-  await prisma.matchCallProposal.updateMany({
-    where: { matchCallId: call.id, status: "PENDING", id: { not: proposalId } },
-    data: { status: "DECLINED" },
-  });
-
-  const updated = await prisma.matchCall.update({
-    where: { id: call.id },
-    data: {
-      scheduledAt: proposal.slotStart,
-      durationMinutes,
-      confirmedAt: now,
-      status: call.zoomUrl ? "CONFIRMED" : "CONFIRMED",
-      wantsCallByA: true,
-      wantsCallByB: true,
-    },
+  const { call, proposal, updated } = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`
+      SELECT pg_advisory_xact_lock(hashtextextended(${`call-confirm:${matchId}`}, 0))
+    `;
+    const currentCall = await tx.matchCall.findUnique({
+      where: { matchId },
+      include: { proposals: { where: { id: proposalId, status: "PENDING" } } },
+    });
+    if (!currentCall) throw new Error("Call record not found");
+    const currentProposal = currentCall.proposals[0];
+    if (!currentProposal) throw new Error("Proposal not found or already resolved");
+    if (currentProposal.proposedByOwnerId === ownerId) {
+      throw new Error("You cannot confirm your own proposal — wait for the other owner");
+    }
+    const now = new Date();
+    const accepted = await tx.matchCallProposal.updateMany({
+      where: { id: proposalId, matchCallId: currentCall.id, status: "PENDING" },
+      data: { status: "ACCEPTED", confirmedAt: now },
+    });
+    if (accepted.count !== 1) throw new Error("Proposal not found or already resolved");
+    await tx.matchCallProposal.updateMany({
+      where: { matchCallId: currentCall.id, status: "PENDING", id: { not: proposalId } },
+      data: { status: "DECLINED" },
+    });
+    const durationMinutes = Math.round(
+      (currentProposal.slotEnd.getTime() - currentProposal.slotStart.getTime()) / 60_000
+    );
+    const nextCall = await tx.matchCall.update({
+      where: { id: currentCall.id },
+      data: {
+        scheduledAt: currentProposal.slotStart,
+        durationMinutes,
+        confirmedAt: now,
+        status: "CONFIRMED",
+        wantsCallByA: true,
+        wantsCallByB: true,
+      },
+    });
+    return { call: currentCall, proposal: currentProposal, updated: nextCall };
   });
 
   const proposerOwnerId = proposal.proposedByOwnerId;

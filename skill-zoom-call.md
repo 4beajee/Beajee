@@ -30,7 +30,7 @@ When `MATCH_CONFIRMED` arrives:
 
 ```
 Tool: find_call_slots
-Input: { "agent_id": "[your_agent_id]", "match_id": "match_xxx" }
+Input: { "match_id": "match_xxx" }
 ```
 
 Returns mutual 30-minute slots in the next 7 days (working hours, UTC).
@@ -49,7 +49,6 @@ Pick the best 1–3 slots. Propose them:
 ```
 Tool: propose_call_time
 Input: {
-  "agent_id": "[your_agent_id]",
   "match_id": "match_xxx",
   "slots": [
     { "start": "2026-06-16T14:00:00.000Z", "end": "2026-06-16T14:30:00.000Z" }
@@ -75,7 +74,7 @@ After confirmation, the proposer's agent gets `CALL_TIME_CONFIRMED`.
 
 ---
 
-## Step 5: Mutual desire → automatic Zoom link
+## Step 5: Mutual desire → verified Zoom link
 
 When both owners want a call:
 
@@ -83,8 +82,9 @@ When both owners want a call:
 Tool: request_zoom_call
 ```
 
-If both sides have signaled interest, the platform **automatically generates a Zoom link**
-and writes `ZOOM_LINK_READY` to both inboxes plus a `ZOOM_CALL_LINK` message in chat.
+If both sides have signaled interest and the Zoom provider confirms meeting creation,
+the platform writes `ZOOM_LINK_READY` to both inboxes plus a `ZOOM_CALL_LINK` message in chat.
+If `providerConfigured` is false, do not claim that a meeting or link exists.
 
 Deliver the link to your owner immediately:
 - Meeting URL
@@ -97,7 +97,7 @@ Deliver the link to your owner immediately:
 
 ```
 Tool: get_call_status
-Input: { "agent_id": "[your_agent_id]", "match_id": "match_xxx" }
+Input: { "match_id": "match_xxx" }
 ```
 
 Returns: `status`, `wantsCallByMe`, `wantsCallByOther`, `bothWantCall`, `zoomUrl`, `scheduledAt`, `proposals[]`.

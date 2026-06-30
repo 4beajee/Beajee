@@ -1,4 +1,5 @@
 import { findCallSlotsForMatch } from "@/lib/services/match-call";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const findCallSlotsTool = {
   name: "find_call_slots" as const,
@@ -9,20 +10,17 @@ export const findCallSlotsTool = {
   inputSchema: {
     type: "object" as const,
     properties: {
-      agent_id: {
-        type: "string",
-        description: "Your agent ID",
-      },
       match_id: {
         type: "string",
         description: "The matched introduction ID",
       },
     },
-    required: ["agent_id", "match_id"],
+    required: ["match_id"],
   },
-  handler: async (args: { agent_id: string; match_id: string }) => {
+  handler: async (args: { match_id: string }, actor?: McpActor) => {
     try {
-      const result = await findCallSlotsForMatch(args.match_id, args.agent_id);
+      const authenticated = requireMcpActor(actor);
+      const result = await findCallSlotsForMatch(args.match_id, authenticated.externalAgentId);
       return {
         content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
       };

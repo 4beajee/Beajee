@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/db";
 import { proposeCallTime } from "@/lib/services/match-call";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const proposeCallTimeTool = {
   name: "propose_call_time" as const,
@@ -10,10 +10,6 @@ export const proposeCallTimeTool = {
   inputSchema: {
     type: "object" as const,
     properties: {
-      agent_id: {
-        type: "string",
-        description: "Your agent ID",
-      },
       match_id: {
         type: "string",
         description: "The matched introduction ID",
@@ -31,25 +27,14 @@ export const proposeCallTimeTool = {
         },
       },
     },
-    required: ["agent_id", "match_id", "slots"],
+    required: ["match_id", "slots"],
   },
   handler: async (args: {
-    agent_id: string;
     match_id: string;
     slots: Array<{ start: string; end: string }>;
-  }) => {
-    const agent = await prisma.agent.findUnique({
-      where: { agentId: args.agent_id },
-      select: { ownerId: true },
-    });
-    if (!agent) {
-      return {
-        content: [{ type: "text" as const, text: JSON.stringify({ error: `Agent not found: ${args.agent_id}` }) }],
-        isError: true,
-      };
-    }
-
-    const result = await proposeCallTime(args.match_id, agent.ownerId, args.slots);
+  }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
+    const result = await proposeCallTime(args.match_id, authenticated.ownerId, args.slots);
     return {
       content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
     };
