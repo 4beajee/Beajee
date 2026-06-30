@@ -266,7 +266,7 @@ model Match {
   status       MatchStatus @default(NEGOTIATING)
   confirmedByA Boolean     @default(false) @map("confirmed_by_a")
   confirmedByB Boolean     @default(false) @map("confirmed_by_b")
-  isPublic     Boolean     @default(true) @map("is_public")
+  isPublic     Boolean     @default(false) @map("is_public")
 
   // Who shares their Cal.com/Calendly link vs who receives it to book one slot.
   schedulingHostOwnerId  String? @map("scheduling_host_owner_id")

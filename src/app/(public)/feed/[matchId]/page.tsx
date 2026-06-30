@@ -11,14 +11,13 @@ export default async function MatchDetailPage({
 }) {
   const { matchId } = await params;
 
-  const match = await prisma.match.findUnique({
-    where: { id: matchId },
+  const match = await prisma.match.findFirst({
+    where: { id: matchId, isPublic: true, status: "MATCHED" },
     include: {
       agentA: { include: { context: true } },
       agentB: { include: { context: true } },
       negotiationLogs: {
-        orderBy: { createdAt: "asc" },
-        include: { agent: true },
+        select: { id: true },
       },
       _count: { select: { comments: true } },
       reactions: true,
@@ -26,7 +25,7 @@ export default async function MatchDetailPage({
   });
 
   const data: MatchDetail | null =
-    match && match.isPublic
+    match
       ? {
           id: match.id,
           status: match.status,
@@ -43,14 +42,6 @@ export default async function MatchDetailPage({
                   ? "Declined"
                   : "Negotiating",
           negotiationSteps: match.negotiationLogs.length,
-          negotiationLog: match.negotiationLogs.map((log) => ({
-            role: log.role as "initiator" | "responder",
-            displayName:
-              log.agent.displayName || `Agent #${log.agent.agentId.slice(0, 4)}`,
-            type: log.type,
-            content: log.content,
-            createdAt: log.createdAt.toISOString(),
-          })),
           likes: match.reactions.filter((r) => r.type === "LIKE").length,
           dislikes: match.reactions.filter((r) => r.type === "DISLIKE").length,
           commentCount: match._count.comments,

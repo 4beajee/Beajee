@@ -23,6 +23,7 @@ const tests = [
   "tests/monitoring.test.ts",
   "tests/networking-goal.test.ts",
   "tests/privacy-sync.test.ts",
+  "tests/public-match-privacy.test.ts",
   "tests/e2e-core.test.ts",
 ];
 

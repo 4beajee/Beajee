@@ -11,7 +11,7 @@ export async function GET(
   const { matchId } = await params;
 
   const match = await prisma.match.findFirst({
-    where: { id: matchId, isPublic: true },
+    where: { id: matchId, isPublic: true, status: "MATCHED" },
     select: { id: true },
   });
   if (!match) {
@@ -65,7 +65,7 @@ export async function POST(
   const ownerId = session.user.id as string;
 
   const match = await prisma.match.findFirst({
-    where: { id: matchId, isPublic: true },
+    where: { id: matchId, isPublic: true, status: "MATCHED" },
     select: { id: true },
   });
   if (!match) {

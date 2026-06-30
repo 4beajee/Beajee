@@ -219,6 +219,7 @@ async function handleMatchSearch(query: string, limit: number) {
   const textMatches = await prisma.match.findMany({
     where: {
       isPublic: true,
+      status: "MATCHED",
       ...matchDemoFilter,
       overlapSummary: { contains: query, mode: "insensitive" },
     },
@@ -244,7 +245,12 @@ async function handleMatchSearch(query: string, limit: number) {
   }
 
   const matches = await prisma.match.findMany({
-    where: { isPublic: true, OR: orConditions, ...matchDemoFilter },
+    where: {
+      isPublic: true,
+      status: "MATCHED",
+      OR: orConditions,
+      ...matchDemoFilter,
+    },
     take: limit * 2,
     orderBy: { createdAt: "desc" },
     include: {
@@ -326,6 +332,7 @@ async function handleTrending(limit: number) {
   const matches = await prisma.match.findMany({
     where: {
       isPublic: true,
+      status: "MATCHED",
       createdAt: { gte: since },
       ...(Object.keys(agentFilter).length > 0
         ? { agentA: agentFilter, agentB: agentFilter }

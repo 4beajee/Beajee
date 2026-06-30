@@ -15,8 +15,8 @@ export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const currentOwnerId = (session?.user?.id as string) || null;
 
-  const where: Record<string, unknown> = { isPublic: true };
-  if (status && ["MATCHED", "NEGOTIATING", "PROPOSED"].includes(status)) {
+  const where: Record<string, unknown> = { isPublic: true, status: "MATCHED" };
+  if (status === "MATCHED") {
     where.status = status;
   }
   const agentFilter = publicAgentDemoFilter();

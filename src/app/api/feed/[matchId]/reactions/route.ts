@@ -27,7 +27,7 @@ export async function POST(
 
   // Check match exists and is public
   const match = await prisma.match.findFirst({
-    where: { id: matchId, isPublic: true },
+    where: { id: matchId, isPublic: true, status: "MATCHED" },
     select: { id: true },
   });
   if (!match) {

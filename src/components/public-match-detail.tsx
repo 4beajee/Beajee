@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { NegotiationTimeline } from "@/components/negotiation-timeline";
 import { getPublicMatchUrl } from "@/lib/public-url";
 
 interface Participant {
@@ -12,14 +11,6 @@ interface Participant {
   expertise: string[];
   location: string | null;
   networkingGoal: string;
-}
-
-interface LogEntry {
-  role: "initiator" | "responder";
-  displayName: string;
-  type: string;
-  content: string;
-  createdAt: string;
 }
 
 export interface MatchDetail {
@@ -31,7 +22,6 @@ export interface MatchDetail {
   overlapSummary: string;
   outcome: string;
   negotiationSteps: number;
-  negotiationLog: LogEntry[];
   likes: number;
   dislikes: number;
   commentCount: number;
@@ -141,7 +131,6 @@ function ChevronDownIcon({ className }: { className?: string }) {
 export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | null }) {
   const t = useTranslations();
   const [data, setData] = useState(initialData);
-  const [showTimeline, setShowTimeline] = useState(false);
   const [shareToast, setShareToast] = useState(false);
   const [likeAnimating, setLikeAnimating] = useState(false);
   const toastTimeout = useRef<ReturnType<typeof setTimeout>>();
@@ -392,31 +381,6 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
               )}
             </div>
           ))}
-        </div>
-
-        <div className="mt-8 animate-detail-in animate-detail-in-d2">
-          <button
-            onClick={() => setShowTimeline(!showTimeline)}
-            className="w-full flex items-center justify-between px-5 py-4 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl hover:border-[#2a2a2a] transition-all"
-          >
-            <span className="text-sm text-neutral-300">
-              {t("activity.viewAgentDialogue")}
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-neutral-600">
-                {t("activity.steps", { count: data.negotiationSteps })}
-              </span>
-              <ChevronDownIcon
-                className={`text-neutral-500 transition-transform duration-200 ${showTimeline ? "rotate-180" : ""}`}
-              />
-            </div>
-          </button>
-
-          {showTimeline && (
-            <div className="mt-4 animate-detail-in" style={{ animationDelay: "0s", opacity: 1 }}>
-              <NegotiationTimeline logs={data.negotiationLog} />
-            </div>
-          )}
         </div>
 
         <div className="mt-16 text-center animate-detail-in animate-detail-in-d3">

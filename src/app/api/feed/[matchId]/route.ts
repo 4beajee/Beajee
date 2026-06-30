@@ -14,6 +14,7 @@ export async function GET(
       where: {
         id: matchId,
         isPublic: true,
+        status: "MATCHED",
         ...(Object.keys(agentFilter).length > 0
           ? { agentA: agentFilter, agentB: agentFilter }
           : {}),
@@ -22,8 +23,7 @@ export async function GET(
         agentA: { include: { context: true } },
         agentB: { include: { context: true } },
         negotiationLogs: {
-          orderBy: { createdAt: "asc" },
-          include: { agent: true },
+          select: { id: true },
         },
         _count: { select: { comments: true } },
         reactions: true,
@@ -45,15 +45,6 @@ export async function GET(
   else if (match.status === "PROPOSED") outcome = "Proposed — waiting";
   else if (match.status === "DECLINED") outcome = "Declined";
 
-  const negotiationLog = match.negotiationLogs.map((log) => ({
-    role: log.role as "initiator" | "responder",
-    displayName:
-      log.agent.displayName || `Agent #${log.agent.agentId.slice(0, 4)}`,
-    type: log.type,
-    content: log.content,
-    createdAt: log.createdAt.toISOString(),
-  }));
-
   const likes = match.reactions.filter((r) => r.type === "LIKE").length;
   const dislikes = match.reactions.filter((r) => r.type === "DISLIKE").length;
 
@@ -65,8 +56,7 @@ export async function GET(
     participants: [participantA, participantB],
     overlapSummary: match.overlapSummary,
     outcome,
-    negotiationSteps: negotiationLog.length,
-    negotiationLog,
+    negotiationSteps: match.negotiationLogs.length,
     likes,
     dislikes,
     commentCount: match._count.comments,
