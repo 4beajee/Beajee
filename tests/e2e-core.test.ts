@@ -823,6 +823,7 @@ async function main() {
     cancelModelAdviceSession,
   } = await import("../src/lib/services/model-advice");
   const { POST: mcpPost } = await import("../src/app/api/mcp/route");
+  const { GET: soulGet } = await import("../src/app/api/soul/[agentId]/route");
 
   {
     const publishedAlpha = await publishContext("agent_alpha_e2e", {
@@ -1126,6 +1127,32 @@ async function main() {
   }
 
   {
+    const invalidSoulResponse = await soulGet(
+      new NextRequest("http://localhost/api/soul/agent_alpha_e2e", {
+        headers: { authorization: "Bearer invalid-agent-key" },
+      }),
+      { params: Promise.resolve({ agentId: "agent_alpha_e2e" }) }
+    );
+    assert.equal(invalidSoulResponse.status, 401);
+
+    const crossAgentSoulResponse = await soulGet(
+      new NextRequest("http://localhost/api/soul/agent_bravo_e2e", {
+        headers: { authorization: "Bearer gny_alpha_e2e" },
+      }),
+      { params: Promise.resolve({ agentId: "agent_bravo_e2e" }) }
+    );
+    assert.equal(crossAgentSoulResponse.status, 401);
+
+    const ownSoulResponse = await soulGet(
+      new NextRequest("http://localhost/api/soul/agent_alpha_e2e", {
+        headers: { authorization: "Bearer gny_alpha_e2e" },
+      }),
+      { params: Promise.resolve({ agentId: "agent_alpha_e2e" }) }
+    );
+    assert.equal(ownSoulResponse.status, 200);
+    assert.equal(ownSoulResponse.headers.get("cache-control"), "no-store, private");
+    assert.match(await ownSoulResponse.text(), /agent_alpha_e2e/);
+
     const unrelated = await initiateNegotiation(
       "agent_bravo_e2e",
       "agent_delta_e2e",
@@ -1267,7 +1294,7 @@ async function main() {
     assert.equal(mismatchBody.result.isError, true);
     assert.match(mismatchBody.result.content[0].text, /Identity mismatch/);
 
-    ok("MCP API binds privileged actions to the authenticated agent and returns structured RBAC errors");
+    ok("agent instructions and privileged MCP actions are bound to the authenticated agent");
   }
 
   assert.equal(

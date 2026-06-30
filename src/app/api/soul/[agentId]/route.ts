@@ -8,6 +8,14 @@ import {
 import { personalizeAgentInstructions } from "@/lib/onboarding/agent-instructions";
 import fs from "fs";
 import path from "path";
+import { getAuthenticatedOwner } from "@/lib/auth";
+import { authenticateAgent } from "@/lib/mcp/auth";
+
+function getBearerToken(request: NextRequest) {
+  const header = request.headers.get("authorization") ?? "";
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  return match?.[1]?.trim() ?? null;
+}
 
 // GET /api/soul/[agentId] — serve personalized instruction file for any platform
 export async function GET(
@@ -15,6 +23,18 @@ export async function GET(
   { params }: { params: Promise<{ agentId: string }> }
 ) {
   const { agentId } = await params;
+
+  const bearerToken = getBearerToken(request);
+  const authenticatedAgent = bearerToken
+    ? await authenticateAgent(bearerToken)
+    : null;
+  const authenticatedOwner = bearerToken
+    ? null
+    : await getAuthenticatedOwner();
+
+  if (!authenticatedAgent && !authenticatedOwner) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   let agent;
   try {
@@ -28,6 +48,14 @@ export async function GET(
 
   if (!agent) {
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+  }
+
+  const authorized =
+    authenticatedAgent?.id === agent.id ||
+    authenticatedOwner?.ownerId === agent.ownerId;
+
+  if (!authorized) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // Determine platform — fall back to open_claw
@@ -64,6 +92,8 @@ export async function GET(
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
       "Content-Disposition": `attachment; filename="${fileName}"`,
+      "Cache-Control": "no-store, private",
+      "Referrer-Policy": "no-referrer",
     },
   });
 }
