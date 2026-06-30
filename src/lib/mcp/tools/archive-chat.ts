@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const archiveChatTool = {
   name: "archive_chat" as const,
@@ -10,14 +11,11 @@ export const archiveChatTool = {
         type: "string",
         description: "The chat ID to archive",
       },
-      owner_id: {
-        type: "string",
-        description: "The owner ID requesting the archive",
-      },
     },
-    required: ["chat_id", "owner_id"],
+    required: ["chat_id"],
   },
-  handler: async (args: { chat_id: string; owner_id: string }) => {
+  handler: async (args: { chat_id: string }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
     const chat = await prisma.chat.findUnique({
       where: { id: args.chat_id },
       include: {
@@ -38,8 +36,8 @@ export const archiveChatTool = {
     }
 
     const isParticipant =
-      chat.match.agentA.owner.id === args.owner_id ||
-      chat.match.agentB.owner.id === args.owner_id;
+      chat.match.agentA.owner.id === authenticated.ownerId ||
+      chat.match.agentB.owner.id === authenticated.ownerId;
 
     if (!isParticipant) {
       return {

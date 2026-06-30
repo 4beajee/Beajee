@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const blockUserTool = {
   name: "block_user" as const,
@@ -8,20 +9,21 @@ export const blockUserTool = {
   inputSchema: {
     type: "object" as const,
     properties: {
-      owner_id: {
-        type: "string",
-        description: "The owner ID who is blocking",
-      },
       blocked_owner_id: {
         type: "string",
         description: "The owner ID to block",
       },
     },
-    required: ["owner_id", "blocked_owner_id"],
+    required: ["blocked_owner_id"],
   },
-  handler: async (args: { owner_id: string; blocked_owner_id: string }) => {
+  handler: async (
+    args: { blocked_owner_id: string },
+    actor?: McpActor
+  ) => {
+    const authenticated = requireMcpActor(actor);
+    const ownerId = authenticated.ownerId;
     const [blocker, blocked] = await Promise.all([
-      prisma.owner.findUnique({ where: { id: args.owner_id }, include: { agent: true } }),
+      prisma.owner.findUnique({ where: { id: ownerId }, include: { agent: true } }),
       prisma.owner.findUnique({ where: { id: args.blocked_owner_id }, include: { agent: true } }),
     ]);
 
@@ -32,7 +34,7 @@ export const blockUserTool = {
       };
     }
 
-    if (args.owner_id === args.blocked_owner_id) {
+    if (ownerId === args.blocked_owner_id) {
       return {
         content: [{ type: "text" as const, text: JSON.stringify({ error: "Cannot block yourself" }) }],
         isError: true,
@@ -43,12 +45,12 @@ export const blockUserTool = {
     await prisma.block.upsert({
       where: {
         blockerId_blockedId: {
-          blockerId: args.owner_id,
+          blockerId: ownerId,
           blockedId: args.blocked_owner_id,
         },
       },
       create: {
-        blockerId: args.owner_id,
+        blockerId: ownerId,
         blockedId: args.blocked_owner_id,
       },
       update: {},

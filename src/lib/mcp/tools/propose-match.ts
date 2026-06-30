@@ -1,4 +1,5 @@
 import { proposeMatch } from "@/lib/services/negotiation";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const proposeMatchTool = {
   name: "propose_match" as const,
@@ -13,15 +14,12 @@ export const proposeMatchTool = {
         type: "string",
         description: "The match ID",
       },
-      agent_id: {
-        type: "string",
-        description: "Your agent ID (must be part of this match)",
-      },
     },
-    required: ["match_id", "agent_id"],
+    required: ["match_id"],
   },
-  handler: async (args: { match_id: string; agent_id: string }) => {
-    const result = await proposeMatch(args.match_id);
+  handler: async (args: { match_id: string }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
+    const result = await proposeMatch(args.match_id, authenticated.externalAgentId);
     return {
       content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
     };

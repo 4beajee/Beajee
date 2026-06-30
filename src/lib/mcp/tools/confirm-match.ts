@@ -1,4 +1,5 @@
 import { confirmMatch } from "@/lib/services/negotiation";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const confirmMatchTool = {
   name: "confirm_match" as const,
@@ -12,15 +13,12 @@ export const confirmMatchTool = {
         type: "string",
         description: "The match ID",
       },
-      owner_id: {
-        type: "string",
-        description: "The owner's ID who is confirming",
-      },
     },
-    required: ["match_id", "owner_id"],
+    required: ["match_id"],
   },
-  handler: async (args: { match_id: string; owner_id: string }) => {
-    const result = await confirmMatch(args.match_id, args.owner_id);
+  handler: async (args: { match_id: string }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
+    const result = await confirmMatch(args.match_id, authenticated.ownerId);
     return {
       content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
     };

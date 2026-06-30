@@ -1126,6 +1126,80 @@ async function main() {
   }
 
   {
+    const unrelated = await initiateNegotiation(
+      "agent_bravo_e2e",
+      "agent_delta_e2e",
+      "Bravo and Delta share a concrete GTM operations problem."
+    );
+    const unrelatedOverlap =
+      "Bravo's distribution experiments complement Delta's GTM operations playbooks.";
+    await negotiate(
+      unrelated.matchId,
+      "agent_bravo_e2e",
+      "accept",
+      unrelatedOverlap,
+      "Delta can operationalize Bravo's distribution experiments."
+    );
+    await negotiate(
+      unrelated.matchId,
+      "agent_delta_e2e",
+      "accept",
+      unrelatedOverlap,
+      "Bravo can validate Delta's operating playbooks with live experiments."
+    );
+
+    const unrelatedProposeResponse = await mcpPost(
+      new NextRequest("http://localhost/api/mcp", {
+        method: "POST",
+        headers: { authorization: "Bearer gny_alpha_e2e" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "tools/call",
+          params: {
+            name: "propose_match",
+            arguments: {
+              match_id: unrelated.matchId,
+              agent_id: "agent_alpha_e2e",
+            },
+          },
+          id: 4,
+        }),
+      })
+    );
+    const unrelatedProposeBody = await responseJson(unrelatedProposeResponse);
+    assert.equal(unrelatedProposeBody.result.isError, true);
+    assert.match(unrelatedProposeBody.result.content[0].text, /not part of this match/);
+
+    await proposeMatch(unrelated.matchId, "agent_bravo_e2e");
+
+    const spoofedOwnerResponse = await mcpPost(
+      new NextRequest("http://localhost/api/mcp", {
+        method: "POST",
+        headers: { authorization: "Bearer gny_alpha_e2e" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "tools/call",
+          params: {
+            name: "confirm_match",
+            arguments: {
+              match_id: unrelated.matchId,
+              agent_id: "agent_alpha_e2e",
+              owner_id: bravo.owner.id,
+            },
+          },
+          id: 5,
+        }),
+      })
+    );
+    const spoofedOwnerBody = await responseJson(spoofedOwnerResponse);
+    assert.equal(spoofedOwnerBody.result.isError, true);
+    assert.match(spoofedOwnerBody.result.content[0].text, /not part of this match/);
+    const unrelatedMatch = prisma.__db.matches.find(
+      (match: Row) => match.id === unrelated.matchId
+    );
+    assert.equal(unrelatedMatch?.confirmedByA, false);
+    assert.equal(unrelatedMatch?.confirmedByB, false);
+
     const unauth = await mcpPost(
       new NextRequest("http://localhost/api/mcp", {
         method: "POST",
@@ -1193,7 +1267,7 @@ async function main() {
     assert.equal(mismatchBody.result.isError, true);
     assert.match(mismatchBody.result.content[0].text, /Identity mismatch/);
 
-    ok("MCP API returns structured JSON-RPC envelopes for auth, discovery, and RBAC errors");
+    ok("MCP API binds privileged actions to the authenticated agent and returns structured RBAC errors");
   }
 
   assert.equal(

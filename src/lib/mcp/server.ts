@@ -29,6 +29,7 @@ import { setSchedulingUrlTool } from "./tools/set-scheduling-url";
 import { answerContextQuestionTool } from "./tools/answer-context-question";
 import { confirmContextQuestionBatchTool } from "./tools/confirm-context-question-batch";
 import { setSocialProfilesTool } from "./tools/set-social-profiles";
+import type { McpActor } from "./actor";
 
 const tools = [
   publishContextTool,
@@ -59,7 +60,7 @@ const tools = [
   setSocialProfilesTool,
 ];
 
-export function createMcpServer() {
+export function createMcpServer(actor?: McpActor) {
   const server = new Server(
     {
       name: "beajee",
@@ -100,7 +101,7 @@ export function createMcpServer() {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await tool.handler(args as any);
+      return await tool.handler(args as any, actor as any);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return {

@@ -342,7 +342,7 @@ export async function negotiate(
   };
 }
 
-export async function proposeMatch(matchId: string) {
+export async function proposeMatch(matchId: string, proposingAgentExternalId?: string) {
   const match = await prisma.match.findUnique({
     where: { id: matchId },
     include: {
@@ -352,6 +352,13 @@ export async function proposeMatch(matchId: string) {
   });
 
   if (!match) throw new Error(`Match not found: ${matchId}`);
+  if (
+    proposingAgentExternalId &&
+    match.agentA.agentId !== proposingAgentExternalId &&
+    match.agentB.agentId !== proposingAgentExternalId
+  ) {
+    throw new Error(`Agent ${proposingAgentExternalId} is not part of this match`);
+  }
   if (match.status !== "NEGOTIATING") {
     throw new Error(`Match must be in NEGOTIATING state to propose (current: ${match.status})`);
   }

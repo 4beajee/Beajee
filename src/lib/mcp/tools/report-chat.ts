@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const reportChatTool = {
   name: "report_chat" as const,
@@ -10,18 +11,18 @@ export const reportChatTool = {
         type: "string",
         description: "The chat ID to report",
       },
-      reporter_id: {
-        type: "string",
-        description: "The owner ID submitting the report",
-      },
       reason: {
         type: "string",
         description: "Reason for the report",
       },
     },
-    required: ["chat_id", "reporter_id", "reason"],
+    required: ["chat_id", "reason"],
   },
-  handler: async (args: { chat_id: string; reporter_id: string; reason: string }) => {
+  handler: async (
+    args: { chat_id: string; reason: string },
+    actor?: McpActor
+  ) => {
+    const authenticated = requireMcpActor(actor);
     const chat = await prisma.chat.findUnique({
       where: { id: args.chat_id },
       include: {
@@ -42,8 +43,8 @@ export const reportChatTool = {
     }
 
     const isParticipant =
-      chat.match.agentA.owner.id === args.reporter_id ||
-      chat.match.agentB.owner.id === args.reporter_id;
+      chat.match.agentA.owner.id === authenticated.ownerId ||
+      chat.match.agentB.owner.id === authenticated.ownerId;
 
     if (!isParticipant) {
       return {
@@ -55,7 +56,7 @@ export const reportChatTool = {
     const report = await prisma.report.create({
       data: {
         chatId: args.chat_id,
-        reporterId: args.reporter_id,
+        reporterId: authenticated.ownerId,
         reason: args.reason,
       },
     });

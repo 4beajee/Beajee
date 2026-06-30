@@ -1,4 +1,5 @@
 import { markDormant } from "@/lib/services/negotiation";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const markDormantTool = {
   name: "mark_dormant" as const,
@@ -12,15 +13,12 @@ export const markDormantTool = {
         type: "string",
         description: "The match ID",
       },
-      owner_id: {
-        type: "string",
-        description: "The owner's ID who is declining",
-      },
     },
-    required: ["match_id", "owner_id"],
+    required: ["match_id"],
   },
-  handler: async (args: { match_id: string; owner_id: string }) => {
-    const result = await markDormant(args.match_id, args.owner_id);
+  handler: async (args: { match_id: string }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
+    const result = await markDormant(args.match_id, authenticated.ownerId);
     return {
       content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
     };

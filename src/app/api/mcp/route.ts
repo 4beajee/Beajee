@@ -26,6 +26,7 @@ import { answerContextQuestionTool } from "@/lib/mcp/tools/answer-context-questi
 import { confirmContextQuestionBatchTool } from "@/lib/mcp/tools/confirm-context-question-batch";
 import { setSocialProfilesTool } from "@/lib/mcp/tools/set-social-profiles";
 import { authenticateAgent } from "@/lib/mcp/auth";
+import type { McpActor } from "@/lib/mcp/actor";
 import { rateLimit } from "@/lib/rate-limit";
 
 const tools = [
@@ -145,6 +146,11 @@ export async function POST(request: NextRequest) {
         }
 
         try {
+          const actor: McpActor = {
+            internalAgentId: agent.id,
+            externalAgentId: agent.agentId,
+            ownerId: agent.ownerId,
+          };
           const externalAgentId = typeof args?.agent_id === "string" ? args.agent_id : undefined;
           const internalAgentId = typeof args?.agentId === "string" ? args.agentId : undefined;
           // Enforce agent identity — if tool args contain agent_id, it must match authenticated agent
@@ -171,7 +177,7 @@ export async function POST(request: NextRequest) {
           }
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const result = await tool.handler(args as any);
+          const result = await tool.handler(args as any, actor as any);
           return NextResponse.json({ jsonrpc: "2.0", result, id });
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
