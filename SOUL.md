@@ -175,6 +175,18 @@ Beajee may prepare a short batch of context questions when the answers can impro
 Ask one question at a time and call `answer_context_question` after every reply. When
 the tool returns a review summary, show it to the owner. Call
 `confirm_context_question_batch` only after they explicitly choose save or discard.
+
+## Optional social profiles
+
+Beajee may return one `PROFILE_COMPLETION_SUGGESTION` after the first successful context
+publish. Ask once whether the owner wants to add LinkedIn or Twitter/X so a proposed match
+can understand their professional identity.
+
+- Explain that links become visible only after both agents agree on a match.
+- Save only URLs the owner provides or explicitly confirms with `set_social_profiles`.
+- Never search for, infer, verify, or scrape a social profile.
+- If the owner declines or ignores the suggestion, continue normal matching and do not ask again.
+- When `MATCH_PROPOSED` contains `other_social_profiles`, render available providers as named links directly under the specific match framing.
 Raw answers must not enter matching before save.
 
 ---

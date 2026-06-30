@@ -3,6 +3,7 @@ generator client {
   previewFeatures = ["postgresqlExtensions"]
   binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
 }
+
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
@@ -11,38 +12,42 @@ datasource db {
 }
 
 model Owner {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  name            String?
-  passwordHash    String?   @map("password_hash")
-  emailVerified   DateTime? @map("email_verified")
-  image           String?
-  networkingGoal  String?   @map("networking_goal")
-  countryCode     String?   @map("country_code")
-  privacyConsent  Boolean   @default(false) @map("privacy_consent")
-  researchConsent Boolean   @default(false) @map("research_consent") // Purpose B — separate GDPR basis
-  excludedTopics  String[]  @default([]) @map("excluded_topics")
-  agentPlatform   String?   @map("agent_platform") // Runtime key from src/lib/agent-platform.ts
-  schedulingUrl   String?   @map("scheduling_url") // Cal.com or Calendly booking page
-  telegramId      String?   @unique @map("telegram_id")
-  onboarded       Boolean   @default(false)
+  id                              String    @id @default(cuid())
+  email                           String    @unique
+  name                            String?
+  passwordHash                    String?   @map("password_hash")
+  emailVerified                   DateTime? @map("email_verified")
+  image                           String?
+  networkingGoal                  String?   @map("networking_goal")
+  countryCode                     String?   @map("country_code")
+  privacyConsent                  Boolean   @default(false) @map("privacy_consent")
+  researchConsent                 Boolean   @default(false) @map("research_consent") // Purpose B — separate GDPR basis
+  excludedTopics                  String[]  @default([]) @map("excluded_topics")
+  agentPlatform                   String?   @map("agent_platform") // Runtime key from src/lib/agent-platform.ts
+  schedulingUrl                   String?   @map("scheduling_url") // Cal.com or Calendly booking page
+  linkedinUrl                     String?   @map("linkedin_url")
+  twitterUrl                      String?   @map("twitter_url")
+  socialProfilesPromptedAt        DateTime? @map("social_profiles_prompted_at")
+  socialProfilesPromptDismissedAt DateTime? @map("social_profiles_prompt_dismissed_at")
+  telegramId                      String?   @unique @map("telegram_id")
+  onboarded                       Boolean   @default(false)
 
   // Demo network — simulated accounts driven by the server-side responder.
   // Filtered out of production analytics and reputation leaderboards.
   isDemo Boolean @default(false) @map("is_demo")
 
-  createdAt                DateTime               @default(now()) @map("created_at")
-  agent                    Agent?
-  accounts                 Account[]
-  consentLogs              ConsentLog[]
-  blockedUsers             Block[]                @relation("Blocker")
-  blockedBy                Block[]                @relation("Blocked")
-  reports                  Report[]
-  matchReactions           MatchReaction[]
-  matchComments            MatchComment[]
-  telegramTopics           TelegramTopic[]
-  personalConnectors       PersonalConnector[]
-  contextQuestionBatches   ContextQuestionBatch[]
+  createdAt              DateTime               @default(now()) @map("created_at")
+  agent                  Agent?
+  accounts               Account[]
+  consentLogs            ConsentLog[]
+  blockedUsers           Block[]                @relation("Blocker")
+  blockedBy              Block[]                @relation("Blocked")
+  reports                Report[]
+  matchReactions         MatchReaction[]
+  matchComments          MatchComment[]
+  telegramTopics         TelegramTopic[]
+  personalConnectors     PersonalConnector[]
+  contextQuestionBatches ContextQuestionBatch[]
 
   @@index([isDemo])
   @@map("owners")
@@ -63,10 +68,10 @@ model TelegramTopic {
 }
 
 enum TelegramTopicType {
-  MATCHES    @map("matches")
-  DATES      @map("dates")
-  SETTINGS   @map("settings")
-  AGENT_LOG  @map("agent_log")
+  MATCHES   @map("matches")
+  DATES     @map("dates")
+  SETTINGS  @map("settings")
+  AGENT_LOG @map("agent_log")
 }
 
 model Account {
@@ -147,11 +152,11 @@ model Agent {
   demoPersona    Json?     @map("demo_persona")
   lastDemoTickAt DateTime? @map("last_demo_tick_at")
 
-  context         AgentContext?
-  beacons         Beacon[]
-  matchesAsA      Match[]               @relation("AgentA")
-  matchesAsB      Match[]               @relation("AgentB")
-  negotiationLogs NegotiationLog[]
+  context                AgentContext?
+  beacons                Beacon[]
+  matchesAsA             Match[]                @relation("AgentA")
+  matchesAsB             Match[]                @relation("AgentB")
+  negotiationLogs        NegotiationLog[]
   contextQuestionBatches ContextQuestionBatch[]
 
   @@index([isDemo])
@@ -215,12 +220,10 @@ model PersonalConnector {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-
   @@unique([ownerId, type])
   @@index([type, enabled])
   @@map("personal_connectors")
 }
-
 
 model Beacon {
   id                   String                       @id @default(cuid())
@@ -307,15 +310,15 @@ model MatchCall {
 }
 
 model MatchCallProposal {
-  id                String                    @id @default(cuid())
-  matchCallId       String                    @map("match_call_id")
-  matchCall         MatchCall                 @relation(fields: [matchCallId], references: [id], onDelete: Cascade)
-  proposedByOwnerId String                    @map("proposed_by_owner_id")
-  slotStart         DateTime                  @map("slot_start")
-  slotEnd           DateTime                  @map("slot_end")
-  status            MatchCallProposalStatus   @default(PENDING)
-  confirmedAt       DateTime?                 @map("confirmed_at")
-  createdAt         DateTime                  @default(now()) @map("created_at")
+  id                String                  @id @default(cuid())
+  matchCallId       String                  @map("match_call_id")
+  matchCall         MatchCall               @relation(fields: [matchCallId], references: [id], onDelete: Cascade)
+  proposedByOwnerId String                  @map("proposed_by_owner_id")
+  slotStart         DateTime                @map("slot_start")
+  slotEnd           DateTime                @map("slot_end")
+  status            MatchCallProposalStatus @default(PENDING)
+  confirmedAt       DateTime?               @map("confirmed_at")
+  createdAt         DateTime                @default(now()) @map("created_at")
 
   @@index([matchCallId, status])
   @@map("match_call_proposals")
@@ -665,16 +668,16 @@ model ContextQuestion {
 // Append-only analytics lifecycle ledger.
 // Used for precise admin dashboard metrics without scanning business tables heuristically.
 model AnalyticsEvent {
-  id                String   @id @default(cuid())
-  type              String
-  ownerId           String?  @map("owner_id")
-  agentId           String?  @map("agent_id")
-  matchId           String?  @map("match_id")
-  beaconId          String?  @map("beacon_id")
-  chatId            String?  @map("chat_id")
-  adviceSessionId   String?  @map("advice_session_id")
-  metadata          Json?
-  createdAt         DateTime @default(now()) @map("created_at")
+  id              String   @id @default(cuid())
+  type            String
+  ownerId         String?  @map("owner_id")
+  agentId         String?  @map("agent_id")
+  matchId         String?  @map("match_id")
+  beaconId        String?  @map("beacon_id")
+  chatId          String?  @map("chat_id")
+  adviceSessionId String?  @map("advice_session_id")
+  metadata        Json?
+  createdAt       DateTime @default(now()) @map("created_at")
 
   @@index([type, createdAt])
   @@index([ownerId, createdAt])
@@ -688,22 +691,22 @@ model AnalyticsEvent {
 
 // Precise compute ledger for production and demo cost tracking.
 model ComputeUsage {
-  id                String   @id @default(cuid())
-  category          String
-  provider          String
-  model             String
-  operation         String
-  ownerId           String?  @map("owner_id")
-  agentId           String?  @map("agent_id")
-  matchId           String?  @map("match_id")
-  beaconId          String?  @map("beacon_id")
-  chatId            String?  @map("chat_id")
-  adviceSessionId   String?  @map("advice_session_id")
-  tokensInput       Int      @default(0) @map("tokens_input")
-  tokensOutput      Int      @default(0) @map("tokens_output")
-  costUsd           Float    @default(0) @map("cost_usd")
-  metadata          Json?
-  createdAt         DateTime @default(now()) @map("created_at")
+  id              String   @id @default(cuid())
+  category        String
+  provider        String
+  model           String
+  operation       String
+  ownerId         String?  @map("owner_id")
+  agentId         String?  @map("agent_id")
+  matchId         String?  @map("match_id")
+  beaconId        String?  @map("beacon_id")
+  chatId          String?  @map("chat_id")
+  adviceSessionId String?  @map("advice_session_id")
+  tokensInput     Int      @default(0) @map("tokens_input")
+  tokensOutput    Int      @default(0) @map("tokens_output")
+  costUsd         Float    @default(0) @map("cost_usd")
+  metadata        Json?
+  createdAt       DateTime @default(now()) @map("created_at")
 
   @@index([category, createdAt])
   @@index([operation, createdAt])

@@ -45,7 +45,8 @@ Registered tools:
 - delivery and chat: `check_in`, `ack_inbox`, `send_chat_message`,
   `answer_context_question`, `confirm_context_question_batch`,
   `archive_chat`, `report_chat`, `block_user`
-- trust and scheduling: `get_reputation`, `set_scheduling_url`,
+- trust, identity, and scheduling: `get_reputation`, `set_scheduling_url`,
+  `set_social_profiles`,
   `request_zoom_call`, `find_call_slots`, `propose_call_time`,
   `confirm_call_time`, `get_call_status`
 
@@ -60,6 +61,8 @@ Tool schemas are public contracts and compatibility-sensitive.
 - Both owners confirm before chat opens.
 - Beacons deactivate on significant context or networking-goal change.
 - “Not now” moves a match to dormant without reminders.
+- Owner-confirmed LinkedIn and Twitter/X links are presentation-only: they appear from
+  `PROPOSED` onward and never enter context indexing, discovery, or negotiation.
 
 ## Database Changes
 

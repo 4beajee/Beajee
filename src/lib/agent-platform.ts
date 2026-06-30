@@ -68,3 +68,12 @@ export function getContextQuestionDeliveryMode(
 export function supportsNativeContextQuestions(platform: string | null | undefined): boolean {
   return !!platform && NATIVE_CONTEXT_QUESTION_PLATFORM_SET.has(platform);
 }
+
+export function supportsNativeProfilePrompts(platform: string | null | undefined): boolean {
+  if (!platform || platform === "codex" || platform === "claude_code") return false;
+  return NATIVE_CONTEXT_QUESTION_PLATFORM_SET.has(platform) || [
+    "custom",
+    "manus",
+    "claude_desktop",
+  ].includes(platform);
+}

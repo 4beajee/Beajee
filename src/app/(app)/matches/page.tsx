@@ -32,6 +32,10 @@ interface MatchItem {
     currentWork: string | null;
     expertise: string[] | null;
     location: string | null;
+    socialProfiles: {
+      linkedin: { url: string; label: string } | null;
+      twitter: { url: string; label: string } | null;
+    };
   };
   chatId: string | null;
   proposedAt: string | null;
@@ -217,6 +221,25 @@ export default function MatchesPage() {
               )}
           </div>
 
+          {(match.otherPerson.socialProfiles.linkedin || match.otherPerson.socialProfiles.twitter) && (
+            <div className="mt-5 flex flex-wrap gap-2 border-t border-white/[0.05] pt-4">
+              {match.otherPerson.socialProfiles.linkedin && (
+                <SocialProfileBadge
+                  provider="linkedin"
+                  url={match.otherPerson.socialProfiles.linkedin.url}
+                  label={match.otherPerson.socialProfiles.linkedin.label}
+                />
+              )}
+              {match.otherPerson.socialProfiles.twitter && (
+                <SocialProfileBadge
+                  provider="twitter"
+                  url={match.otherPerson.socialProfiles.twitter.url}
+                  label={match.otherPerson.socialProfiles.twitter.label}
+                />
+              )}
+            </div>
+          )}
+
           {match.schedulingRole === "guest" && match.partnerSchedulingUrl && (
             <div className="mt-5">
               <ScheduleCallButton
@@ -268,6 +291,36 @@ export default function MatchesPage() {
         </Surface>
       ))}
     </div>
+  );
+}
+
+function SocialProfileBadge({
+  provider,
+  url,
+  label,
+}: {
+  provider: "linkedin" | "twitter";
+  url: string;
+  label: string;
+}) {
+  const isLinkedIn = provider === "linkedin";
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cx(
+        "inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 text-xs font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
+        isLinkedIn ? "bg-[#0A66C2]" : "bg-[#1D9BF0]"
+      )}
+      aria-label={`Open ${isLinkedIn ? "LinkedIn" : "Twitter / X"} profile ${label}`}
+    >
+      <span className="grid h-5 w-5 place-items-center rounded bg-white/15 text-[10px] font-bold">
+        {isLinkedIn ? "in" : "𝕏"}
+      </span>
+      {label}
+      <span aria-hidden="true">↗</span>
+    </a>
   );
 }
 

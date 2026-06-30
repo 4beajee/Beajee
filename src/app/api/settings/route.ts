@@ -11,6 +11,8 @@ import { getWakeWebhookUrlError } from "@/lib/wake-webhook";
 import { getWakeStreamConnectionCount, hasLiveWakeStream } from "@/lib/services/agent-wake-stream";
 import { ZodError } from "zod";
 import { getContextQuestionDeliveryMode } from "@/lib/agent-platform";
+import { socialProfilesFromOwner } from "@/lib/social-profile";
+import { setOwnerSocialProfiles } from "@/lib/services/owner-social-profile";
 
 // GET /api/settings — load current settings for the authenticated owner
 export async function GET() {
@@ -68,6 +70,7 @@ export async function GET() {
       wakeDeliveryMode,
       privacySync,
       schedulingUrl: owner.schedulingUrl,
+      socialProfiles: socialProfilesFromOwner(owner),
       telegramConnected: !!owner.telegramId,
       contextQuestionDelivery: getContextQuestionDeliveryMode(
         owner.agentPlatform,
@@ -159,6 +162,14 @@ export async function PATCH(request: NextRequest) {
         data: ownerUpdate,
       });
     }
+
+    const socialProfiles = validated.socialProfiles !== undefined
+      ? await setOwnerSocialProfiles({
+        ownerId: auth.ownerId,
+        patch: validated.socialProfiles,
+        source: "settings",
+      })
+      : undefined;
 
     if (validated.excludedTopics !== undefined && previousOwner) {
       await syncPrivacyTopicsForAgent({
@@ -257,8 +268,11 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, ...(socialProfiles ? { socialProfiles } : {}) });
   } catch (error) {
+    if (error instanceof Error && /LinkedIn|Twitter\/X|Social profile/.test(error.message)) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return safeErrorResponse(error, "Failed to update settings");
   }
 }

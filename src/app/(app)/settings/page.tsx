@@ -95,6 +95,7 @@ interface Settings {
   wakeStreamLastError: string | null;
   wakeDeliveryMode: "stream" | "webhook" | "polling";
   schedulingUrl: string | null;
+  socialProfiles: SocialProfiles;
   telegramConnected: boolean;
   contextQuestionDelivery: "telegram" | "native_agent" | "telegram_required";
   privacySync: {
@@ -112,6 +113,17 @@ interface Settings {
     recommendedAdditions: string[];
     recommendedRemovals: string[];
   } | null;
+}
+
+interface SocialProfileLink {
+  provider: "linkedin" | "twitter";
+  url: string;
+  label: string;
+}
+
+interface SocialProfiles {
+  linkedin: SocialProfileLink | null;
+  twitter: SocialProfileLink | null;
 }
 
 /* ── Page ── */
@@ -198,6 +210,11 @@ export default function SettingsPage() {
       <SchedulingUrlSection
         schedulingUrl={settings.schedulingUrl}
         onUpdate={(v) => setSettings({ ...settings, schedulingUrl: v })}
+      />
+
+      <SocialProfilesSection
+        socialProfiles={settings.socialProfiles}
+        onUpdate={(socialProfiles) => setSettings({ ...settings, socialProfiles })}
       />
 
       <Section title="Context check-ins">
@@ -701,6 +718,95 @@ function SchedulingUrlSection({
         <SaveStatus saving={saving} saved={saved} err={err} />
       </div>
     </Section>
+  );
+}
+
+function SocialProfilesSection({
+  socialProfiles,
+  onUpdate,
+}: {
+  socialProfiles: SocialProfiles;
+  onUpdate: (value: SocialProfiles) => void;
+}) {
+  const t = useTranslations();
+  const { saving, saved, err, save } = useSave();
+  const [linkedin, setLinkedin] = useState(socialProfiles.linkedin?.url ?? "");
+  const [twitter, setTwitter] = useState(socialProfiles.twitter?.url ?? "");
+
+  const submit = async () => {
+    const result = await save("/api/settings", {
+      socialProfiles: {
+        linkedin: linkedin.trim() || null,
+        twitter: twitter.trim() || null,
+      },
+    });
+    if (result?.socialProfiles) {
+      onUpdate(result.socialProfiles);
+      setLinkedin(result.socialProfiles.linkedin?.url ?? "");
+      setTwitter(result.socialProfiles.twitter?.url ?? "");
+    }
+  };
+
+  return (
+    <Section title={t("settings.socialProfilesTitle")}>
+      <p className={cx(sectionDescriptionClass, "mb-4")}>{t("settings.socialProfilesDesc")}</p>
+      <div className="space-y-4">
+        <SocialProfileField
+          provider="linkedin"
+          label="LinkedIn"
+          value={linkedin}
+          onChange={setLinkedin}
+          placeholder="https://linkedin.com/in/you"
+        />
+        <SocialProfileField
+          provider="twitter"
+          label="Twitter / X"
+          value={twitter}
+          onChange={setTwitter}
+          placeholder="https://x.com/you"
+        />
+      </div>
+      <div className="mt-4 flex items-center gap-3">
+        <button type="button" onClick={submit} disabled={saving} className={PRIMARY_BUTTON_SM}>
+          {t("settings.saveChanges")}
+        </button>
+        <SaveStatus saving={saving} saved={saved} err={err} />
+      </div>
+    </Section>
+  );
+}
+
+function SocialProfileField({
+  provider,
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  provider: "linkedin" | "twitter";
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  const accent = provider === "linkedin" ? "bg-[#0A66C2]" : "bg-[#1D9BF0]";
+  return (
+    <label className="block">
+      <span className="mb-2 flex items-center gap-2 text-sm font-medium text-neutral-200">
+        <span className={cx("grid h-6 w-6 place-items-center rounded-md text-[11px] font-bold text-white", accent)}>
+          {provider === "linkedin" ? "in" : "𝕏"}
+        </span>
+        {label}
+      </span>
+      <input
+        className={INPUT}
+        type="url"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        autoComplete="url"
+      />
+    </label>
   );
 }
 

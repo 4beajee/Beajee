@@ -13,6 +13,11 @@ import {
   resolveInitiatorAndRecipient,
   resolveSchedulingRoles,
 } from "@/lib/services/scheduling-match";
+import {
+  buildSocialProfileDeliveryPayload,
+  canRevealMatchSocialProfiles,
+} from "@/lib/services/match-card-view";
+import { socialProfilesFromOwner } from "@/lib/social-profile";
 
 /**
  * NegotiationFSM — state machine for agent-to-agent match negotiation
@@ -471,6 +476,8 @@ export async function proposeMatch(matchId: string) {
         overlap_summary: match.overlapSummary,
         proposed_at: new Date().toISOString(),
         next_action: "deliver_intro_and_optional_booking_link",
+        delivery_hint: ownerA.telegramId ? "telegram_primary" : "deliver_to_owner",
+        ...buildSocialProfileDeliveryPayload(ownerB),
         ...ownerAScheduling,
       },
     }),
@@ -488,6 +495,8 @@ export async function proposeMatch(matchId: string) {
         overlap_summary: match.overlapSummary,
         proposed_at: new Date().toISOString(),
         next_action: "deliver_intro_and_optional_booking_link",
+        delivery_hint: ownerB.telegramId ? "telegram_primary" : "deliver_to_owner",
+        ...buildSocialProfileDeliveryPayload(ownerA),
         ...ownerBScheduling,
       },
     }),
@@ -517,6 +526,8 @@ export async function proposeMatch(matchId: string) {
       framing: match.framingForA,
       overlapSummary: match.overlapSummary,
       similarity: match.matchSimilarity,
+      otherOwnerImage: ownerB.image,
+      socialProfiles: socialProfilesFromOwner(ownerB),
     }),
     sendTelegramMatchCard({
       ownerId: ownerB.id,
@@ -526,6 +537,8 @@ export async function proposeMatch(matchId: string) {
       framing: match.framingForB,
       overlapSummary: match.overlapSummary,
       similarity: match.matchSimilarity,
+      otherOwnerImage: ownerA.image,
+      socialProfiles: socialProfilesFromOwner(ownerA),
     }),
   ]).catch(() => undefined);
 
@@ -683,6 +696,7 @@ export async function confirmMatch(matchId: string, ownerId: string) {
           other_display_name: confirmation.agentB.displayName,
           other_owner_name: ownerB.name,
           overlap_summary: confirmation.overlapSummary,
+          ...buildSocialProfileDeliveryPayload(ownerB),
           matched_at: matchedAt,
         },
       }),
@@ -698,6 +712,7 @@ export async function confirmMatch(matchId: string, ownerId: string) {
           other_display_name: confirmation.agentA.displayName,
           other_owner_name: ownerA.name,
           overlap_summary: confirmation.overlapSummary,
+          ...buildSocialProfileDeliveryPayload(ownerA),
           matched_at: matchedAt,
         },
       }),
@@ -811,6 +826,9 @@ export async function getMatches(agentExternalId: string) {
         currentWork: otherAgent.context?.currentWork,
         expertise: otherAgent.context?.expertise,
         location: otherAgent.context?.location,
+        socialProfiles: canRevealMatchSocialProfiles(m.status)
+          ? socialProfilesFromOwner(otherAgent.owner)
+          : { linkedin: null, twitter: null },
       },
       confirmedByMe: isAgentA ? m.confirmedByA : m.confirmedByB,
       confirmedByOther: isAgentA ? m.confirmedByB : m.confirmedByA,

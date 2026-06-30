@@ -4,6 +4,7 @@ import {
   sendOwnerTopicMessage,
 } from "@/lib/telegram/topics";
 import { escapeTelegramHtml, type TelegramInlineKeyboard } from "@/lib/services/telegram";
+import type { SocialProfiles } from "@/lib/social-profile";
 
 function buildMiniAppKeyboard(
   text: string,
@@ -16,7 +17,10 @@ function buildMiniAppKeyboard(
   return { inline_keyboard: [[{ text, web_app: { url: url.toString() } }]] };
 }
 
-export function buildMatchCardKeyboard(matchId: string): { inline_keyboard: TelegramInlineKeyboard } {
+export function buildMatchCardKeyboard(
+  matchId: string,
+  socialProfiles?: SocialProfiles
+): { inline_keyboard: TelegramInlineKeyboard } {
   const miniAppUrl = getTelegramMiniAppUrl();
   let reviewUrl = "";
   if (miniAppUrl) {
@@ -26,11 +30,17 @@ export function buildMatchCardKeyboard(matchId: string): { inline_keyboard: Tele
     reviewUrl = url.toString();
   }
 
-  return {
-    inline_keyboard: reviewUrl
-      ? [[{ text: "Review introduction", web_app: { url: reviewUrl } }]]
-      : [[{ text: "Review introduction", callback_data: `match_dialogue:${matchId}` }]],
-  };
+  const socialRow: TelegramInlineKeyboard[number] = [];
+  if (socialProfiles?.linkedin) {
+    socialRow.push({ text: "in  LinkedIn", url: socialProfiles.linkedin.url });
+  }
+  if (socialProfiles?.twitter) {
+    socialRow.push({ text: "𝕏  Twitter / X", url: socialProfiles.twitter.url });
+  }
+  const reviewRow: TelegramInlineKeyboard[number] = reviewUrl
+    ? [{ text: "Review introduction", web_app: { url: reviewUrl } }]
+    : [{ text: "Review introduction", callback_data: `match_dialogue:${matchId}` }];
+  return { inline_keyboard: [...(socialRow.length ? [socialRow] : []), reviewRow] };
 }
 
 export function buildMatchCardCaption(args: {
@@ -73,14 +83,16 @@ export async function sendTelegramMatchCard(args: {
   framing: string;
   overlapSummary: string;
   similarity?: number | null;
+  otherOwnerImage?: string | null;
+  socialProfiles?: SocialProfiles;
 }) {
   return sendOwnerLivePhotoCard({
     ownerId: args.ownerId,
     topic: "matches",
     caption: buildMatchCardCaption(args),
     livePhotoUrl: process.env.TELEGRAM_MATCH_CARD_LIVE_PHOTO_URL ?? null,
-    photoUrl: process.env.TELEGRAM_MATCH_CARD_PHOTO_URL ?? null,
-    replyMarkup: buildMatchCardKeyboard(args.matchId),
+    photoUrl: args.otherOwnerImage ?? process.env.TELEGRAM_MATCH_CARD_PHOTO_URL ?? null,
+    replyMarkup: buildMatchCardKeyboard(args.matchId, args.socialProfiles),
   });
 }
 

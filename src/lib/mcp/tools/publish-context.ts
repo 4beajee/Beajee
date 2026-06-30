@@ -1,4 +1,5 @@
 import { publishContext } from "@/lib/services/context-index";
+import { maybePromptForSocialProfiles } from "@/lib/services/social-profile-prompt";
 
 export const publishContextTool = {
   name: "publish_context" as const,
@@ -139,13 +140,28 @@ export const publishContextTool = {
     };
   }) => {
     const result = await publishContext(args.agent_id, args.context);
+    const socialProfilePrompt = await maybePromptForSocialProfilesByAgent(args.agent_id);
     return {
       content: [
         {
           type: "text" as const,
-          text: JSON.stringify(result, null, 2),
+          text: JSON.stringify({ ...result, socialProfilePrompt }, null, 2),
         },
       ],
     };
   },
 };
+
+async function maybePromptForSocialProfilesByAgent(agentId: string) {
+  const { prisma } = await import("@/lib/db");
+  const agent = await prisma.agent.findUnique({
+    where: { agentId },
+    select: { ownerId: true },
+  });
+  if (!agent) return { prompted: false, reason: "agent_not_found" };
+  return maybePromptForSocialProfiles(agent.ownerId).catch((error) => ({
+    prompted: false,
+    reason: "delivery_failed",
+    error: error instanceof Error ? error.message : String(error),
+  }));
+}

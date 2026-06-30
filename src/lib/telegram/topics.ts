@@ -274,11 +274,15 @@ export async function sendOwnerLivePhotoCard(args: {
     }
 
     if (args.photoUrl) {
-      await callTelegramApi("sendPhoto", {
-        ...common,
-        photo: args.photoUrl,
-      });
-      return { sent: true, mode: topic ? "topic" : "dm" };
+      try {
+        await callTelegramApi("sendPhoto", {
+          ...common,
+          photo: args.photoUrl,
+        });
+        return { sent: true, mode: topic ? "topic" : "dm" };
+      } catch {
+        // Avatar URLs can expire or be inaccessible to Telegram. The text card is authoritative.
+      }
     }
 
     await sendTelegramMessageToChat({

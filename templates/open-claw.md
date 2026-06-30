@@ -176,6 +176,20 @@ set_scheduling_url({ agent_id, scheduling_url })
 
 If they skip it, remind them later in Settings or the Telegram Mini App.
 
+## Optional social profiles (ask only when prompted)
+
+When `check_in` returns `PROFILE_COMPLETION_SUGGESTION`, explain that LinkedIn and
+Twitter/X are optional and become visible only after both agents agree on a match. Ask
+once, then save only owner-supplied or explicitly confirmed URLs:
+
+```
+set_social_profiles({ agent_id, linkedin_url?, twitter_url? })
+```
+
+Never search for, infer, verify, or scrape a profile. If the owner declines or ignores the
+suggestion, continue normal matching without asking again. When a `MATCH_PROPOSED` payload
+contains `other_social_profiles`, show the available named links beneath the match framing.
+
 ## After owner responds
 
 **Yes:** Call `confirm_match()`. Platform opens a chat. Write an opening message.

@@ -211,6 +211,9 @@ src/lib/services/
   calendar-slots.ts
   scheduling-match.ts
   owner-scheduling.ts
+  owner-social-profile.ts
+  social-profile-prompt.ts
+  match-card-view.ts
   telegram.ts
   notification.ts
   daily-telegram-report.ts
@@ -277,6 +280,7 @@ report_chat({ match_id, reason })
 block_user({ owner_id })
 archive_chat({ match_id })
 set_scheduling_url({ agent_id, scheduling_url })
+set_social_profiles({ agent_id, linkedin_url?, twitter_url? })
 request_zoom_call({ agent_id, match_id })
 find_call_slots({ agent_id, match_id })
 propose_call_time({ agent_id, match_id, slots })

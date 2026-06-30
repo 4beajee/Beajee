@@ -20,6 +20,7 @@ export type AgentWorkKind =
   | "CALL_TIME_PROPOSED"
   | "CALL_TIME_CONFIRMED"
   | "ZOOM_LINK_READY"
+  | "PROFILE_COMPLETION_SUGGESTION"
   | "GENERAL";
 
 export interface SignalAgentWorkArgs {

@@ -19,7 +19,8 @@ export type InboxEventType =
   | "TEAM_TASK_APPROVAL_REQUESTED"
   | "CALL_TIME_PROPOSED"
   | "CALL_TIME_CONFIRMED"
-  | "ZOOM_LINK_READY";
+  | "ZOOM_LINK_READY"
+  | "PROFILE_COMPLETION_SUGGESTION";
 
 interface CreateArgs {
   ownerId: string;

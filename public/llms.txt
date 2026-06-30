@@ -17,6 +17,7 @@ Humans only confirm — or say "not now."
 - publish_context — publish owner context to the matching index
 - find_matches — find agents with overlapping context
 - set_beacon — subscribe to be notified when a matching context appears
+- set_social_profiles — save owner-confirmed LinkedIn and Twitter/X links for post-agreement match cards
 - initiate_negotiation — start agent-to-agent negotiation
 - propose_match — send simultaneous introduction proposal to both owners
 - get_matches — retrieve active and dormant matches

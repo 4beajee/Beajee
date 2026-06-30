@@ -21,6 +21,7 @@ import {
   startContextQuestionBatch,
 } from "@/lib/services/context-questions";
 import { escapeTelegramHtml } from "@/lib/services/telegram";
+import { dismissSocialProfilePrompt } from "@/lib/services/social-profile-prompt";
 
 interface TelegramUpdate {
   message?: TelegramMessage;
@@ -77,6 +78,7 @@ function parseCallbackCommand(data: string) {
   if (action === "context_skip" && id) return { kind: "context_skip" as const, batchId: id };
   if (action === "context_save" && id) return { kind: "context_save" as const, batchId: id };
   if (action === "context_discard" && id) return { kind: "context_discard" as const, batchId: id };
+  if (action === "social_profiles_dismiss" && id) return { kind: "social_profiles_dismiss" as const };
   return null;
 }
 
@@ -274,6 +276,14 @@ export async function POST(request: NextRequest) {
       command.kind === "context_discard"
     ) {
       callbackAnswer = await handleContextCallback(command, update.callback_query?.from?.id);
+    } else if (command.kind === "social_profiles_dismiss") {
+      const ownerId = await ownerIdFromTelegramUser(update.callback_query?.from?.id);
+      if (ownerId) {
+        await dismissSocialProfilePrompt(ownerId, "telegram");
+        callbackAnswer = "Okay — you can add profiles later from You.";
+      } else {
+        callbackAnswer = "Open the Mini App first to connect your Telegram account.";
+      }
     }
 
     if (callbackId) {

@@ -162,6 +162,7 @@ If you receive 401 — your api_key is invalid or expired. Ask owner to check th
 | answer_context_question | Record one owner answer and receive the next question or review summary |
 | confirm_context_question_batch | Save or discard the reviewed batch; save republishes approved context |
 | set_scheduling_url | Save the owner's Cal.com or Calendly booking link |
+| set_social_profiles | Save or clear owner-confirmed LinkedIn and Twitter/X profile links; never infer or scrape them |
 | request_zoom_call | Signal owner wants a Zoom call — auto-generates link when both sides agree |
 | find_call_slots | Find overlapping free calendar slots for both match participants |
 | propose_call_time | Propose call time slots to the other owner via their agent |
@@ -181,8 +182,9 @@ Flow on every `check_in`:
 1. Read `inbox[]` in the response. Each entry has a `type`, `event_id`, and
    a self-contained `payload` with everything you need to compose a message:
    - `NEW_MESSAGE` — `from_owner_name`, `message_preview`, `match_id`, `chat_id`
-   - `MATCH_PROPOSED` — `other_owner_name`, `framing`, `overlap_summary`, `match_id`
-   - `MATCH_CONFIRMED` — `other_owner_name`, `chat_id`, `overlap_summary` → load skill-zoom-call.md
+   - `MATCH_PROPOSED` — `other_owner_name`, `framing`, `overlap_summary`, `other_social_profiles`, `match_id`; render available social profiles as named links beneath the framing
+   - `MATCH_CONFIRMED` — `other_owner_name`, `chat_id`, `overlap_summary`, `other_social_profiles` → load skill-zoom-call.md
+   - `PROFILE_COMPLETION_SUGGESTION` — ask once whether the owner wants to add optional LinkedIn or Twitter/X links; save only owner-supplied URLs with `set_social_profiles`
    - `CALL_TIME_PROPOSED` — `proposals[]`, `proposed_by_owner_name` → ask owner to confirm a slot
    - `CALL_TIME_CONFIRMED` — `scheduled_at`, `slot_label` → notify owner, share Zoom link when ready
    - `ZOOM_LINK_READY` — `zoom_url`, `zoom_password`, `scheduled_at` → deliver link to owner now

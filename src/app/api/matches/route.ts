@@ -7,6 +7,7 @@ import { ZodError } from "zod";
 import { confirmMatch, markDormant } from "@/lib/services/negotiation";
 import { getPrivacySyncStatus } from "@/lib/services/privacy-sync";
 import { detectSchedulingProvider, schedulingProviderLabel } from "@/lib/scheduling-url";
+import { buildMatchCardPerson } from "@/lib/services/match-card-view";
 
 // GET /api/matches — get all proposed/matched/dormant matches for an owner (requires auth)
 export async function GET() {
@@ -90,12 +91,7 @@ export async function GET() {
       confirmedByMe,
       confirmedByOther,
       initiatedByMe,
-      otherPerson: {
-        name: otherAgent.owner.name,
-        currentWork: otherAgent.context?.currentWork,
-        expertise: otherAgent.context?.expertise,
-        location: otherAgent.context?.location,
-      },
+      otherPerson: buildMatchCardPerson(otherAgent),
       chatId: m.chat?.id ?? null,
       proposedAt: m.proposedAt,
       matchedAt: m.matchedAt,

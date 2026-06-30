@@ -8,12 +8,15 @@ import { syncNetworkingGoalForAgent } from "@/lib/services/networking-goal-sync"
 import { setAgentSearchPaused } from "@/lib/services/agent-search";
 import { getContextQuestionDeliveryMode } from "@/lib/agent-platform";
 import { TelegramAuthError, verifyUnifiedToken } from "@/lib/telegram/auth";
+import { SocialProfilePatchSchema, socialProfilesFromOwner } from "@/lib/social-profile";
+import { setOwnerSocialProfiles } from "@/lib/services/owner-social-profile";
 
 const TelegramSettingsSchema = z.object({
   agentActive: z.boolean().optional(),
   networkingGoal: NetworkingGoal.optional(),
   excludedTopics: z.array(z.string().trim().min(1).max(100)).max(20).optional(),
   schedulingUrl: z.union([z.literal(""), SchedulingUrlSchema]).optional(),
+  socialProfiles: SocialProfilePatchSchema.optional(),
 }).refine((value) => Object.keys(value).length > 0, "No settings supplied");
 
 function bearer(request: NextRequest) {
@@ -45,6 +48,7 @@ export async function GET(request: NextRequest) {
         networkingGoal: owner.networkingGoal,
         excludedTopics: owner.excludedTopics,
         schedulingUrl: owner.schedulingUrl,
+        socialProfiles: socialProfilesFromOwner(owner),
         agentId: owner.agent?.agentId ?? null,
         agentPlatform: owner.agentPlatform,
         agentActive: owner.agent ? owner.agent.isActive && !owner.agent.searchPaused : false,
@@ -82,6 +86,13 @@ export async function PATCH(request: NextRequest) {
     if (input.schedulingUrl !== undefined) ownerUpdate.schedulingUrl = input.schedulingUrl || null;
     if (Object.keys(ownerUpdate).length) {
       await prisma.owner.update({ where: { id: owner.id }, data: ownerUpdate });
+    }
+    if (input.socialProfiles !== undefined) {
+      await setOwnerSocialProfiles({
+        ownerId: owner.id,
+        patch: input.socialProfiles,
+        source: "telegram",
+      });
     }
     if (input.excludedTopics !== undefined && owner.agent) {
       await syncPrivacyTopicsForAgent({

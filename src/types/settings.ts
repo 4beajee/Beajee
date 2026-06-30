@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { NetworkingGoal } from "./context";
 import { SchedulingUrlSchema } from "@/lib/scheduling-url";
+import { SocialProfilePatchSchema } from "@/lib/social-profile";
 
 export const SettingsUpdateSchema = z
   .object({
@@ -15,6 +16,7 @@ export const SettingsUpdateSchema = z
       .optional(),
     webhookToken: z.union([z.literal(""), z.string().min(8).max(500)]).optional(),
     schedulingUrl: z.union([z.literal(""), SchedulingUrlSchema]).optional(),
+    socialProfiles: SocialProfilePatchSchema.optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one setting must be provided",

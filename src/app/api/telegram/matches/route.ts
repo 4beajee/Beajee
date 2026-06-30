@@ -6,6 +6,7 @@ import { confirmMatch, markDormant } from "@/lib/services/negotiation";
 import { getPrivacySyncStatus } from "@/lib/services/privacy-sync";
 import { detectSchedulingProvider, schedulingProviderLabel } from "@/lib/scheduling-url";
 import { TelegramAuthError, verifyUnifiedToken } from "@/lib/telegram/auth";
+import { buildMatchCardPerson } from "@/lib/services/match-card-view";
 
 function bearer(request: NextRequest) {
   return request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim() ?? "";
@@ -94,15 +95,7 @@ export async function GET(request: NextRequest) {
         confirmedByMe,
         confirmedByOther,
         initiatedByMe: match.initiatorAgentId === owner.agent!.id,
-        otherPerson: {
-          id: otherAgent.owner.id,
-          name: otherAgent.owner.name,
-          image: otherAgent.owner.image,
-          currentWork: otherAgent.context?.currentWork ?? null,
-          expertise: otherAgent.context?.expertise ?? [],
-          location: otherAgent.context?.location ?? null,
-          profession: otherAgent.context?.ownerProfession ?? null,
-        },
+        otherPerson: buildMatchCardPerson(otherAgent),
         chatId: match.chat?.id ?? null,
         chatStatus: match.chat?.status ?? null,
         unreadCount,
