@@ -1,6 +1,7 @@
 import { publishContext } from "@/lib/services/context-index";
 import { maybePromptForSocialProfiles } from "@/lib/services/social-profile-prompt";
 import { SensitiveContextError } from "@/lib/sensitive-topics";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const publishContextTool = {
   name: "publish_context" as const,
@@ -12,10 +13,6 @@ export const publishContextTool = {
   inputSchema: {
     type: "object" as const,
     properties: {
-      agent_id: {
-        type: "string",
-        description: "Your agent ID (e.g. agent_arlan_001)",
-      },
       context: {
         type: "object",
         description: "Structured context snapshot from all source files",
@@ -110,10 +107,9 @@ export const publishContextTool = {
         required: ["current_work", "expertise", "looking_for", "networking_goal"],
       },
     },
-    required: ["agent_id", "context"],
+    required: ["context"],
   },
   handler: async (args: {
-    agent_id: string;
     context: {
       // From USER.md
       owner_name?: string;
@@ -139,10 +135,11 @@ export const publishContextTool = {
       location?: string;
       networking_goal: string;
     };
-  }) => {
+  }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
     let result;
     try {
-      result = await publishContext(args.agent_id, args.context);
+      result = await publishContext(authenticated.externalAgentId, args.context);
     } catch (error) {
       if (error instanceof SensitiveContextError) {
         return {
@@ -161,7 +158,11 @@ export const publishContextTool = {
       }
       throw error;
     }
-    const socialProfilePrompt = await maybePromptForSocialProfilesByAgent(args.agent_id);
+    const socialProfilePrompt = await maybePromptForSocialProfiles(authenticated.ownerId).catch((error) => ({
+      prompted: false,
+      reason: "delivery_failed",
+      error: error instanceof Error ? error.message : String(error),
+    }));
     return {
       content: [
         {
@@ -172,17 +173,3 @@ export const publishContextTool = {
     };
   },
 };
-
-async function maybePromptForSocialProfilesByAgent(agentId: string) {
-  const { prisma } = await import("@/lib/db");
-  const agent = await prisma.agent.findUnique({
-    where: { agentId },
-    select: { ownerId: true },
-  });
-  if (!agent) return { prompted: false, reason: "agent_not_found" };
-  return maybePromptForSocialProfiles(agent.ownerId).catch((error) => ({
-    prompted: false,
-    reason: "delivery_failed",
-    error: error instanceof Error ? error.message : String(error),
-  }));
-}

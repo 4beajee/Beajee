@@ -8,6 +8,10 @@ export async function setBeacon(
   contextQuery: string,
   networkingGoalFilter?: NetworkingGoal
 ) {
+  const normalizedQuery = contextQuery.trim();
+  if (normalizedQuery.length < 10 || normalizedQuery.length > 2_000) {
+    throw new Error("Beacon context_query must be between 10 and 2000 characters");
+  }
   const agent = await prisma.agent.findUnique({
     where: { agentId },
     include: { context: true },
@@ -19,7 +23,7 @@ export async function setBeacon(
   }
 
   // Generate embedding for the beacon query
-  const { embedding } = await generateEmbeddingWithUsage(contextQuery, {
+  const { embedding } = await generateEmbeddingWithUsage(normalizedQuery, {
     operation: "set_beacon",
     ownerId: agent.ownerId,
     agentId: agent.id,
@@ -37,7 +41,7 @@ export async function setBeacon(
     VALUES (
       ${beaconId},
       ${agent.id},
-      ${contextQuery},
+      ${normalizedQuery},
       ${effectiveGoalFilter},
       ${embedding}::vector,
       true,
@@ -51,7 +55,7 @@ export async function setBeacon(
     agentId: agent.id,
     beaconId,
     metadata: {
-      context_query: contextQuery,
+      context_query: normalizedQuery,
       networking_goal_filter: effectiveGoalFilter,
     },
   });
@@ -84,7 +88,7 @@ export async function setBeacon(
 
   return {
     beaconId,
-    contextQuery,
+    contextQuery: normalizedQuery,
     networkingGoalFilter: effectiveGoalFilter,
     isActive: true,
     immediateMatches: immediateMatches.map((m) => ({

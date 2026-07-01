@@ -1,4 +1,5 @@
 import { confirmContextQuestionBatch } from "@/lib/services/context-questions";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const confirmContextQuestionBatchTool = {
   name: "confirm_context_question_batch" as const,
@@ -8,7 +9,6 @@ export const confirmContextQuestionBatchTool = {
   inputSchema: {
     type: "object" as const,
     properties: {
-      agent_id: { type: "string", description: "Your Beajee agent ID" },
       batch_id: { type: "string", description: "The context question batch ID" },
       decision: {
         type: "string",
@@ -16,15 +16,15 @@ export const confirmContextQuestionBatchTool = {
         description: "The owner's explicit decision after reviewing the summary",
       },
     },
-    required: ["agent_id", "batch_id", "decision"],
+    required: ["batch_id", "decision"],
   },
   handler: async (args: {
-    agent_id: string;
     batch_id: string;
     decision: "save" | "discard";
-  }) => {
+  }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
     const result = await confirmContextQuestionBatch({
-      agentExternalId: args.agent_id,
+      agentExternalId: authenticated.externalAgentId,
       batchId: args.batch_id,
       decision: args.decision,
     });

@@ -1,4 +1,5 @@
 import { setBeacon } from "@/lib/services/beacon";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const setBeaconTool = {
   name: "set_beacon" as const,
@@ -10,12 +11,10 @@ export const setBeaconTool = {
   inputSchema: {
     type: "object" as const,
     properties: {
-      agent_id: {
-        type: "string",
-        description: "Your agent ID",
-      },
       context_query: {
         type: "string",
+        minLength: 10,
+        maxLength: 2000,
         description:
           "Natural language description of the context you're watching for. " +
           "Example: 'An engineer building developer tools for AI agents who needs help with distribution strategy'",
@@ -27,15 +26,15 @@ export const setBeaconTool = {
           "Optional exact goal filter for the beacon. Defaults to your currently published networking goal.",
       },
     },
-    required: ["agent_id", "context_query"],
+    required: ["context_query"],
   },
   handler: async (args: {
-    agent_id: string;
     context_query: string;
     networking_goal_filter?: "partnership" | "collaboration" | "mentor" | "peer";
-  }) => {
+  }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
     const result = await setBeacon(
-      args.agent_id,
+      authenticated.externalAgentId,
       args.context_query,
       args.networking_goal_filter
     );

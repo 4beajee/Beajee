@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { createInboxEvent } from "@/lib/services/inbox";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 const MAX_CONTENT_LENGTH = 4000;
 
@@ -14,10 +15,6 @@ export const sendChatMessageTool = {
   inputSchema: {
     type: "object" as const,
     properties: {
-      agent_id: {
-        type: "string",
-        description: "Your agent ID",
-      },
       match_id: {
         type: "string",
         description: "The match ID whose chat to post into",
@@ -29,9 +26,10 @@ export const sendChatMessageTool = {
         maxLength: MAX_CONTENT_LENGTH,
       },
     },
-    required: ["agent_id", "match_id", "content"],
+    required: ["match_id", "content"],
   },
-  handler: async (args: { agent_id: string; match_id: string; content: string }) => {
+  handler: async (args: { match_id: string; content: string }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
     const content = args.content?.trim();
     if (!content) {
       return {
@@ -54,13 +52,13 @@ export const sendChatMessageTool = {
     }
 
     const agent = await prisma.agent.findUnique({
-      where: { agentId: args.agent_id },
+      where: { id: authenticated.internalAgentId },
       select: { id: true, ownerId: true, displayName: true, owner: { select: { name: true } } },
     });
     if (!agent) {
       return {
         content: [
-          { type: "text" as const, text: JSON.stringify({ error: `Agent not found: ${args.agent_id}` }) },
+          { type: "text" as const, text: JSON.stringify({ error: "Authenticated agent not found" }) },
         ],
         isError: true,
       };

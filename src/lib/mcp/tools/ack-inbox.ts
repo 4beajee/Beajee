@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/db";
 import { markDismissed } from "@/lib/services/inbox";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const ackInboxTool = {
   name: "ack_inbox" as const,
@@ -11,10 +11,6 @@ export const ackInboxTool = {
   inputSchema: {
     type: "object" as const,
     properties: {
-      agent_id: {
-        type: "string",
-        description: "Your agent ID",
-      },
       event_ids: {
         type: "array",
         items: { type: "string" },
@@ -22,25 +18,10 @@ export const ackInboxTool = {
         minItems: 1,
       },
     },
-    required: ["agent_id", "event_ids"],
+    required: ["event_ids"],
   },
-  handler: async (args: { agent_id: string; event_ids: string[] }) => {
-    const agent = await prisma.agent.findUnique({
-      where: { agentId: args.agent_id },
-      select: { id: true },
-    });
-
-    if (!agent) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify({ error: `Agent not found: ${args.agent_id}` }),
-          },
-        ],
-        isError: true,
-      };
-    }
+  handler: async (args: { event_ids: string[] }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
 
     if (!Array.isArray(args.event_ids) || args.event_ids.length === 0) {
       return {
@@ -54,7 +35,7 @@ export const ackInboxTool = {
       };
     }
 
-    const result = await markDismissed(args.event_ids, agent.id);
+    const result = await markDismissed(args.event_ids, authenticated.internalAgentId);
 
     return {
       content: [

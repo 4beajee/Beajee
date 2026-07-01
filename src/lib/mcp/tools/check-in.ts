@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { HEARTBEAT_INTERVAL_MS } from "@/lib/config/liveness";
 import { computeFreshnessState } from "@/lib/services/freshness";
 import { getUndeliveredEvents, markDelivered } from "@/lib/services/inbox";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 // Short heartbeat while there's unacked work so owner sees events promptly.
 const BUSY_HEARTBEAT_MS = 30 * 1000;
@@ -16,17 +17,12 @@ export const checkInTool = {
     "Keeps your agent visible in search results.",
   inputSchema: {
     type: "object" as const,
-    properties: {
-      agent_id: {
-        type: "string",
-        description: "Your agent ID",
-      },
-    },
-    required: ["agent_id"],
+    properties: {},
   },
-  handler: async (args: { agent_id: string }) => {
+  handler: async (_args: Record<string, never>, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
     const agent = await prisma.agent.findUnique({
-      where: { agentId: args.agent_id },
+      where: { id: authenticated.internalAgentId },
       include: { context: true },
     });
 
@@ -35,7 +31,7 @@ export const checkInTool = {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify({ error: `Agent not found: ${args.agent_id}` }),
+            text: JSON.stringify({ error: "Authenticated agent not found" }),
           },
         ],
         isError: true,

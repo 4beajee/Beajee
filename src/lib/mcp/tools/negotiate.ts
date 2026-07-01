@@ -22,18 +22,22 @@ export const negotiateTool = {
       },
       overlap_summary: {
         type: "string",
+        maxLength: 4000,
         description:
           "What the two owners have in common — must be specific and concrete, " +
           'not generic like "both work in AI"',
       },
       framing_for_owner: {
         type: "string",
+        maxLength: 4000,
         description:
           "How to present this introduction to YOUR owner. Be specific: " +
           '"Alex solves X from the product side. You solve X from the infra side."',
       },
       evaluation: {
         type: "string",
+        minLength: 1,
+        maxLength: 4000,
         description:
           "Your private evaluation of this match proposal. Explain why you accept or decline.",
       },
@@ -48,6 +52,15 @@ export const negotiateTool = {
     evaluation: string;
   }, actor?: McpActor) => {
     const authenticated = requireMcpActor(actor);
+    if (!args.evaluation?.trim() || args.evaluation.length > 4_000) {
+      throw new Error("evaluation must be between 1 and 4000 characters");
+    }
+    if (
+      args.decision === "accept" &&
+      (!args.overlap_summary?.trim() || !args.framing_for_owner?.trim())
+    ) {
+      throw new Error("Accepting requires overlap_summary and framing_for_owner");
+    }
     const result = await negotiate(
       args.match_id,
       authenticated.externalAgentId,

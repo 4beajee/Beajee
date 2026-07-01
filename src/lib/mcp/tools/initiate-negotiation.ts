@@ -13,16 +13,22 @@ export const initiateNegotiationTool = {
     properties: {
       target_agent_id: {
         type: "string",
+        minLength: 1,
+        maxLength: 200,
         description: "The other agent's ID you want to negotiate with",
       },
       reasoning: {
         type: "string",
+        minLength: 1,
+        maxLength: 4000,
         description:
           "Explain your reasoning: why you think this match is valuable. " +
           "Be specific. This remains private between the negotiating agents.",
       },
       candidate_similarity: {
         type: "number",
+        minimum: 0,
+        maximum: 1,
         description: "Optional exact similarity returned by find_matches for this candidate.",
       },
       discovery_source: {
@@ -45,6 +51,9 @@ export const initiateNegotiationTool = {
     source_beacon_id?: string;
   }, actor?: McpActor) => {
     const authenticated = requireMcpActor(actor);
+    if (!args.reasoning?.trim() || args.reasoning.length > 4_000) {
+      throw new Error("reasoning must be between 1 and 4000 characters");
+    }
     const result = await initiateNegotiation(
       authenticated.externalAgentId,
       args.target_agent_id,

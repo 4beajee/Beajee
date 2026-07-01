@@ -55,7 +55,18 @@ export async function initiateNegotiation(
   if (initiatorAgentId === targetAgentId) {
     throw new Error("Cannot initiate negotiation with yourself");
   }
-
+  if (reasoning !== undefined && reasoning.length > 4_000) {
+    throw new Error("reasoning must not exceed 4000 characters");
+  }
+  if (targetAgentId.length > 200) throw new Error("target_agent_id is too long");
+  if (
+    options?.candidateSimilarity !== undefined &&
+    (!Number.isFinite(options.candidateSimilarity) ||
+      options.candidateSimilarity < 0 ||
+      options.candidateSimilarity > 1)
+  ) {
+    throw new Error("candidate_similarity must be between 0 and 1");
+  }
   const agentA = await prisma.agent.findUnique({
     where: { agentId: initiatorAgentId },
     include: { context: true, owner: true },
@@ -247,6 +258,11 @@ export async function negotiate(
   framingForOwner?: string,
   evaluation?: string // agent's evaluation of the match proposal
 ) {
+  for (const [name, value] of Object.entries({ overlapSummary, framingForOwner, evaluation })) {
+    if (value !== undefined && value.length > 4_000) {
+      throw new Error(`${name} must not exceed 4000 characters`);
+    }
+  }
   const match = await prisma.match.findUnique({
     where: { id: matchId },
     include: {

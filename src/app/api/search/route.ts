@@ -26,7 +26,17 @@ export async function GET(req: NextRequest) {
   const type = searchParams.get("type") || "all";
   const mode = searchParams.get("mode") || "search";
   const rawLimit = Number(searchParams.get("limit") || 20);
-  const limit = Math.max(1, Math.min(isNaN(rawLimit) ? 20 : rawLimit, 50));
+  const limit = Math.max(1, Math.min(Number.isFinite(rawLimit) ? Math.floor(rawLimit) : 20, 50));
+
+  if (query.length > 500) {
+    return NextResponse.json({ results: [], error: "Search query is too long" }, { status: 400 });
+  }
+  if (!["all", "people", "agents", "matches"].includes(type)) {
+    return NextResponse.json({ results: [], error: "Invalid search type" }, { status: 400 });
+  }
+  if (!["search", "leaderboard", "trending", "suggestions"].includes(mode)) {
+    return NextResponse.json({ results: [], error: "Invalid search mode" }, { status: 400 });
+  }
 
   try {
     if (mode === "leaderboard") return await handleLeaderboard(limit);

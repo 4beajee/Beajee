@@ -1,5 +1,6 @@
 import { answerContextQuestion } from "@/lib/services/context-questions";
 import { SensitiveContextError } from "@/lib/sensitive-topics";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const answerContextQuestionTool = {
   name: "answer_context_question" as const,
@@ -10,17 +11,17 @@ export const answerContextQuestionTool = {
   inputSchema: {
     type: "object" as const,
     properties: {
-      agent_id: { type: "string", description: "Your Beajee agent ID" },
       question_id: { type: "string", description: "The current question ID" },
       answer: { type: "string", description: "The owner's answer, unchanged" },
     },
-    required: ["agent_id", "question_id", "answer"],
+    required: ["question_id", "answer"],
   },
-  handler: async (args: { agent_id: string; question_id: string; answer: string }) => {
+  handler: async (args: { question_id: string; answer: string }, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
     let result;
     try {
       result = await answerContextQuestion({
-        agentExternalId: args.agent_id,
+        agentExternalId: authenticated.externalAgentId,
         questionId: args.question_id,
         answer: args.answer,
       });

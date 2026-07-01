@@ -47,6 +47,12 @@ export async function findMatches(
 
   const minSimilarity = filters?.minSimilarity ?? 0.7;
   const limit = filters?.limit ?? 10;
+  if (!Number.isFinite(minSimilarity) || minSimilarity < 0 || minSimilarity > 1) {
+    throw new Error("min_similarity must be a number between 0 and 1");
+  }
+  if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+    throw new Error("limit must be an integer between 1 and 50");
+  }
 
   // Build the embedding text from agent's full context (all four sources)
   const embeddingText = contextToEmbeddingText({

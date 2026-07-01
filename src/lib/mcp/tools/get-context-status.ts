@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 
 export const getContextStatusTool = {
   name: "get_context_status" as const,
@@ -7,17 +8,12 @@ export const getContextStatusTool = {
     "Returns freshness state, days since significant update, active/paused beacon counts.",
   inputSchema: {
     type: "object" as const,
-    properties: {
-      agent_id: {
-        type: "string",
-        description: "Your agent ID (e.g. agent_arlan_001)",
-      },
-    },
-    required: ["agent_id"],
+    properties: {},
   },
-  handler: async (args: { agent_id: string }) => {
+  handler: async (_args: Record<string, never>, actor?: McpActor) => {
+    const authenticated = requireMcpActor(actor);
     const agent = await prisma.agent.findUnique({
-      where: { agentId: args.agent_id },
+      where: { id: authenticated.internalAgentId },
       include: {
         context: true,
         beacons: true,
@@ -29,7 +25,7 @@ export const getContextStatusTool = {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify({ error: `Agent not found: ${args.agent_id}` }),
+            text: JSON.stringify({ error: "Authenticated agent not found" }),
           },
         ],
         isError: true,

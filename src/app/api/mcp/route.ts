@@ -58,12 +58,21 @@ const tools = [
   setSocialProfilesTool,
 ];
 
+const MAX_MCP_BODY_BYTES = 256 * 1024;
+
 // JSON-RPC 2.0 handler for MCP protocol
 export async function POST(request: NextRequest) {
   const rateLimited = await rateLimit(request, { maxRequests: 60, windowMs: 60_000, keyPrefix: "mcp" });
   if (rateLimited) return rateLimited;
 
   try {
+    const declaredLength = Number(request.headers.get("content-length") ?? 0);
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_MCP_BODY_BYTES) {
+      return NextResponse.json(
+        { jsonrpc: "2.0", error: { code: -32600, message: "Request body too large" }, id: null },
+        { status: 413 }
+      );
+    }
     // Authenticate via API key in Authorization header
     const authHeader = request.headers.get("authorization");
     const apiKey = authHeader?.replace("Bearer ", "") ?? null;
@@ -78,7 +87,14 @@ export async function POST(request: NextRequest) {
 
     let body: { method?: string; params?: Record<string, unknown>; id?: unknown };
     try {
-      body = await request.json();
+      const rawBody = await request.text();
+      if (new TextEncoder().encode(rawBody).byteLength > MAX_MCP_BODY_BYTES) {
+        return NextResponse.json(
+          { jsonrpc: "2.0", error: { code: -32600, message: "Request body too large" }, id: null },
+          { status: 413 }
+        );
+      }
+      body = JSON.parse(rawBody);
     } catch {
       return NextResponse.json(
         { jsonrpc: "2.0", error: { code: -32700, message: "Parse error: invalid JSON body" }, id: null },
