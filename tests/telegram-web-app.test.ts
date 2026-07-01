@@ -71,6 +71,8 @@ function ok(label: string) {
 
 {
   const bot = read("src/lib/telegram/bot.ts");
+  const onboarding = read("src/lib/telegram/onboarding.ts");
+  const webhook = read("src/app/api/telegram/webhook/route.ts");
   const card = read("src/lib/telegram/match-card.ts");
   const negotiation = read("src/lib/services/negotiation.ts");
   assert.doesNotMatch(bot, /Set up workspace topics/);
@@ -80,6 +82,14 @@ function ok(label: string) {
   assert.match(card, /sendTelegramCallRequest/);
   assert.match(negotiation, /sendTelegramMatchCard/);
   ok("bot entry points deep-link exact proposal, chat, and call actions into the Web App");
+
+  assert.match(onboarding, /not a general AI chat/);
+  assert.match(onboarding, /Start here/);
+  assert.match(onboarding, /Today, Matches, Chats, calls, and your settings/);
+  assert.match(webhook, /command === "\/help"/);
+  assert.match(webhook, /guided: true/);
+  assert.match(webhook, /message\.chat\.type !== "private"/);
+  ok("first-run and free-form messages explain how to use the bot without spamming groups");
 }
 
 console.log(`\nAll ${passed} Telegram Web App tests passed.`);

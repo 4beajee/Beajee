@@ -18,6 +18,7 @@ const APP_HOST = process.env.NEXT_PUBLIC_APP_URL
 
 const LANDING_URL = process.env.NEXT_PUBLIC_LANDING_URL ?? "";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
+const useSubdomainRouting = process.env.NODE_ENV === "production";
 
 // Routes that belong on the landing domain only.
 function isAppRoute(pathname: string) {
@@ -59,20 +60,20 @@ export async function proxy(request: NextRequest) {
   const isLocalDev = isLocalDevHost(host);
 
   // --- Subdomain routing (only in production when APP_HOST is set) ---
-  if (APP_HOST && !isLocalDev && host !== APP_HOST && pathname === "/") {
+  if (useSubdomainRouting && APP_HOST && !isLocalDev && host !== APP_HOST && pathname === "/") {
     return NextResponse.redirect(new URL("/home", APP_URL));
   }
 
-  if (APP_HOST && !isLocalDev && host !== APP_HOST && isAppRoute(pathname)) {
+  if (useSubdomainRouting && APP_HOST && !isLocalDev && host !== APP_HOST && isAppRoute(pathname)) {
     // Someone hit beajee.com/login or beajee.com/matches → redirect to app subdomain
     return NextResponse.redirect(new URL(pathname + request.nextUrl.search, APP_URL));
   }
 
-  if (APP_HOST && !isLocalDev && host === APP_HOST && pathname === "/") {
+  if (useSubdomainRouting && APP_HOST && !isLocalDev && host === APP_HOST && pathname === "/") {
     return NextResponse.redirect(new URL("/home", APP_URL));
   }
 
-  if (APP_HOST && LANDING_URL && !isLocalDev && host === APP_HOST && isLandingRoute(pathname)) {
+  if (useSubdomainRouting && APP_HOST && LANDING_URL && !isLocalDev && host === APP_HOST && isLandingRoute(pathname)) {
     // Someone hit app.beajee.com/privacy or public agent docs → redirect to landing
     return NextResponse.redirect(new URL(pathname + request.nextUrl.search, LANDING_URL));
   }

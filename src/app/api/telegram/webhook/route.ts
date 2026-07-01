@@ -24,6 +24,10 @@ import { escapeTelegramHtml } from "@/lib/services/telegram";
 import { dismissSocialProfilePrompt } from "@/lib/services/social-profile-prompt";
 import { readLimitedJson, RequestBodyTooLargeError } from "@/lib/request-body";
 import { rateLimit } from "@/lib/rate-limit";
+import {
+  buildTelegramGuidanceMessage,
+  buildTelegramWelcomeMessage,
+} from "@/lib/telegram/onboarding";
 
 interface TelegramUpdate {
   message?: TelegramMessage;
@@ -67,6 +71,7 @@ function parseTextCommand(text: string) {
       ? { kind: "telegram_sync" as const, rawToken: agentId.slice("sync_".length) }
       : { kind: "start" as const };
   }
+  if (command === "/help") return { kind: "help" as const };
   return null;
 }
 
@@ -97,11 +102,19 @@ async function handleStart(message: TelegramMessage, origin?: string) {
   if (!message.chat?.id) return;
   await sendTelegramMessageToChat({
     chatId: message.chat.id,
-    text:
-      "<b>Welcome to Beajee</b>\n" +
-      "Your personal agent can find relevant people, negotiate introductions, and bring you one clear question: Meet?",
+    text: buildTelegramWelcomeMessage(message.from?.first_name),
     replyMarkup: buildMiniAppReplyMarkup(origin),
   });
+}
+
+async function handleGuidance(message: TelegramMessage, origin?: string) {
+  if (!message.chat?.id || message.chat.type !== "private") return false;
+  await sendTelegramMessageToChat({
+    chatId: message.chat.id,
+    text: buildTelegramGuidanceMessage(),
+    replyMarkup: buildMiniAppReplyMarkup(origin),
+  });
+  return true;
 }
 
 async function handleTelegramSync(message: TelegramMessage, rawToken: string) {
@@ -263,6 +276,9 @@ export async function POST(request: NextRequest) {
       if (update.message && (await handleContextAnswer(update.message))) {
         return NextResponse.json({ ok: true });
       }
+      if (update.message?.text && (await handleGuidance(update.message, request.nextUrl.origin))) {
+        return NextResponse.json({ ok: true, guided: true });
+      }
       return NextResponse.json({ ok: true, ignored: true });
     }
 
@@ -270,6 +286,8 @@ export async function POST(request: NextRequest) {
 
     if (command.kind === "start" && update.message) {
       await handleStart(update.message, request.nextUrl.origin);
+    } else if (command.kind === "help" && update.message) {
+      await handleGuidance(update.message, request.nextUrl.origin);
     } else if (command.kind === "telegram_sync" && update.message) {
       await handleTelegramSync(update.message, command.rawToken);
       callbackAnswer = "Telegram connected";
