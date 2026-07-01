@@ -251,9 +251,28 @@ async function main() {
   }
 
   {
-    const keyboard = buildMatchCardKeyboard("match_123");
-    assert.match(keyboard.inline_keyboard[0][0].web_app?.url ?? "", /tab=matches/);
-    assert.match(keyboard.inline_keyboard[0][0].web_app?.url ?? "", /matchId=match_123/);
+    const keyboard = buildMatchCardKeyboard("match_123", {
+      linkedin: {
+        provider: "linkedin",
+        url: "https://www.linkedin.com/in/grace",
+        label: "/in/grace",
+      },
+      twitter: {
+        provider: "twitter",
+        url: "https://x.com/grace_builds",
+        label: "@grace_builds",
+      },
+    });
+    assert.deepEqual(keyboard.inline_keyboard[0], [
+      {
+        text: "LinkedIn",
+        style: "primary",
+        url: "https://www.linkedin.com/in/grace",
+      },
+      { text: "𝕏  X", url: "https://x.com/grace_builds" },
+    ]);
+    assert.match(keyboard.inline_keyboard[1][0].web_app?.url ?? "", /tab=matches/);
+    assert.match(keyboard.inline_keyboard[1][0].web_app?.url ?? "", /matchId=match_123/);
     const caption = buildMatchCardCaption({
       otherOwnerName: "Grace",
       otherAgentDisplayName: null,
@@ -263,7 +282,7 @@ async function main() {
     });
     assert.match(caption, /Meet Grace/);
     assert.doesNotMatch(caption, /Compatibility/);
-    ok("Match Cards open the exact Web App review state without false precision");
+    ok("Match Cards show social profiles above the exact Web App review state");
   }
 
   {

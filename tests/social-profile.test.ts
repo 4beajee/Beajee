@@ -108,10 +108,14 @@ ok("social profiles stay hidden until mutual agent agreement");
 process.env.TELEGRAM_MINI_APP_URL = "https://app.beajee.com/telegram";
 const keyboard = buildMatchCardKeyboard("match_1", person.socialProfiles);
 assert.equal(keyboard.inline_keyboard.length, 2);
+assert.equal(keyboard.inline_keyboard[0]?.[0]?.text, "LinkedIn");
+assert.equal(keyboard.inline_keyboard[0]?.[0]?.style, "primary");
 assert.equal(keyboard.inline_keyboard[0]?.[0]?.url, "https://www.linkedin.com/in/alex");
+assert.equal(keyboard.inline_keyboard[0]?.[1]?.text, "𝕏  X");
+assert.equal(keyboard.inline_keyboard[0]?.[1]?.style, undefined);
 assert.equal(keyboard.inline_keyboard[0]?.[1]?.url, "https://x.com/alex_builds");
 assert.match(keyboard.inline_keyboard[1]?.[0]?.web_app?.url ?? "", /matchId=match_1/);
-ok("Telegram match card exposes provider links and an exact match deep link");
+ok("Telegram match card exposes styled provider links above an exact match deep link");
 
 assert.equal(supportsNativeProfilePrompts("open_claw"), true);
 assert.equal(supportsNativeProfilePrompts("custom"), true);

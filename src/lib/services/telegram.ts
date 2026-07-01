@@ -8,6 +8,7 @@ const TELEGRAM_TIMEOUT_MS = 8_000;
 export type TelegramInlineKeyboard = Array<
   Array<{
     text: string;
+    style?: "danger" | "success" | "primary";
     callback_data?: string;
     url?: string;
     web_app?: { url: string };

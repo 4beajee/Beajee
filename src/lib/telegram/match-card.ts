@@ -32,10 +32,14 @@ export function buildMatchCardKeyboard(
 
   const socialRow: TelegramInlineKeyboard[number] = [];
   if (socialProfiles?.linkedin) {
-    socialRow.push({ text: "in  LinkedIn", url: socialProfiles.linkedin.url });
+    socialRow.push({
+      text: "LinkedIn",
+      style: "primary",
+      url: socialProfiles.linkedin.url,
+    });
   }
   if (socialProfiles?.twitter) {
-    socialRow.push({ text: "𝕏  Twitter / X", url: socialProfiles.twitter.url });
+    socialRow.push({ text: "𝕏  X", url: socialProfiles.twitter.url });
   }
   const reviewRow: TelegramInlineKeyboard[number] = reviewUrl
     ? [{ text: "Review introduction", web_app: { url: reviewUrl } }]
