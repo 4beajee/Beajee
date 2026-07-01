@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     if (!current.agent) {
       return NextResponse.json({ error: "No agent found" }, { status: 404 });
     }
+    const agent = current.agent;
     if (current.agentPlatform === agentPlatform) {
       return NextResponse.json({
         agentPlatform,
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
         data: { agentPlatform },
       });
       await tx.agent.update({
-        where: { id: current.agent.id },
+        where: { id: agent.id },
         data: {
           apiKey: newApiKey,
           credentialVersion: { increment: 1 },
@@ -69,21 +70,21 @@ export async function POST(request: NextRequest) {
         },
       });
       await tx.oAuthAccessToken.updateMany({
-        where: { agentId: current.agent.id, revokedAt: null },
+        where: { agentId: agent.id, revokedAt: null },
         data: { revokedAt: changedAt },
       });
       await tx.setupGrant.updateMany({
-        where: { agentId: current.agent.id, usedAt: null },
+        where: { agentId: agent.id, usedAt: null },
         data: { usedAt: changedAt },
       });
     });
 
-    closeAgentWakeStreams(current.agent.id, "platform_changed");
+    closeAgentWakeStreams(agent.id, "platform_changed");
 
     return NextResponse.json({
       agentPlatform,
       platformLabel: PLATFORM_LABELS[agentPlatform],
-      agentId: current.agent.agentId,
+      agentId: agent.agentId,
       changed: true,
       credentialsRotated: true,
     });

@@ -20,7 +20,6 @@ import { ContextCheckInDelivery } from "@/components/context-check-in-delivery";
 import { AgentPlatformLogo } from "@/components/agent-platform-logo";
 import {
   getContextQuestionDeliveryMode,
-  PRIMARY_AGENT_PLATFORMS,
   PLATFORM_LABELS,
   type AgentPlatformValue,
 } from "@/lib/agent-platform";
@@ -31,6 +30,9 @@ type OS = "unix" | "windows";
 type OpenClawStatus = "using" | "installed_later" | null;
 
 const FILE_NAME = "SOUL.md";
+const ONBOARDING_AGENT_PLATFORMS = [
+  "open_claw", "hermes", "fork", "codex", "claude_code", "manus",
+] as const satisfies readonly AgentPlatformValue[];
 const ONBOARDING_TITLE = "text-xl font-semibold text-white mb-3 text-center";
 const ONBOARDING_TITLE_TIGHT = "text-xl font-semibold text-white mb-2 text-center";
 const ONBOARDING_DESC = "text-sm leading-6 text-neutral-400";
@@ -405,7 +407,7 @@ export default function OnboardingPage() {
               Beajee uses this to choose a reliable personal delivery channel.
             </p>
             <div className="space-y-3">
-              {PRIMARY_AGENT_PLATFORMS.map((platform) => {
+              {ONBOARDING_AGENT_PLATFORMS.map((platform) => {
                 const isSelected = selectedAgentPlatform === platform;
                 return (
                 <button

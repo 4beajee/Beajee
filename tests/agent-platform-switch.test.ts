@@ -98,12 +98,12 @@ function ok(label: string) {
   assert.match(switchRoute, /tx\.oAuthAccessToken\.updateMany/);
   assert.match(switchRoute, /tx\.setupGrant\.updateMany/);
   assert.match(switchRoute, /wakeWebhookEnabled: false/);
-  assert.match(switchRoute, /closeAgentWakeStreams\(current\.agent\.id, "platform_changed"\)/);
+  assert.match(switchRoute, /closeAgentWakeStreams\(agent\.id, "platform_changed"\)/);
   assert.doesNotMatch(settingsSchema, /agentPlatform:/);
   assert.match(settingsPage, /\/api\/settings\/agent-platform/);
   assert.match(settingsPage, /function ChangeAgentPlatformSection/);
   assert.match(settingsPage, /PRIMARY_AGENT_PLATFORMS\.map/);
-  assert.match(onboardingPage, /PRIMARY_AGENT_PLATFORMS\.map/);
+  assert.match(onboardingPage, /ONBOARDING_AGENT_PLATFORMS\.map/);
   assert.match(onboardingPage, /<AgentPlatformLogo platform=\{platform\}/);
   assert.doesNotMatch(onboardingPage, /setStep\("install"\)/);
   assert.match(setupRoute, /isOpenClawPlatform\(platform\)/);
