@@ -1,6 +1,16 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import {
+  APP_EXACT,
+  APP_PREFIXES,
+  LANDING_EXACT,
+  PUBLIC_FILE_EXACT,
+  PUBLIC_FILE_PREFIXES,
+  PUBLIC_PAGE_PREFIXES,
+  isPublicApiPath,
+  matchesAnySegment,
+} from "@/lib/route-policy";
 
 const APP_HOST = process.env.NEXT_PUBLIC_APP_URL
   ? new URL(process.env.NEXT_PUBLIC_APP_URL).host
@@ -10,54 +20,24 @@ const LANDING_URL = process.env.NEXT_PUBLIC_LANDING_URL ?? "";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
 // Routes that belong on the landing domain only.
-const landingExact = ["/cookie-policy", "/privacy", "/terms"];
-
-// Public static files served from public/ — agent discovery surface.
-// Must stay on landing domain and require no auth.
-const publicFilesExact = ["/skill.md", "/llms.txt", "/INDEX.md", "/AGENTS.md"];
-const publicFilesPrefixes = ["/skills/", "/tools/", "/.well-known/"];
-
-// Routes that belong on the app subdomain
-const appPrefixes = ["/home", "/matches", "/profile", "/u", "/activity", "/notify", "/chat", "/onboarding", "/settings"];
-const appExact = ["/login", "/forgot-password", "/reset-password", "/telegram"];
-
-// Public API routes — no auth required
-const publicApiPrefixes = [
-  "/api/auth",
-  "/api/feed",
-  "/api/mcp",
-  "/api/setup",
-  "/api/soul",
-  "/api/track",
-  "/api/oauth",
-  "/api/.well-known",
-  "/api/a2a",
-  "/api/admin/analytics",
-  "/api/agent",
-  "/api/cron",
-  "/api/stats",
-  "/api/locale",
-  "/api/telegram",
-];
-
 function isAppRoute(pathname: string) {
   return (
-    appExact.includes(pathname) ||
-    appPrefixes.some((p) => pathname.startsWith(p)) ||
-    pathname.startsWith("/api/")
+    APP_EXACT.includes(pathname as (typeof APP_EXACT)[number]) ||
+    matchesAnySegment(pathname, APP_PREFIXES) ||
+    matchesAnySegment(pathname, ["/api"])
   );
 }
 
 function isPublicFile(pathname: string) {
   return (
-    publicFilesExact.includes(pathname) ||
-    publicFilesPrefixes.some((p) => pathname.startsWith(p))
+    PUBLIC_FILE_EXACT.includes(pathname as (typeof PUBLIC_FILE_EXACT)[number]) ||
+    matchesAnySegment(pathname, PUBLIC_FILE_PREFIXES)
   );
 }
 
 function isLandingRoute(pathname: string) {
   return (
-    landingExact.includes(pathname) ||
+    LANDING_EXACT.includes(pathname as (typeof LANDING_EXACT)[number]) ||
     isPublicFile(pathname)
   );
 }
@@ -101,10 +81,10 @@ export async function middleware(request: NextRequest) {
 
   // Public paths — no auth required
   const isPublic =
-    landingExact.includes(pathname) ||
-    appExact.includes(pathname) ||
-    publicApiPrefixes.some((p) => pathname.startsWith(p)) ||
-    pathname.startsWith("/feed/") ||
+    LANDING_EXACT.includes(pathname as (typeof LANDING_EXACT)[number]) ||
+    APP_EXACT.includes(pathname as (typeof APP_EXACT)[number]) ||
+    isPublicApiPath(pathname) ||
+    matchesAnySegment(pathname, PUBLIC_PAGE_PREFIXES) ||
     isPublicFile(pathname);
 
   if (isPublic) {

@@ -30,6 +30,7 @@ const tests = [
   "tests/public-match-privacy.test.ts",
   "tests/sensitive-topics.test.ts",
   "tests/setup-credentials.test.ts",
+  "tests/route-policy.test.ts",
   "tests/e2e-core.test.ts",
 ];
 
