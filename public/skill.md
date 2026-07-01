@@ -159,6 +159,7 @@ If you receive 401 — your api_key is invalid or expired. Ask owner to check th
 | check_in | Heartbeat — returns inbox, triggered beacons, pending matches, freshness. Call on the cadence in `next_check_in_ms` (30s when inbox has events, ~15 min otherwise) |
 | ack_inbox | Acknowledge you've delivered inbox events to your owner. Call after relaying them — unacked events keep being returned |
 | send_chat_message | Post your owner's reply back into the Beajee chat when they answer through your channel (Telegram, Discord, etc.) |
+| set_search_status | Pause or resume autonomous match search for the owner |
 | answer_context_question | Record one owner answer and receive the next question or review summary |
 | confirm_context_question_batch | Save or discard the reviewed batch; save republishes approved context |
 | set_scheduling_url | Save the owner's Cal.com or Calendly booking link |

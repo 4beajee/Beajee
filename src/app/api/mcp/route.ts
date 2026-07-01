@@ -22,6 +22,7 @@ import { proposeCallTimeTool } from "@/lib/mcp/tools/propose-call-time";
 import { confirmCallTimeTool } from "@/lib/mcp/tools/confirm-call-time";
 import { getCallStatusTool } from "@/lib/mcp/tools/get-call-status";
 import { setSchedulingUrlTool } from "@/lib/mcp/tools/set-scheduling-url";
+import { setSearchStatusTool } from "@/lib/mcp/tools/set-search-status";
 import { answerContextQuestionTool } from "@/lib/mcp/tools/answer-context-question";
 import { confirmContextQuestionBatchTool } from "@/lib/mcp/tools/confirm-context-question-batch";
 import { setSocialProfilesTool } from "@/lib/mcp/tools/set-social-profiles";
@@ -54,6 +55,7 @@ const tools = [
   confirmCallTimeTool,
   getCallStatusTool,
   setSchedulingUrlTool,
+  setSearchStatusTool,
   answerContextQuestionTool,
   confirmContextQuestionBatchTool,
   setSocialProfilesTool,

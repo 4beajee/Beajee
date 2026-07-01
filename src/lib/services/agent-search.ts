@@ -3,7 +3,7 @@ import { recordAnalyticsEvent } from "@/lib/analytics-tracking";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
 import { createInboxEvent } from "@/lib/services/inbox";
 
-export type AgentSearchPauseSource = "settings" | "telegram";
+export type AgentSearchPauseSource = "settings" | "telegram" | "agent";
 
 export async function setAgentSearchPaused(args: {
   agentInternalId: string;

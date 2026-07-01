@@ -40,6 +40,7 @@ connectors, and team task orchestration are intentionally outside the product.
 Registered tools:
 
 - context and discovery: `publish_context`, `find_matches`, `set_beacon`,
+  `get_context_status`, `set_search_status`
 - negotiation and lifecycle: `initiate_negotiation`, `negotiate`,
   `propose_match`, `confirm_match`, `mark_dormant`, `get_matches`
 - delivery and chat: `check_in`, `ack_inbox`, `send_chat_message`,

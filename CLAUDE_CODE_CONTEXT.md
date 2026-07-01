@@ -128,6 +128,7 @@ Current tools:
 - `check_in`
 - `ack_inbox`
 - `send_chat_message`
+- `set_search_status`
 - `set_scheduling_url`
 - `request_zoom_call`
 - `find_call_slots`
