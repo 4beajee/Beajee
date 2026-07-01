@@ -36,7 +36,7 @@ export const dangerButtonSmallClass =
 export const dangerSubtleButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl bg-red-500/[0.12] px-4 py-2.5 text-sm font-medium text-red-200 transition hover:bg-red-500/[0.18] hover:text-red-100 disabled:opacity-50";
 export const inputClass =
-  "w-full min-h-10 appearance-none rounded-xl bg-neutral-950/68 px-4 py-2.5 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.10] transition [color-scheme:dark] focus:outline-none focus:ring-white/[0.18]";
+  "w-full min-h-[52px] appearance-none rounded-[10px] bg-neutral-900/90 px-4 py-3 text-[15px] leading-6 text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_1px_2px_rgba(0,0,0,0.18)] transition-[background-color,box-shadow] duration-200 [color-scheme:dark] hover:bg-neutral-800/90 hover:ring-white/[0.22] focus:outline-none focus:ring-2 focus:ring-white/70 disabled:cursor-not-allowed disabled:bg-neutral-950/55 disabled:opacity-60 [&:-webkit-autofill]:[-webkit-text-fill-color:white] [&:-webkit-autofill]:[box-shadow:0_0_0_1000px_rgb(38_38_38)_inset]";
 export const compactInputClass =
   "w-full min-h-9 appearance-none rounded-lg bg-neutral-950/70 px-3 py-2 text-sm text-white placeholder:text-neutral-500 ring-1 ring-inset ring-white/[0.10] transition [color-scheme:dark] focus:outline-none focus:ring-white/[0.20]";
 export const compactSelectClass =

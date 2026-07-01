@@ -32,6 +32,7 @@ import {
   isOpenClawPlatform,
 } from "@/lib/agent-platform";
 import { ContextCheckInDelivery } from "@/components/context-check-in-delivery";
+import { FormField, PasswordInput, TextInput, useFieldId } from "@/components/ui/form-field";
 
 /* ── Constants ── */
 
@@ -524,15 +525,19 @@ function ChangePasswordSection() {
   const [confirm, setConfirm] = useState("");
   const { saving, saved, err, save } = useSave();
   const [localErr, setLocalErr] = useState<string | null>(null);
+  const [localErrField, setLocalErrField] = useState<"new" | "confirm" | null>(null);
 
   const handleSubmit = async () => {
     setLocalErr(null);
+    setLocalErrField(null);
     if (newPw !== confirm) {
       setLocalErr(t("auth.passwordsDontMatch"));
+      setLocalErrField("confirm");
       return;
     }
     if (newPw.length < 8) {
       setLocalErr(t("auth.passwordMinLength"));
+      setLocalErrField("new");
       return;
     }
     const result = await save("/api/settings/password", {
@@ -548,33 +553,48 @@ function ChangePasswordSection() {
 
   return (
     <Section title={t("settings.changePassword")}>
-      <div className="space-y-3">
-        <input
-          type="password"
-          placeholder={t("settings.currentPassword")}
+      <div className="space-y-4">
+        <FormField label={t("settings.currentPassword")} inputId="current-password" required requiredLabel={t("common.required")} errorText={err}>
+        <PasswordInput
+          id="current-password"
           value={current}
           onChange={(e) => setCurrent(e.target.value)}
-          className={INPUT}
+          autoComplete="current-password"
+          required
+          tone={err ? "error" : "default"}
+          describedBy={err ? "current-password-message" : undefined}
+          showLabel={t("settings.showPassword")}
+          hideLabel={t("settings.hidePassword")}
         />
-        <input
-          type="password"
-          placeholder={t("settings.newPassword")}
+        </FormField>
+        <FormField label={t("settings.newPassword")} inputId="new-password" required requiredLabel={t("common.required")} helperText={localErrField !== "new" ? t("settings.passwordRequirement") : undefined} errorText={localErrField === "new" ? localErr : undefined}>
+        <PasswordInput
+          id="new-password"
           value={newPw}
           onChange={(e) => setNewPw(e.target.value)}
-          className={INPUT}
+          autoComplete="new-password"
+          required
+          tone={localErrField === "new" ? "error" : "default"}
+          describedBy="new-password-message"
+          showLabel={t("settings.showPassword")}
+          hideLabel={t("settings.hidePassword")}
         />
-        <input
-          type="password"
-          placeholder={t("settings.confirmPassword")}
+        </FormField>
+        <FormField label={t("settings.confirmPassword")} inputId="confirm-password" required requiredLabel={t("common.required")} errorText={localErrField === "confirm" ? localErr : undefined}>
+        <PasswordInput
+          id="confirm-password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          className={INPUT}
+          autoComplete="new-password"
+          required
+          tone={localErrField === "confirm" ? "error" : "default"}
+          describedBy={localErrField === "confirm" ? "confirm-password-message" : undefined}
+          showLabel={t("settings.showPassword")}
+          hideLabel={t("settings.hidePassword")}
         />
+        </FormField>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <SaveStatus saving={saving} saved={saved} err={err} />
-            {localErr && <span className="text-[13px] text-red-400">{localErr}</span>}
-          </div>
+          <SaveStatus saving={saving} saved={saved} err={null} />
           <button
             onClick={handleSubmit}
             disabled={saving || !current || !newPw || !confirm}
@@ -815,6 +835,7 @@ function SchedulingUrlSection({
   const t = useTranslations();
   const { saving, saved, err, save } = useSave();
   const [value, setValue] = useState(schedulingUrl ?? "");
+  const fieldId = useFieldId("scheduling-url");
 
   const submit = async () => {
     const result = await save("/api/settings", {
@@ -826,18 +847,14 @@ function SchedulingUrlSection({
   return (
     <Section title={t("settings.schedulingTitle")}>
       <p className={cx(sectionDescriptionClass, "mb-4")}>{t("settings.schedulingDesc")}</p>
-      <input
-        className={INPUT}
-        type="url"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="https://cal.com/you/30min"
-      />
+      <FormField label={t("settings.schedulingFieldLabel")} inputId={fieldId} helperText={!err ? t("settings.schedulingFieldHelp") : undefined} errorText={err} successText={saved ? t("common.saved") : undefined}>
+        <TextInput id={fieldId} type="url" value={value} onChange={(e) => setValue(e.target.value)} placeholder="https://cal.com/you/30min" autoComplete="url" inputMode="url" tone={err ? "error" : saved ? "success" : "default"} describedBy={`${fieldId}-message`} leading={<LinkIcon />} />
+      </FormField>
       <div className="mt-3 flex items-center gap-3">
         <button type="button" onClick={submit} disabled={saving} className={PRIMARY_BUTTON_SM}>
           {t("settings.saveChanges")}
         </button>
-        <SaveStatus saving={saving} saved={saved} err={err} />
+        <SaveStatus saving={saving} saved={false} err={null} />
       </div>
     </Section>
   );
@@ -879,6 +896,10 @@ function SocialProfilesSection({
           value={linkedin}
           onChange={setLinkedin}
           placeholder="https://linkedin.com/in/you"
+          helperText={t("settings.linkedinFieldHelp")}
+          errorText={err && /linkedin/i.test(err) ? err : undefined}
+          disabled={saving}
+          optionalLabel={t("common.optional")}
         />
         <SocialProfileField
           provider="twitter"
@@ -886,13 +907,17 @@ function SocialProfilesSection({
           value={twitter}
           onChange={setTwitter}
           placeholder="https://x.com/you"
+          helperText={t("settings.twitterFieldHelp")}
+          errorText={err && /(twitter|x\.com)/i.test(err) ? err : undefined}
+          disabled={saving}
+          optionalLabel={t("common.optional")}
         />
       </div>
       <div className="mt-4 flex items-center gap-3">
         <button type="button" onClick={submit} disabled={saving} className={PRIMARY_BUTTON_SM}>
           {t("settings.saveChanges")}
         </button>
-        <SaveStatus saving={saving} saved={saved} err={err} />
+        <SaveStatus saving={saving} saved={saved} err={err && !/(linkedin|twitter|x\.com)/i.test(err) ? err : null} />
       </div>
     </Section>
   );
@@ -904,32 +929,44 @@ function SocialProfileField({
   value,
   onChange,
   placeholder,
+  helperText,
+  errorText,
+  disabled,
+  optionalLabel,
 }: {
   provider: "linkedin" | "twitter";
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  helperText: string;
+  errorText?: string;
+  disabled?: boolean;
+  optionalLabel: string;
 }) {
   const accent = provider === "linkedin" ? "bg-[#0A66C2]" : "bg-[#1D9BF0]";
+  const fieldId = useFieldId(`${provider}-url`);
   return (
-    <label className="block">
-      <span className="mb-2 flex items-center gap-2 text-sm font-medium text-neutral-200">
-        <span className={cx("grid h-6 w-6 place-items-center rounded-md text-[11px] font-bold text-white", accent)}>
-          {provider === "linkedin" ? "in" : "𝕏"}
-        </span>
-        {label}
-      </span>
-      <input
-        className={INPUT}
+    <FormField label={label} inputId={fieldId} optional optionalLabel={optionalLabel} helperText={!errorText ? helperText : undefined} errorText={errorText}>
+      <TextInput
+        id={fieldId}
         type="url"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         autoComplete="url"
+        inputMode="url"
+        disabled={disabled}
+        tone={errorText ? "error" : "default"}
+        describedBy={`${fieldId}-message`}
+        leading={<span className={cx("grid h-6 w-6 place-items-center rounded-md text-[11px] font-bold text-white", accent)}>{provider === "linkedin" ? "in" : "𝕏"}</span>}
       />
-    </label>
+    </FormField>
   );
+}
+
+function LinkIcon() {
+  return <svg className="h-[18px] w-[18px]" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M8.25 11.75 11.75 8.25M6.5 13.5l-1 1a2.828 2.828 0 0 1-4-4l3-3a2.828 2.828 0 0 1 4 0M13.5 6.5l1-1a2.828 2.828 0 1 1 4 4l-3 3a2.828 2.828 0 0 1-4 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>;
 }
 
 /* ── P1: Networking Goal ── */

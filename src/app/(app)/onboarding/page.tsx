@@ -9,13 +9,13 @@ import { getCountryOptions, matchesCountryQuery } from "@/lib/countries";
 import {
   codePanelClass,
   cx,
-  inputClass,
   panelClass,
   primaryButtonClass,
   primaryButtonSmallClass,
   subtleButtonClass,
   subtleButtonSmallClass,
 } from "@/components/ui/app-chrome";
+import { FormField, TextInput } from "@/components/ui/form-field";
 import { ContextCheckInDelivery } from "@/components/context-check-in-delivery";
 import { AgentPlatformLogo } from "@/components/agent-platform-logo";
 import {
@@ -809,10 +809,18 @@ export default function OnboardingPage() {
               {t("onboarding.countryDesc")}
             </p>
 
-            <div className={cx(panelClass, "p-4")}>
-              <div className="relative">
-                <svg
-                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500"
+            <div className={cx(panelClass, "overflow-hidden p-3 sm:p-4")}>
+              <FormField label={t("onboarding.countrySearchLabel")} inputId="country-search">
+                <TextInput
+                  id="country-search"
+                  type="search"
+                  value={countryQuery}
+                  onChange={(event) => setCountryQuery(event.target.value)}
+                  autoFocus
+                  autoComplete="off"
+                  placeholder={t("onboarding.countrySearchPlaceholder")}
+                  leading={<svg
+                  className="h-4 w-4"
                   viewBox="0 0 20 20"
                   fill="none"
                   aria-hidden="true"
@@ -824,19 +832,11 @@ export default function OnboardingPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                </svg>
-
-                <input
-                  value={countryQuery}
-                  onChange={(event) => setCountryQuery(event.target.value)}
-                  autoFocus
-                  autoComplete="off"
-                  placeholder={t("onboarding.countrySearchPlaceholder")}
-                  className={cx(inputClass, "pl-11")}
+                </svg>}
                 />
-              </div>
+              </FormField>
 
-              <div className="mt-4 max-h-[360px] overflow-y-auto pr-1">
+              <div className="mt-3 max-h-[360px] overflow-y-auto rounded-lg bg-black/10 p-1">
                 {filteredCountries.length > 0 ? (
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {filteredCountries.map((country) => {
@@ -846,10 +846,11 @@ export default function OnboardingPage() {
                         <button
                           key={country.code}
                           onClick={() => setSelectedCountryCode(country.code)}
-                          className={`rounded-xl border px-3 py-3 text-left transition-all ${
+                          aria-pressed={isSelected}
+                          className={`min-h-12 rounded-lg border px-3 py-3 text-left transition-all ${
                             isSelected
                               ? "border-white bg-white text-black shadow-[0_12px_30px_rgba(255,255,255,0.08)]"
-                              : "border-neutral-800 bg-black/20 text-neutral-200 hover:border-neutral-600 hover:bg-neutral-900"
+                              : "border-transparent bg-transparent text-neutral-200 hover:border-white/[0.12] hover:bg-white/[0.045]"
                           }`}
                         >
                           <span className="flex items-center gap-3">
