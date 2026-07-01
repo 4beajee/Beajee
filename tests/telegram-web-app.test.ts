@@ -70,6 +70,7 @@ function ok(label: string) {
 }
 
 {
+  const page = read("src/app/(public)/telegram/page.tsx");
   const bot = read("src/lib/telegram/bot.ts");
   const onboarding = read("src/lib/telegram/onboarding.ts");
   const webhook = read("src/app/api/telegram/webhook/route.ts");
@@ -86,6 +87,10 @@ function ok(label: string) {
   assert.match(onboarding, /not a general AI chat/);
   assert.match(onboarding, /Start here/);
   assert.match(onboarding, /Today, Matches, Chats, calls, and your settings/);
+  assert.match(onboarding, /TELEGRAM_SUPPORT_USERNAME = "GGen1e"/);
+  assert.match(onboarding, /https:\/\/t\.me\/\$\{TELEGRAM_SUPPORT_USERNAME\}/);
+  assert.match(page, /Technical help/);
+  assert.match(page, /Message @\{TELEGRAM_SUPPORT_USERNAME\}/);
   assert.match(webhook, /command === "\/help"/);
   assert.match(webhook, /guided: true/);
   assert.match(webhook, /message\.chat\.type !== "private"/);
