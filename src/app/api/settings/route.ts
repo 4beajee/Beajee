@@ -125,7 +125,6 @@ export async function PATCH(request: NextRequest) {
 
     // Build Owner update
     const ownerUpdate: Record<string, unknown> = {};
-    if (validated.excludedTopics !== undefined) ownerUpdate.excludedTopics = validated.excludedTopics;
     if (validated.networkingGoal !== undefined) ownerUpdate.networkingGoal = validated.networkingGoal;
     if (validated.schedulingUrl !== undefined) {
       ownerUpdate.schedulingUrl = validated.schedulingUrl === "" ? null : validated.schedulingUrl;
@@ -174,7 +173,6 @@ export async function PATCH(request: NextRequest) {
     if (validated.excludedTopics !== undefined && previousOwner) {
       await syncPrivacyTopicsForAgent({
         ownerId: auth.ownerId,
-        previousExcludedTopics: previousOwner.excludedTopics ?? [],
         nextExcludedTopics: validated.excludedTopics,
       });
     }

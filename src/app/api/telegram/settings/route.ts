@@ -82,7 +82,6 @@ export async function PATCH(request: NextRequest) {
 
     const ownerUpdate: Record<string, unknown> = {};
     if (input.networkingGoal !== undefined) ownerUpdate.networkingGoal = input.networkingGoal;
-    if (input.excludedTopics !== undefined) ownerUpdate.excludedTopics = input.excludedTopics;
     if (input.schedulingUrl !== undefined) ownerUpdate.schedulingUrl = input.schedulingUrl || null;
     if (Object.keys(ownerUpdate).length) {
       await prisma.owner.update({ where: { id: owner.id }, data: ownerUpdate });
@@ -94,10 +93,9 @@ export async function PATCH(request: NextRequest) {
         source: "telegram",
       });
     }
-    if (input.excludedTopics !== undefined && owner.agent) {
+    if (input.excludedTopics !== undefined) {
       await syncPrivacyTopicsForAgent({
         ownerId: owner.id,
-        previousExcludedTopics: owner.excludedTopics,
         nextExcludedTopics: input.excludedTopics,
       });
     }

@@ -16,9 +16,36 @@ export async function GET(
 
     const owner = await prisma.owner.findUnique({
       where: { id: ownerId },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        networkingGoal: true,
+        createdAt: true,
         agent: {
-          include: { context: true },
+          select: {
+            displayName: true,
+            isActive: true,
+            lastActiveAt: true,
+            reputationScore: true,
+            reputationAcceptanceRate: true,
+            reputationCompletedMatches: true,
+            totalProposedMatches: true,
+            interactionCount: true,
+            context: {
+              select: {
+                ownerProfession: true,
+                ownerDomain: true,
+                currentWork: true,
+                expertise: true,
+                lookingFor: true,
+                location: true,
+                networkingGoal: true,
+                agentSpecialization: true,
+                freshnessState: true,
+              },
+            },
+          },
         },
       },
     });
@@ -28,7 +55,8 @@ export async function GET(
     }
 
     const agent = owner.agent;
-    const ctx = agent?.context ?? null;
+    // STALE is also the immediate suppression state after privacy is tightened.
+    const ctx = agent?.context?.freshnessState === "STALE" ? null : agent?.context ?? null;
 
     return NextResponse.json({
       id: owner.id,
@@ -38,27 +66,14 @@ export async function GET(
       memberSince: owner.createdAt,
       context: ctx
         ? {
-            ownerName: ctx.ownerName,
             ownerProfession: ctx.ownerProfession,
             ownerDomain: ctx.ownerDomain,
-            ownerExperience: ctx.ownerExperience,
-            ownerGoals: ctx.ownerGoals,
-            ownerLocation: ctx.ownerLocation,
             currentWork: ctx.currentWork,
             expertise: ctx.expertise,
             lookingFor: ctx.lookingFor,
-            notLookingFor: ctx.notLookingFor,
-            recentProblems: ctx.recentProblems,
-            recentWins: ctx.recentWins,
             location: ctx.location,
             networkingGoal: ctx.networkingGoal,
-            collaborationStyle: ctx.collaborationStyle,
-            communicationStyle: ctx.communicationStyle,
             agentSpecialization: ctx.agentSpecialization,
-            agentDomains: ctx.agentDomains,
-            freshnessState: ctx.freshnessState,
-            lastUpdated: ctx.updatedAt,
-            lastSignificantUpdate: ctx.lastSignificantUpdateAt,
           }
         : null,
       reputation: {

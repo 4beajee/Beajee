@@ -1,5 +1,7 @@
 import assert from "assert";
 import { buildPrivacyChangePayload } from "../src/lib/privacy-change";
+import fs from "node:fs";
+import path from "node:path";
 
 {
   const payload = buildPrivacyChangePayload({
@@ -23,6 +25,27 @@ import { buildPrivacyChangePayload } from "../src/lib/privacy-change";
   );
 
   console.log("PASS: stricter privacy change builds a suppression payload");
+}
+
+{
+  const root = path.resolve(__dirname, "..");
+  const service = fs.readFileSync(path.join(root, "src/lib/services/privacy-sync.ts"), "utf8");
+  assert.match(service, /prisma\.\$transaction\(async \(tx\)/);
+  assert.match(service, /tx\.owner\.update/);
+  assert.match(service, /SET embedding = NULL/);
+  assert.match(service, /tx\.beacon\.updateMany/);
+  assert.match(service, /tx\.inboxEvent\.create/);
+
+  const settings = fs.readFileSync(path.join(root, "src/app/api/settings/route.ts"), "utf8");
+  assert.doesNotMatch(settings, /ownerUpdate\.excludedTopics/);
+
+  const profile = fs.readFileSync(path.join(root, "src/app/api/profiles/[ownerId]/route.ts"), "utf8");
+  for (const privateField of ["recentProblems", "recentWins", "notLookingFor", "ownerGoals"]) {
+    assert.doesNotMatch(profile, new RegExp(privateField));
+  }
+  assert.match(profile, /freshnessState === "STALE" \? null/);
+
+  console.log("PASS: privacy tightening is atomic and public profiles use a safe projection");
 }
 
 {
