@@ -1,8 +1,19 @@
 .telegram-app-shell {
-  /* Telegram's own controls sit inside the OS safe area. Its content inset is
-     therefore the authoritative top edge; the extra gap keeps navigation easy
-     to reach without making the first screen feel detached. */
-  padding-top: calc(max(env(safe-area-inset-top, 0px), var(--telegram-safe-top, 0px)) + 16px);
+  /* Some Telegram clients report a zero content inset even while their native
+     toolbar is visible. The fixed 88px floor keeps our header clear there too. */
+  padding-top: max(
+    88px,
+    calc(max(env(safe-area-inset-top, 0px), var(--telegram-safe-top, 0px)) + 20px)
+  );
+  padding-bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--telegram-safe-bottom, 0px)) + 116px);
+}
+
+.telegram-bottom-nav {
+  bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--telegram-safe-bottom, 0px)) + 12px);
+}
+
+.telegram-notice {
+  bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--telegram-safe-bottom, 0px)) + 88px);
 }
 
 .telegram-float {

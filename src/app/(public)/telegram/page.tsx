@@ -185,7 +185,9 @@ export default function TelegramWebAppPage() {
     const hostedByTelegram = !!tg?.initData;
     const syncTelegramInsets = () => {
       const topInset = Math.max(tg?.safeAreaInset?.top ?? 0, tg?.contentSafeAreaInset?.top ?? 0);
+      const bottomInset = Math.max(tg?.safeAreaInset?.bottom ?? 0, tg?.contentSafeAreaInset?.bottom ?? 0);
       document.documentElement.style.setProperty("--telegram-safe-top", `${topInset}px`);
+      document.documentElement.style.setProperty("--telegram-safe-bottom", `${bottomInset}px`);
     };
     if (hostedByTelegram) {
       tg?.ready?.();
@@ -368,17 +370,21 @@ export default function TelegramWebAppPage() {
   const selectedMatch = matches.find((item) => item.matchId === selectedMatchId) ?? null;
   return (
     <main className="min-h-[100dvh] overflow-x-hidden bg-black text-white">
-      <div className="telegram-app-shell mx-auto min-h-[100dvh] max-w-[560px] px-4 pb-[calc(32px+env(safe-area-inset-bottom))] sm:px-6">
-        {notice ? <button onClick={() => setNotice(null)} className="telegram-float fixed bottom-[max(20px,env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] max-w-[520px] -translate-x-1/2 rounded-full bg-white px-5 py-3 text-left text-sm font-medium text-black shadow-[0_24px_80px_rgba(0,0,0,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">{notice}</button> : null}
-        <header className="mb-5 flex items-center justify-between">
-          <button onClick={() => openTab("today")} className="telegram-float grid h-12 w-12 place-items-center rounded-full bg-white text-sm font-bold text-black shadow-[0_18px_55px_rgba(0,0,0,0.7)] transition-transform active:scale-95" aria-label="Open Today">B</button>
+      <div className="telegram-app-shell mx-auto min-h-[100dvh] max-w-[560px] px-4 sm:px-6">
+        {notice ? <button onClick={() => setNotice(null)} className="telegram-notice telegram-float fixed left-1/2 z-50 w-[calc(100%-32px)] max-w-[520px] -translate-x-1/2 rounded-full bg-white px-5 py-3 text-left text-sm font-medium text-black shadow-[0_24px_80px_rgba(0,0,0,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">{notice}</button> : null}
+        <header className="mb-10 flex items-center justify-between">
+          <button onClick={() => openTab("today")} className="telegram-float grid h-12 w-12 place-items-center text-white transition-transform active:scale-95" aria-label="Open Today">
+            {/* The app icon is the canonical Beajee mark; its black field disappears into the shell. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon.png" alt="" className="h-12 w-12 object-contain" />
+          </button>
           <div className="rounded-full bg-white/[0.06] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-neutral-400 backdrop-blur-2xl">Personal network</div>
           <button onClick={() => refresh()} disabled={refreshing} className="telegram-float-delayed grid h-12 w-12 place-items-center rounded-full bg-white/[0.09] text-lg text-white shadow-[0_18px_55px_rgba(0,0,0,0.7)] backdrop-blur-2xl transition-transform active:scale-95 disabled:opacity-40" aria-label="Refresh">↻</button>
         </header>
-        <nav className="telegram-float-delayed mb-10 grid grid-cols-4 gap-1 rounded-full bg-white/[0.07] p-1.5 shadow-[0_28px_80px_rgba(0,0,0,0.58)] backdrop-blur-2xl" aria-label="Main navigation">
+        <nav className="telegram-bottom-nav fixed left-1/2 z-40 grid w-[calc(100%-24px)] max-w-[536px] -translate-x-1/2 grid-cols-4 gap-1 rounded-full border border-white/[0.08] bg-black/80 p-1.5 shadow-[0_28px_80px_rgba(0,0,0,0.78)] backdrop-blur-2xl" aria-label="Main navigation">
           {(["today", "matches", "chats", "you"] as Tab[]).map((item) => {
             const badge = item === "today" ? matches.filter((m) => m.status === "PROPOSED" && !m.confirmedByMe).length : item === "chats" ? chats.reduce((sum, chatItem) => sum + chatItem.unreadCount, 0) : 0;
-            return <button key={item} onClick={() => openTab(item)} className={`relative flex min-h-12 items-center justify-center gap-2 rounded-full px-2 text-[11px] font-medium capitalize transition-[background-color,color,transform] active:scale-95 ${tab === item ? "bg-white text-black shadow-[0_10px_30px_rgba(0,0,0,0.35)]" : "text-neutral-500 hover:bg-white/[0.06] hover:text-white"}`}><span className="relative"><Icon name={item}/>{badge > 0 ? <span className={`absolute -right-2 -top-2 min-w-4 rounded-full px-1 text-center text-[9px] leading-4 ${tab === item ? "bg-black text-white" : "bg-white text-black"}`}>{Math.min(9, badge)}</span> : null}</span><span className="hidden min-[390px]:inline">{item}</span></button>;
+            return <button key={item} onClick={() => openTab(item)} aria-current={tab === item ? "page" : undefined} className={`relative flex min-h-12 items-center justify-center gap-2 rounded-full px-2 text-[11px] font-medium capitalize transition-[background-color,color,transform] active:scale-95 ${tab === item ? "bg-white text-black shadow-[0_10px_30px_rgba(0,0,0,0.35)]" : "text-neutral-500 hover:bg-white/[0.06] hover:text-white"}`}><span className="relative"><Icon name={item}/>{badge > 0 ? <span className={`absolute -right-2 -top-2 min-w-4 rounded-full px-1 text-center text-[9px] leading-4 ${tab === item ? "bg-black text-white" : "bg-white text-black"}`}>{Math.min(9, badge)}</span> : null}</span><span className="hidden min-[390px]:inline">{item}</span></button>;
           })}
         </nav>
         <div className="pb-8">
