@@ -1,3 +1,10 @@
+.telegram-app-shell {
+  /* Telegram's own controls sit inside the OS safe area. Its content inset is
+     therefore the authoritative top edge; the extra gap keeps navigation easy
+     to reach without making the first screen feel detached. */
+  padding-top: calc(max(env(safe-area-inset-top, 0px), var(--telegram-safe-top, 0px)) + 16px);
+}
+
 .telegram-float {
   animation: telegram-float 6s ease-in-out infinite;
   will-change: translate;

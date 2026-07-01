@@ -16,6 +16,10 @@ type TelegramWebApp = {
   disableVerticalSwipes?: () => void;
   enableClosingConfirmation?: () => void;
   disableClosingConfirmation?: () => void;
+  safeAreaInset?: { top: number; right: number; bottom: number; left: number };
+  contentSafeAreaInset?: { top: number; right: number; bottom: number; left: number };
+  onEvent?: (event: "safeAreaChanged" | "contentSafeAreaChanged", fn: () => void) => void;
+  offEvent?: (event: "safeAreaChanged" | "contentSafeAreaChanged", fn: () => void) => void;
   BackButton?: { show: () => void; hide: () => void; onClick: (fn: () => void) => void; offClick: (fn: () => void) => void };
   HapticFeedback?: { impactOccurred?: (style: "light" | "medium" | "heavy") => void; notificationOccurred?: (type: "success" | "warning" | "error") => void };
 };
@@ -179,11 +183,18 @@ export default function TelegramWebAppPage() {
   useEffect(() => {
     const tg = webApp();
     const hostedByTelegram = !!tg?.initData;
+    const syncTelegramInsets = () => {
+      const topInset = Math.max(tg?.safeAreaInset?.top ?? 0, tg?.contentSafeAreaInset?.top ?? 0);
+      document.documentElement.style.setProperty("--telegram-safe-top", `${topInset}px`);
+    };
     if (hostedByTelegram) {
       tg?.ready?.();
       tg?.expand?.();
       try { tg?.requestFullscreen?.(); } catch { /* Older clients stay expanded. */ }
       tg?.disableVerticalSwipes?.();
+      syncTelegramInsets();
+      tg?.onEvent?.("safeAreaChanged", syncTelegramInsets);
+      tg?.onEvent?.("contentSafeAreaChanged", syncTelegramInsets);
     }
     const params = new URLSearchParams(window.location.search);
     const requestedTab = params.get("tab") as Tab | null;
@@ -207,6 +218,10 @@ export default function TelegramWebAppPage() {
       }
     };
     authenticate();
+    return () => {
+      tg?.offEvent?.("safeAreaChanged", syncTelegramInsets);
+      tg?.offEvent?.("contentSafeAreaChanged", syncTelegramInsets);
+    };
   }, []);
 
   const refresh = useCallback(async (quiet = false) => {
@@ -353,7 +368,7 @@ export default function TelegramWebAppPage() {
   const selectedMatch = matches.find((item) => item.matchId === selectedMatchId) ?? null;
   return (
     <main className="min-h-[100dvh] overflow-x-hidden bg-black text-white">
-      <div className="mx-auto min-h-[100dvh] max-w-[560px] px-4 pb-[calc(32px+env(safe-area-inset-bottom))] pt-[max(20px,env(safe-area-inset-top))] sm:px-6">
+      <div className="telegram-app-shell mx-auto min-h-[100dvh] max-w-[560px] px-4 pb-[calc(32px+env(safe-area-inset-bottom))] sm:px-6">
         {notice ? <button onClick={() => setNotice(null)} className="telegram-float fixed bottom-[max(20px,env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] max-w-[520px] -translate-x-1/2 rounded-full bg-white px-5 py-3 text-left text-sm font-medium text-black shadow-[0_24px_80px_rgba(0,0,0,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">{notice}</button> : null}
         <header className="mb-5 flex items-center justify-between">
           <button onClick={() => openTab("today")} className="telegram-float grid h-12 w-12 place-items-center rounded-full bg-white text-sm font-bold text-black shadow-[0_18px_55px_rgba(0,0,0,0.7)] transition-transform active:scale-95" aria-label="Open Today">B</button>
