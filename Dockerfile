@@ -18,20 +18,19 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./package.json
 COPY . .
 
-# Build arguments for env vars needed at build time
-ARG DATABASE_URL
-ARG DIRECT_URL
-ARG NEXTAUTH_SECRET
-ARG NEXTAUTH_URL
+# Only public values are baked into the client bundle. Runtime secrets are
+# supplied to the final container and never enter image build layers.
 ARG NEXT_PUBLIC_APP_URL
 ARG NEXT_PUBLIC_LANDING_URL
 
-ENV DATABASE_URL=$DATABASE_URL
-ENV DIRECT_URL=$DIRECT_URL
-ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
-ENV NEXTAUTH_URL=$NEXTAUTH_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_LANDING_URL=$NEXT_PUBLIC_LANDING_URL
+# Some server modules construct clients while Next collects route metadata.
+# Non-routable placeholders satisfy constructor validation without exposing or
+# contacting production services; the runner receives real values at runtime.
+ENV DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build"
+ENV DIRECT_URL="postgresql://build:build@127.0.0.1:5432/build"
+ENV NEXTAUTH_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 # The production droplet is small; allow Next/TypeScript to use swap during image builds.
 ENV NODE_OPTIONS="--max-old-space-size=1536"

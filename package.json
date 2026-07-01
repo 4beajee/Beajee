@@ -7,6 +7,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "test": "node --import tsx tests/run-all.ts",
+    "typecheck": "tsc -p tsconfig.typecheck.json --noEmit",
     "test:e2e": "node --import tsx tests/e2e-core.test.ts",
     "lint": "eslint src",
     "db:generate": "npx prisma generate",
