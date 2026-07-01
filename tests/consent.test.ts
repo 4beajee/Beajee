@@ -7,6 +7,8 @@
 
 import { createHash } from "crypto";
 import assert from "assert";
+import fs from "node:fs";
+import path from "node:path";
 
 const POLICY_VERSION = "2026-04-01";
 
@@ -148,4 +150,34 @@ function hashIp(rawIp: string, salt: string): string {
   console.log("PASS: withdrawConsent inserts action: 'withdrawn' record");
 }
 
-console.log("\nAll 4 tests passed.");
+/* ─── 5. Browser-only consent state cannot alter the hydration render ─── */
+
+{
+  const root = process.cwd();
+  const hook = fs.readFileSync(path.join(root, "src/hooks/useCookieConsent.ts"), "utf8");
+  const banner = fs.readFileSync(path.join(root, "src/components/cookie-consent.tsx"), "utf8");
+  const languageFab = fs.readFileSync(path.join(root, "src/components/mobile-language-fab.tsx"), "utf8");
+
+  assert.match(hook, /const \[isLoaded, setIsLoaded\] = useState\(false\)/);
+  assert.match(hook, /useEffect\(\(\) => \{[\s\S]*setIsLoaded\(true\)/);
+  assert.match(banner, /if \(!isLoaded \|\| pathname/);
+  assert.match(languageFab, /if \(!isLoaded \|\| !hasConsented\)/);
+
+  console.log("PASS: consent-dependent UI waits for browser state before rendering");
+}
+
+/* ─── 6. Development CSP supports the Next.js runtime only in development ─── */
+
+{
+  const root = process.cwd();
+  const nextConfig = fs.readFileSync(path.join(root, "next.config.mjs"), "utf8");
+
+  assert.match(nextConfig, /NODE_ENV === 'development'/);
+  assert.match(nextConfig, /developmentScriptPolicy/);
+  assert.match(nextConfig, /'unsafe-eval'/);
+  assert.match(nextConfig, /'\*\.trycloudflare\.com'/);
+
+  console.log("PASS: tunneled development origins can load the Next.js client runtime");
+}
+
+console.log("\nAll 6 tests passed.");

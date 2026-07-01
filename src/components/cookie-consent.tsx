@@ -67,7 +67,7 @@ function Toggle({
 export function CookieConsent() {
   const pathname = usePathname();
   const t = useTranslations("cookie");
-  const { hasConsented, submitConsent } = useCookieConsent();
+  const { isLoaded, hasConsented, submitConsent } = useCookieConsent();
   const [hiding, setHiding] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
 
@@ -84,7 +84,7 @@ export function CookieConsent() {
     [submitConsent]
   );
 
-  if (pathname === "/telegram" || hasConsented) return null;
+  if (!isLoaded || pathname === "/telegram" || hasConsented) return null;
 
   const categories: {
     key: string;

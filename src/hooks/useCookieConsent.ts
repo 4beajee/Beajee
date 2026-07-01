@@ -129,29 +129,35 @@ function markServerRecorded(eventId: string | undefined) {
   });
 }
 
-function getInitialConsentState() {
-  const stored = getStoredConsent();
-  return {
-    hasConsented: Boolean(stored && stored.action !== "withdrawn"),
-    currentConsents: stored?.consents ?? null,
-  };
-}
-
 export function useCookieConsent() {
-  const [consentState, setConsentState] = useState(getInitialConsentState);
+  const [consentState, setConsentState] = useState({
+    hasConsented: false,
+    currentConsents: null as ConsentCategories | null,
+  });
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const stored = getStoredConsent();
-    if (!stored?.pending || stored.serverRecorded || !stored.eventId) return;
     let cancelled = false;
 
-    recordConsent(stored)
-      .then((success) => {
-        if (!cancelled && success) markServerRecorded(stored.eventId);
-      })
-      .catch(() => {
-        // Keep pending entry for the next page load.
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setConsentState({
+        hasConsented: Boolean(stored && stored.action !== "withdrawn"),
+        currentConsents: stored?.consents ?? null,
       });
+      setIsLoaded(true);
+    });
+
+    if (stored?.pending && !stored.serverRecorded && stored.eventId) {
+      recordConsent(stored)
+        .then((success) => {
+          if (!cancelled && success) markServerRecorded(stored.eventId);
+        })
+        .catch(() => {
+          // Keep pending entry for the next page load.
+        });
+    }
 
     return () => {
       cancelled = true;
@@ -201,6 +207,7 @@ export function useCookieConsent() {
   }, []);
 
   return {
+    isLoaded,
     hasConsented: consentState.hasConsented,
     currentConsents: consentState.currentConsents,
     submitConsent,

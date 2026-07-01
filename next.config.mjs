@@ -2,13 +2,15 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
+const developmentScriptPolicy = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '';
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "script-src 'self' 'unsafe-inline' https://telegram.org",
+  `script-src 'self' 'unsafe-inline'${developmentScriptPolicy} https://telegram.org`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
@@ -19,7 +21,7 @@ const contentSecurityPolicy = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  allowedDevOrigins: ['beajee.local', 'app.beajee.local'],
+  allowedDevOrigins: ['beajee.local', 'app.beajee.local', '*.trycloudflare.com'],
   serverExternalPackages: ['@prisma/client', 'sharp'],
   async headers() {
     return [

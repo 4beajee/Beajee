@@ -4,8 +4,8 @@ import { useCookieConsent } from "@/hooks/useCookieConsent";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
 export function MobileLanguageFab() {
-  const { hasConsented } = useCookieConsent();
-  if (!hasConsented) return null;
+  const { isLoaded, hasConsented } = useCookieConsent();
+  if (!isLoaded || !hasConsented) return null;
 
   return (
     <div
