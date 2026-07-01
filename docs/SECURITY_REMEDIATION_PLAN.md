@@ -1,10 +1,33 @@
 # Beajee Security and Reliability Remediation Plan
 
-Status: approved for execution
+Status: local remediation complete; production rollout blocked pending target confirmation
 
 Source: full-codebase audit performed 2026-06-30
 
 Scope: all confirmed critical, high, medium, and low findings from the audit
+
+## Execution Status — 2026-07-01
+
+Completed locally:
+
+- Phases 0–3 and 5–8 are implemented in focused commits with regression coverage.
+- All 38 migrations apply to a clean PostgreSQL 16 + pgvector database with zero schema drift.
+- Full tests, focused typecheck, production build, hardened Docker build, dependency audit,
+  security-header check, and Git-history secret scan pass.
+- `npm audit --omit=dev --audit-level=high` reports zero production vulnerabilities;
+  the complete dependency tree has no high or critical advisories.
+
+Still blocked before production deployment:
+
+- Phase 4 requires the owner-confirmed Beajee droplet, directory, domain, database, nginx,
+  and host marker. The private `deploy.md` still identifies a different Gennety target.
+- The private `.env.production` contains malformed trailing content after `DIRECT_URL` and
+  cannot currently be parsed by Docker Compose. It must be repaired without exposing values.
+- The Git remote redirects from the legacy Gennety location to `4beajee/Beajee`; rollout
+  configuration should be reconciled explicitly.
+- Production credentials and all historical agent API keys must be rotated during the approved rollout.
+- Production canary verification remains pending because no production mutation was authorized
+  against a confirmed Beajee target.
 
 ## Objective
 
