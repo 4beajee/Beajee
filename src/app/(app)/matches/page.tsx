@@ -18,6 +18,7 @@ import {
   tabIdleClass,
 } from "@/components/ui/app-chrome";
 import { ScheduleCallButton } from "@/components/schedule-call-button";
+import { TelegramConnectCard } from "@/components/telegram-connect-card";
 
 interface MatchItem {
   matchId: string;
@@ -50,15 +51,18 @@ export default function MatchesPage() {
   const { status } = useSession();
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [freshnessState, setFreshnessState] = useState<string | null>(null);
+  const [telegramConnected, setTelegramConnected] = useState(true);
   const [tab, setTab] = useState<"active" | "sent" | "dormant">("active");
   const [loading, setLoading] = useState(true);
   const t = useTranslations();
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    fetch("/api/matches")
-      .then((r) => r.json())
-      .then((data) => {
+    Promise.all([
+      fetch("/api/matches").then((response) => response.json()),
+      fetch("/api/settings").then((response) => response.json()),
+    ])
+      .then(([data, settings]) => {
         if (data && data.matches && Array.isArray(data.matches)) {
           setMatches(data.matches);
           setFreshnessState(data.freshnessState ?? null);
@@ -66,6 +70,7 @@ export default function MatchesPage() {
           // Backward compat with old array response
           setMatches(data);
         }
+        setTelegramConnected(!!settings.telegramConnected);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -101,6 +106,12 @@ export default function MatchesPage() {
   return (
     <div className={pageFrameClass}>
       <PageHeader title={t("matches.title")} />
+
+      <TelegramConnectCard
+        initialConnected={telegramConnected}
+        placement="matches"
+        className="mb-8"
+      />
 
       <FreshnessIndicator state={freshnessState} />
 

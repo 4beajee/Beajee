@@ -17,7 +17,7 @@ import {
   pageFrameClass,
   subtleButtonSmallClass,
 } from "@/components/ui/app-chrome";
-import { ContextCheckInDelivery } from "@/components/context-check-in-delivery";
+import { TelegramConnectCard } from "@/components/telegram-connect-card";
 
 interface Stats {
   totalMembers: number;
@@ -47,7 +47,7 @@ interface MyData {
     summary: string | null;
     action: string | null;
   } | null;
-  contextQuestionDelivery: "telegram" | "native_agent" | "telegram_required";
+  telegramConnected: boolean;
 }
 
 export default function HomePage() {
@@ -88,7 +88,7 @@ export default function HomePage() {
             matchesData.freshnessState === "ACTIVE" ||
             matchesData.freshnessState === "AGING",
           privacySync: matchesData.privacySync ?? null,
-          contextQuestionDelivery: settingsData.contextQuestionDelivery ?? "telegram_required",
+          telegramConnected: !!settingsData.telegramConnected,
         });
         setLoading(false);
       })
@@ -148,7 +148,11 @@ export default function HomePage() {
       )}
 
       {myData ? (
-        <ContextCheckInDelivery mode={myData.contextQuestionDelivery} className="mb-8" />
+        <TelegramConnectCard
+          initialConnected={myData.telegramConnected}
+          placement="home"
+          className="mb-8"
+        />
       ) : null}
 
       <Surface className="mb-8 px-5 py-5">

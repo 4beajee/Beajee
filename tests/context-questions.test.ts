@@ -90,13 +90,13 @@ function ok(label: string) {
   assert.match(onboarding, /"open_claw", "hermes", "fork", "codex", "claude_code"/);
   assert.match(onboarding, /ContextCheckInDelivery/);
   assert.match(settings, /ContextCheckInDelivery/);
-  assert.match(home, /ContextCheckInDelivery/);
+  assert.match(home, /TelegramConnectCard/);
   assert.match(template, /\[context_question_setup\]/);
   assert.match(mcpRoute, /answerContextQuestionTool/);
   assert.match(mcpRoute, /confirmContextQuestionBatchTool/);
   assert.match(cronRoute, /isAuthorizedCronRequest/);
   assert.match(publicContextSkill, /Codex and Claude Code must never display/);
-  ok("Onboarding, Home, Settings, and generated agent instructions expose the delivery policy");
+  ok("Onboarding, Home, Settings, and generated agent instructions expose Telegram delivery");
 }
 
 console.log(`\nAll context question tests passed (${passed} checks).`);
