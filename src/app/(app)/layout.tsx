@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -301,9 +302,12 @@ function ProfileSidebar() {
       >
         {/* Avatar */}
         {avatarUrl ? (
-          <img
+          <Image
             src={avatarUrl}
             alt={name ?? "Profile"}
+            width={40}
+            height={40}
+            unoptimized={avatarUrl.startsWith("data:")}
             className="w-10 h-10 rounded-full object-cover mb-3"
           />
         ) : (

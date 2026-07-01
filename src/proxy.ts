@@ -53,7 +53,7 @@ function isLocalDevHost(host: string) {
   return hostname === "localhost" || hostname === "127.0.0.1";
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get("host") ?? "";
   const isLocalDev = isLocalDevHost(host);
