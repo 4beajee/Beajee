@@ -27,7 +27,7 @@ import {
   subtleButtonSmallClass,
 } from "@/components/ui/app-chrome";
 import {
-  AGENT_PLATFORM_OPTIONS,
+  PRIMARY_AGENT_PLATFORMS,
   getAgentPlatformLabel,
   isOpenClawPlatform,
 } from "@/lib/agent-platform";
@@ -187,6 +187,22 @@ export default function SettingsPage() {
         onUpdate={(v) => setSettings({ ...settings, agentActive: v })}
       />
 
+      {settings.agentPlatform && (
+        <ChangeAgentPlatformSection
+          currentPlatform={settings.agentPlatform}
+          onChanged={(agentPlatform) => setSettings({
+            ...settings,
+            agentPlatform,
+            wakeWebhookEnabled: false,
+            webhookUrl: "",
+            webhookTokenSet: false,
+            wakeStreamConnected: false,
+            wakeStreamConnectionCount: 0,
+            wakeDeliveryMode: "polling",
+          })}
+        />
+      )}
+
       {settings.hasPassword && <ChangePasswordSection />}
 
       <ExcludedTopicsSection
@@ -231,7 +247,6 @@ export default function SettingsPage() {
         <DownloadSoulSection
           agentId={settings.agentId}
           platform={settings.agentPlatform}
-          onPlatformUpdate={(agentPlatform) => setSettings({ ...settings, agentPlatform })}
         />
       )}
 
@@ -353,6 +368,113 @@ function ToggleSwitch({
 }
 
 /* ── P0: Agent Status ── */
+
+function ChangeAgentPlatformSection({
+  currentPlatform,
+  onChanged,
+}: {
+  currentPlatform: string;
+  onChanged: (platform: string) => void;
+}) {
+  const t = useTranslations();
+  const [open, setOpen] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const { saving, saved, err, save } = useSave();
+
+  const close = () => {
+    setOpen(false);
+    setSelectedPlatform(null);
+  };
+
+  const handleConfirm = async () => {
+    if (!selectedPlatform || selectedPlatform === currentPlatform) return;
+
+    const result = await save(
+      "/api/settings/agent-platform",
+      { agentPlatform: selectedPlatform },
+      "POST"
+    );
+    if (result) {
+      onChanged(selectedPlatform);
+      close();
+    }
+  };
+
+  return (
+    <Section title={t("settings.changeAgent")}>
+      <p className={cx(sectionDescriptionClass, "mb-4")}>
+        {t("settings.changeAgentDesc")}
+      </p>
+      <p className="mb-4 text-sm text-neutral-300">
+        {t("settings.platform")} {" "}
+        <span className="text-white">{getAgentPlatformLabel(currentPlatform)}</span>
+      </p>
+
+      {!open ? (
+        <button type="button" onClick={() => setOpen(true)} className={SECONDARY_BUTTON_SM}>
+          {t("settings.changeAgent")}
+        </button>
+      ) : (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            {PRIMARY_AGENT_PLATFORMS.map((platform) => {
+              const isCurrent = platform === currentPlatform;
+              const isSelected = platform === selectedPlatform;
+              return (
+                <button
+                  key={platform}
+                  type="button"
+                  disabled={isCurrent}
+                  onClick={() => setSelectedPlatform(platform)}
+                  className={cx(
+                    OPTION_BUTTON,
+                    isCurrent
+                      ? "cursor-not-allowed bg-white/[0.03] text-neutral-500 ring-white/[0.06]"
+                      : isSelected
+                        ? OPTION_ACTIVE
+                        : OPTION_IDLE
+                  )}
+                >
+                  <span className="flex items-center justify-between gap-3 text-sm">
+                    <span>{getAgentPlatformLabel(platform)}</span>
+                    {isCurrent && (
+                      <span className="text-xs text-neutral-500">
+                        {t("settings.currentAgentPlatform")}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {selectedPlatform && selectedPlatform !== currentPlatform && (
+            <p className="rounded-xl bg-amber-500/[0.07] px-3 py-2.5 text-xs leading-5 text-amber-100/80 ring-1 ring-inset ring-amber-400/15">
+              {t("settings.changeAgentWarning", {
+                platform: getAgentPlatformLabel(selectedPlatform),
+              })}
+            </p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={!selectedPlatform || selectedPlatform === currentPlatform || saving}
+              className={PRIMARY_BUTTON_SM}
+            >
+              {saving ? t("common.saving") : t("settings.confirmAgentChange")}
+            </button>
+            <button type="button" onClick={close} disabled={saving} className={SECONDARY_BUTTON_SM}>
+              {t("common.cancel")}
+            </button>
+            <SaveStatus saving={saving} saved={saved} err={err} />
+          </div>
+        </div>
+      )}
+    </Section>
+  );
+}
 
 function AgentStatusSection({ active, onUpdate }: { active: boolean; onUpdate: (v: boolean) => void }) {
   const t = useTranslations();
@@ -1632,23 +1754,14 @@ function LanguageSection() {
 function DownloadSoulSection({
   agentId,
   platform,
-  onPlatformUpdate,
 }: {
   agentId: string;
   platform: string;
-  onPlatformUpdate: (platform: string) => void;
 }) {
   const t = useTranslations();
-  const { saving, saved, err, save } = useSave();
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [changing, setChanging] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState(platform);
-
-  useEffect(() => {
-    setSelectedPlatform(platform);
-  }, [platform]);
 
   const fetchSoulContent = async (): Promise<string> => {
     const res = await fetch(`/api/soul/${agentId}`);
@@ -1687,112 +1800,22 @@ function DownloadSoulSection({
     }
   };
 
-  const handleSavePlatform = async () => {
-    if (selectedPlatform === platform) {
-      setChanging(false);
-      return;
-    }
-
-    const result = await save(
-      "/api/settings/agent-platform",
-      { agentPlatform: selectedPlatform },
-      "POST"
-    );
-    if (result) {
-      onPlatformUpdate(selectedPlatform);
-      setChanging(false);
-      setError(null);
-    }
-  };
-
   return (
     <Section title={t("settings.agentInstructions")}>
-      <Surface className="px-4 py-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-[13px] text-neutral-400">{t("settings.platform")}</p>
-            <p className="mt-1 text-sm text-neutral-300">{getAgentPlatformLabel(platform)}</p>
-            <p className="mt-2 max-w-xl text-xs leading-5 text-neutral-500">
-              {t("settings.changeAgentDesc")}
-            </p>
-            {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
-            <SaveStatus saving={saving} saved={saved} err={err} />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setChanging((v) => !v)}
-              className={SECONDARY_BUTTON}
-            >
-              {changing ? t("common.cancel") : t("settings.changeAgent")}
-            </button>
-            <button
-              onClick={handleCopy}
-              disabled={copied}
-              className={SECONDARY_BUTTON}
-            >
-              {copied ? t("common.copied") : t("settings.copyContent")}
-            </button>
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className={SECONDARY_BUTTON}
-            >
-              {downloading ? t("settings.downloading") : t("settings.downloadSoul")}
-            </button>
-          </div>
+      <Surface className="flex flex-wrap items-center justify-between gap-3 px-4 py-4">
+        <div>
+          <p className="text-[13px] text-neutral-400">{t("settings.platform")}</p>
+          <p className="mt-1 text-sm text-neutral-300">{getAgentPlatformLabel(platform)}</p>
+          {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
         </div>
-
-        {changing && (
-          <div className="mt-4 border-t border-neutral-800 pt-4">
-            <div className="grid gap-2 sm:grid-cols-2">
-              {AGENT_PLATFORM_OPTIONS.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setSelectedPlatform(value)}
-                  className={`${OPTION_BUTTON} text-sm ${
-                    selectedPlatform === value ? OPTION_ACTIVE : OPTION_IDLE
-                  }`}
-                >
-                  <span className="block font-medium">{getAgentPlatformLabel(value)}</span>
-                  <span className="mt-1 block text-xs text-neutral-500">
-                    {value === platform
-                      ? t("settings.currentAgentPlatform")
-                      : t("settings.useAgentPlatform")}
-                  </span>
-                </button>
-              ))}
-            </div>
-            {selectedPlatform !== platform && (
-              <p className="mt-3 rounded-xl bg-amber-500/[0.07] px-3 py-2.5 text-xs leading-5 text-amber-100/80 ring-1 ring-inset ring-amber-400/15">
-                {t("settings.changeAgentWarning", {
-                  platform: getAgentPlatformLabel(selectedPlatform),
-                })}
-              </p>
-            )}
-            <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedPlatform(platform);
-                  setChanging(false);
-                }}
-                disabled={saving}
-                className={SECONDARY_BUTTON_SM}
-              >
-                {t("common.cancel")}
-              </button>
-              <button
-                type="button"
-                onClick={handleSavePlatform}
-                disabled={saving || selectedPlatform === platform}
-                className={PRIMARY_BUTTON_SM}
-              >
-                {saving ? t("common.saving") : t("settings.confirmAgentChange")}
-              </button>
-            </div>
-          </div>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <button onClick={handleCopy} disabled={copied} className={SECONDARY_BUTTON}>
+            {copied ? t("common.copied") : t("settings.copyContent")}
+          </button>
+          <button onClick={handleDownload} disabled={downloading} className={SECONDARY_BUTTON}>
+            {downloading ? t("settings.downloading") : t("settings.downloadSoul")}
+          </button>
+        </div>
       </Surface>
     </Section>
   );
