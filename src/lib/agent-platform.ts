@@ -14,6 +14,15 @@ export const AGENT_PLATFORM_OPTIONS = [
 
 export type AgentPlatformValue = (typeof AGENT_PLATFORM_OPTIONS)[number];
 
+export const PRIMARY_AGENT_PLATFORMS = [
+  "open_claw",
+  "hermes",
+  "fork",
+  "codex",
+  "claude_code",
+  "manus",
+] as const satisfies readonly AgentPlatformValue[];
+
 export const PLATFORM_LABELS: Record<AgentPlatformValue, string> = {
   open_claw: "OpenClaw",
   hermes: "Hermes",

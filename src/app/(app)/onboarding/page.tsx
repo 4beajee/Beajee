@@ -17,8 +17,10 @@ import {
   subtleButtonSmallClass,
 } from "@/components/ui/app-chrome";
 import { ContextCheckInDelivery } from "@/components/context-check-in-delivery";
+import { AgentPlatformLogo } from "@/components/agent-platform-logo";
 import {
   getContextQuestionDeliveryMode,
+  PRIMARY_AGENT_PLATFORMS,
   PLATFORM_LABELS,
   type AgentPlatformValue,
 } from "@/lib/agent-platform";
@@ -178,7 +180,7 @@ export default function OnboardingPage() {
   const locale = useLocale();
   const [step, setStep] = useState<Step>("platform");
   const [selectedAgentPlatform, setSelectedAgentPlatform] = useState<AgentPlatformValue | null>(null);
-  const [openClawStatus, setOpenClawStatus] = useState<OpenClawStatus>(null);
+  const [, setOpenClawStatus] = useState<OpenClawStatus>(null);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null);
   const [countryQuery, setCountryQuery] = useState("");
@@ -402,28 +404,40 @@ export default function OnboardingPage() {
             <p className={cx(ONBOARDING_DESC, "mb-8 text-center")}>
               Beajee uses this to choose a reliable personal delivery channel.
             </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {(["open_claw", "hermes", "fork", "codex", "claude_code"] as const).map((platform) => (
+            <div className="space-y-3">
+              {PRIMARY_AGENT_PLATFORMS.map((platform) => {
+                const isSelected = selectedAgentPlatform === platform;
+                return (
                 <button
                   key={platform}
-                  onClick={() => {
-                    setSelectedAgentPlatform(platform);
-                    if (platform === "open_claw") setOpenClawStatus("using");
-                    setStep("thesis");
-                  }}
-                  className={cx(ONBOARDING_OPTION, ONBOARDING_OPTION_IDLE)}
+                  onClick={() => setSelectedAgentPlatform(platform)}
+                  className={cx(
+                    ONBOARDING_OPTION,
+                    "flex items-center justify-between gap-3",
+                    isSelected ? "bg-white/[0.07] text-white ring-white/[0.18]" : ONBOARDING_OPTION_IDLE
+                  )}
                 >
-                  <span className="font-medium text-white">{PLATFORM_LABELS[platform]}</span>
-                  <span className="mt-1 block text-xs leading-5 text-neutral-500">
-                    {getContextQuestionDeliveryMode(platform, false) === "native_agent"
-                      ? "Personal check-ins can use this agent's normal channel."
-                      : "Telegram is required for personal check-ins; coding chats stay clean."}
+                  <span className="flex items-center gap-3 font-medium text-white">
+                    <AgentPlatformLogo platform={platform} />
+                    {PLATFORM_LABELS[platform]}
                   </span>
+                  <span
+                    aria-hidden="true"
+                    className={cx(
+                      "h-4 w-4 shrink-0 rounded-full transition-colors",
+                      isSelected ? "bg-white ring-2 ring-white" : "bg-transparent ring-1 ring-white/20"
+                    )}
+                  />
                 </button>
-              ))}
+                );
+              })}
             </div>
-            <button onClick={() => setStep("install")} className={cx(ONBOARDING_SECONDARY, "mt-4")}>
-              I need to install OpenClaw first
+            <button
+              onClick={() => setStep("thesis")}
+              disabled={!selectedAgentPlatform}
+              className={cx(ONBOARDING_PRIMARY, "mt-6 disabled:cursor-not-allowed disabled:opacity-50")}
+            >
+              {t("common.continue")}
             </button>
           </div>
         )}
@@ -741,7 +755,7 @@ export default function OnboardingPage() {
                 </button>
 
                 <button
-                  onClick={() => setStep(openClawStatus === "installed_later" ? "install" : "platform")}
+                  onClick={() => setStep("platform")}
                   className="inline-flex min-h-9 items-center justify-center rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-400 transition-colors hover:bg-white/[0.035] hover:text-white"
                 >
                   {t("common.back")}
