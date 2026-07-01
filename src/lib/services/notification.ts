@@ -44,7 +44,7 @@ type SendResult = { sent: boolean; reason?: string; emailId?: string };
 
 async function sendEmail(to: string, subject: string, html: string): Promise<SendResult> {
   if (!resend) {
-    console.log(`[notification] Resend not configured — skipping email to ${to}`);
+    console.log("[notification] Resend not configured — skipping email delivery");
     return { sent: false, reason: "RESEND_API_KEY not set" };
   }
 
@@ -52,7 +52,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<Sen
     const { data, error } = await resend.emails.send({ from: FROM, to, subject, html });
 
     if (error) {
-      console.error(`[notification] Failed to send to ${to}:`, error);
+      console.error("[notification] Email provider rejected delivery:", error);
       return { sent: false, reason: error.message };
     }
 

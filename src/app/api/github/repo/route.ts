@@ -4,6 +4,7 @@ const owner = "Beajee";
 const repo = "Beajee";
 const repoUrl = `https://github.com/${owner}/${repo}`;
 const githubApiUrl = `https://api.github.com/repos/${owner}/${repo}`;
+const GITHUB_TIMEOUT_MS = 5_000;
 
 export async function GET() {
   try {
@@ -14,6 +15,7 @@ export async function GET() {
         ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
       },
       next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
     });
 
     if (!response.ok) {

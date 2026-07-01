@@ -117,15 +117,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!token) {
-    // Detailed logging for auth debugging (visible in Docker logs)
-    const allCookies = request.cookies.getAll();
-    const cookieNames = allCookies.map((c) => c.name);
-    const sessionRelated = cookieNames.filter((n) => n.includes("next-auth"));
-    console.warn(`[middleware] ${pathname} — NO TOKEN`);
-    console.warn(`[middleware]   expected cookie: "${sessionCookieName}"`);
-    console.warn(`[middleware]   next-auth cookies: [${sessionRelated.join(", ")}]`);
-    console.warn(`[middleware]   all cookies (${cookieNames.length}): [${cookieNames.join(", ")}]`);
-    console.warn(`[middleware]   NEXTAUTH_URL=${process.env.NEXTAUTH_URL} secret=${!!process.env.NEXTAUTH_SECRET} secure=${useSecureCookies}`);
+    console.warn(`[middleware] Unauthorized request for ${pathname}`);
 
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -136,8 +128,6 @@ export async function middleware(request: NextRequest) {
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
-
-  console.log(`[middleware] ${pathname} — token OK for ${token.email} (onboarded=${token.onboarded})`);
 
   // Authenticated but not onboarded — redirect to onboarding
   if (!token.onboarded && pathname !== "/onboarding" && pathname !== "/api/onboarding") {

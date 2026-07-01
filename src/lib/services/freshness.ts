@@ -217,7 +217,7 @@ export async function checkFreshnessDecay(): Promise<{
             : "Update context to stay visible and relevant.",
         },
       }).catch((err) =>
-        console.error(`[freshness-decay] Failed to create inbox event for ${ctx.agent.owner.email}:`, err)
+        console.error(`[freshness-decay] Failed to create inbox event for owner ${ctx.agent.owner.id}:`, err)
       );
     }
   }

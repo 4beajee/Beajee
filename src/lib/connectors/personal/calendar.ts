@@ -7,6 +7,7 @@ export interface PersonalConnectorItem {
 }
 
 const CALENDAR_WINDOW_DAYS = 7;
+const CALENDAR_API_TIMEOUT_MS = 8_000;
 
 function asObject(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
@@ -151,6 +152,7 @@ async function fetchGoogleCalendarItems(config: Record<string, unknown>, token: 
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
     },
+    signal: AbortSignal.timeout(CALENDAR_API_TIMEOUT_MS),
   });
   if (!response.ok) throw new Error(`Google Calendar connector fetch failed: ${response.status}`);
 

@@ -3,6 +3,8 @@ interface TelegramResponse {
   description?: string;
 }
 
+const TELEGRAM_TIMEOUT_MS = 8_000;
+
 export type TelegramInlineKeyboard = Array<
   Array<{
     text: string;
@@ -44,6 +46,7 @@ export async function answerTelegramCallbackQuery(
           text,
           show_alert: false,
         }),
+        signal: AbortSignal.timeout(TELEGRAM_TIMEOUT_MS),
       }
     );
 
@@ -89,6 +92,7 @@ export async function sendOperatorTelegramNotification(
           disable_web_page_preview: true,
           reply_markup: options?.replyMarkup,
         }),
+        signal: AbortSignal.timeout(TELEGRAM_TIMEOUT_MS),
       }
     );
 

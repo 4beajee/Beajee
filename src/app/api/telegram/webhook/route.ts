@@ -22,6 +22,8 @@ import {
 } from "@/lib/services/context-questions";
 import { escapeTelegramHtml } from "@/lib/services/telegram";
 import { dismissSocialProfilePrompt } from "@/lib/services/social-profile-prompt";
+import { readLimitedJson, RequestBodyTooLargeError } from "@/lib/request-body";
+import { rateLimit } from "@/lib/rate-limit";
 
 interface TelegramUpdate {
   message?: TelegramMessage;
@@ -232,7 +234,16 @@ async function handleMatchCallback(command: { kind: string; matchId: string }, t
 
 export async function POST(request: NextRequest) {
   try {
-    const update = (await request.json()) as TelegramUpdate;
+    if (process.env.NODE_ENV === "production" && !isAuthorized(request, undefined)) {
+      return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
+    }
+    const limited = await rateLimit(request, {
+      maxRequests: 120,
+      windowMs: 60_000,
+      keyPrefix: "telegram-webhook",
+    });
+    if (limited) return limited;
+    const update = (await readLimitedJson(request, 512 * 1024)) as TelegramUpdate;
     const messageChatId = update.message?.chat?.id;
     const callbackChatId = update.callback_query?.message?.chat?.id;
     const chatId = messageChatId ?? callbackChatId;
@@ -294,6 +305,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (error instanceof RequestBodyTooLargeError) {
+      return NextResponse.json({ ok: false, error: "Request body is too large" }, { status: 413 });
+    }
     console.error("[telegram-webhook] failed:", redactTelegramSecrets(error));
     return safeErrorResponse(error, "Failed to handle Telegram webhook");
   }

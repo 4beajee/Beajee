@@ -9,6 +9,8 @@ interface TelegramApiResponse<T> {
   description?: string;
 }
 
+const TELEGRAM_TIMEOUT_MS = 8_000;
+
 export interface TelegramApiResult {
   sent: boolean;
   mode?: "topic" | "dm" | "disabled";
@@ -60,6 +62,7 @@ async function defaultTelegramApiCaller<T>(method: string, payload: Record<strin
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(TELEGRAM_TIMEOUT_MS),
   });
 
   const data = (await response.json()) as TelegramApiResponse<T>;

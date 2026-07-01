@@ -8,6 +8,8 @@ import {
 } from "@/lib/telegram/auth";
 import { getAuthenticatedOwner } from "@/lib/auth";
 import { getTelegramBotUsername } from "@/lib/telegram/bot";
+import { rateLimit } from "@/lib/rate-limit";
+import { readLimitedJson, RequestBodyTooLargeError } from "@/lib/request-body";
 
 function authResponse(issued: Awaited<ReturnType<typeof issueUnifiedTokenForOwner>>, telegram?: {
   id: string;
@@ -56,11 +58,20 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as { initData?: unknown };
+    const limited = await rateLimit(request, {
+      maxRequests: 20,
+      windowMs: 60_000,
+      keyPrefix: "telegram-auth",
+    });
+    if (limited) return limited;
+    const body = (await readLimitedJson(request, 16 * 1024)) as { initData?: unknown };
     if (typeof body.initData !== "string") {
       return NextResponse.json({ ok: false, error: "initData is required" }, { status: 400 });
     }
 
+    if (body.initData.length > 12_000) {
+      return NextResponse.json({ ok: false, error: "initData is too large" }, { status: 413 });
+    }
     const verified = verifyInitData(body.initData);
     const issued = await issueUnifiedToken(verified);
 
@@ -71,6 +82,9 @@ export async function POST(request: NextRequest) {
         startParam: verified.startParam,
       }));
   } catch (error) {
+    if (error instanceof RequestBodyTooLargeError) {
+      return NextResponse.json({ ok: false, error: "Request body is too large" }, { status: 413 });
+    }
     if (error instanceof TelegramAuthError) {
       return NextResponse.json({ ok: false, error: error.message }, { status: error.status });
     }

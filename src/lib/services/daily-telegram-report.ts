@@ -6,6 +6,7 @@ const REPORT_EVENT_TYPE = "DAILY_TELEGRAM_STATS_SENT";
 const DELETION_EVENT_TYPE = "ACCOUNT_DELETED";
 const REPORT_TIME_ZONE = "America/Los_Angeles";
 const EXPECTED_ALERTS_BOT_USERNAME = "gennety_alerts_bot";
+const TELEGRAM_TIMEOUT_MS = 8_000;
 
 export interface DailyTelegramStats {
   registeredUsers: number;
@@ -118,7 +119,9 @@ export async function sendDailyStatsTelegramMessage(text: string) {
   }
 
   try {
-    const identityResponse = await fetch(`https://api.telegram.org/bot${botToken}/getMe`);
+    const identityResponse = await fetch(`https://api.telegram.org/bot${botToken}/getMe`, {
+      signal: AbortSignal.timeout(TELEGRAM_TIMEOUT_MS),
+    });
     const identity = (await identityResponse.json()) as TelegramApiResponse<{ username?: string }>;
     const username = identity.result?.username?.toLowerCase();
     if (!identity.ok || username !== EXPECTED_ALERTS_BOT_USERNAME) {
@@ -137,6 +140,7 @@ export async function sendDailyStatsTelegramMessage(text: string) {
         parse_mode: "HTML",
         disable_web_page_preview: true,
       }),
+      signal: AbortSignal.timeout(TELEGRAM_TIMEOUT_MS),
     });
     const data = (await response.json()) as TelegramApiResponse<{ message_id: number }>;
     return data.ok

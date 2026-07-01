@@ -28,6 +28,7 @@ import { setSocialProfilesTool } from "@/lib/mcp/tools/set-social-profiles";
 import { authenticateAgent } from "@/lib/mcp/auth";
 import type { McpActor } from "@/lib/mcp/actor";
 import { rateLimit } from "@/lib/rate-limit";
+import { readLimitedJson, RequestBodyTooLargeError } from "@/lib/request-body";
 
 const tools = [
   publishContextTool,
@@ -66,13 +67,6 @@ export async function POST(request: NextRequest) {
   if (rateLimited) return rateLimited;
 
   try {
-    const declaredLength = Number(request.headers.get("content-length") ?? 0);
-    if (Number.isFinite(declaredLength) && declaredLength > MAX_MCP_BODY_BYTES) {
-      return NextResponse.json(
-        { jsonrpc: "2.0", error: { code: -32600, message: "Request body too large" }, id: null },
-        { status: 413 }
-      );
-    }
     // Authenticate via API key in Authorization header
     const authHeader = request.headers.get("authorization");
     const apiKey = authHeader?.replace("Bearer ", "") ?? null;
@@ -87,18 +81,20 @@ export async function POST(request: NextRequest) {
 
     let body: { method?: string; params?: Record<string, unknown>; id?: unknown };
     try {
-      const rawBody = await request.text();
-      if (new TextEncoder().encode(rawBody).byteLength > MAX_MCP_BODY_BYTES) {
-        return NextResponse.json(
-          { jsonrpc: "2.0", error: { code: -32600, message: "Request body too large" }, id: null },
-          { status: 413 }
-        );
-      }
-      body = JSON.parse(rawBody);
-    } catch {
+      body = (await readLimitedJson(request, MAX_MCP_BODY_BYTES)) as typeof body;
+    } catch (error) {
       return NextResponse.json(
-        { jsonrpc: "2.0", error: { code: -32700, message: "Parse error: invalid JSON body" }, id: null },
-        { status: 400 }
+        {
+          jsonrpc: "2.0",
+          error: {
+            code: error instanceof RequestBodyTooLargeError ? -32600 : -32700,
+            message: error instanceof RequestBodyTooLargeError
+              ? "Request body too large"
+              : "Parse error: invalid JSON body",
+          },
+          id: null,
+        },
+        { status: error instanceof RequestBodyTooLargeError ? 413 : 400 }
       );
     }
 
