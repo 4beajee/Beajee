@@ -42,6 +42,8 @@ const authOptions = read("src/lib/auth-options.ts");
 assert.match(authOptions, /isLoginBlocked\(throttleKey\)/);
 assert.match(authOptions, /recordLoginFailure\(throttleKey/);
 assert.match(authOptions, /owner\.sessionVersion !== token\.sessionVersion/);
+assert.match(authOptions, /debug: process\.env\.NEXTAUTH_DEBUG === "true"/);
+assert.doesNotMatch(authOptions, /debug: process\.env\.NODE_ENV === "development"/);
 
 const rateLimit = read("src/lib/rate-limit.ts");
 assert.match(rateLimit, /prisma\.\$transaction/);

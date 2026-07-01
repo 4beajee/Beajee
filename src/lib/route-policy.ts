@@ -1,6 +1,19 @@
 export const LANDING_EXACT = ["/cookie-policy", "/privacy", "/terms"] as const;
-export const PUBLIC_FILE_EXACT = ["/skill.md", "/llms.txt", "/INDEX.md", "/AGENTS.md"] as const;
-export const PUBLIC_FILE_PREFIXES = ["/skills", "/tools", "/.well-known"] as const;
+export const PUBLIC_FILE_EXACT = [
+  "/skill.md",
+  "/llms.txt",
+  "/INDEX.md",
+  "/AGENTS.md",
+  "/icon.png",
+  "/apple-icon.png",
+] as const;
+export const PUBLIC_FILE_PREFIXES = [
+  "/skills",
+  "/tools",
+  "/.well-known",
+  "/agent-platforms",
+  "/sounds",
+] as const;
 export const APP_PREFIXES = [
   "/home",
   "/matches",

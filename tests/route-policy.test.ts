@@ -3,6 +3,7 @@ import {
   isPublicApiPath,
   matchesAnySegment,
   matchesSegment,
+  PUBLIC_FILE_PREFIXES,
   PUBLIC_PAGE_PREFIXES,
 } from "../src/lib/route-policy";
 
@@ -10,6 +11,7 @@ assert.equal(matchesSegment("/feed", "/feed"), true);
 assert.equal(matchesSegment("/feed/match-1", "/feed"), true);
 assert.equal(matchesSegment("/feedback", "/feed"), false);
 assert.equal(matchesAnySegment("/feed/match-1", PUBLIC_PAGE_PREFIXES), true);
+assert.equal(matchesAnySegment("/agent-platforms/folk.webp", PUBLIC_FILE_PREFIXES), true);
 
 for (const path of [
   "/api/auth/signin",
