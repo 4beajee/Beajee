@@ -80,6 +80,10 @@ function ok(label: string) {
     path.join(ROOT, "src/app/(app)/settings/page.tsx"),
     "utf8"
   );
+  const onboardingPage = fs.readFileSync(
+    path.join(ROOT, "src/app/(app)/onboarding/page.tsx"),
+    "utf8"
+  );
   const setupRoute = fs.readFileSync(
     path.join(ROOT, "src/app/api/setup/[agentId]/route.ts"),
     "utf8"
@@ -90,10 +94,18 @@ function ok(label: string) {
   );
 
   assert.match(switchRoute, /apiKey: newApiKey/);
+  assert.match(switchRoute, /credentialVersion: \{ increment: 1 \}/);
+  assert.match(switchRoute, /tx\.oAuthAccessToken\.updateMany/);
+  assert.match(switchRoute, /tx\.setupGrant\.updateMany/);
   assert.match(switchRoute, /wakeWebhookEnabled: false/);
   assert.match(switchRoute, /closeAgentWakeStreams\(current\.agent\.id, "platform_changed"\)/);
   assert.doesNotMatch(settingsSchema, /agentPlatform:/);
   assert.match(settingsPage, /\/api\/settings\/agent-platform/);
+  assert.match(settingsPage, /function ChangeAgentPlatformSection/);
+  assert.match(settingsPage, /PRIMARY_AGENT_PLATFORMS\.map/);
+  assert.match(onboardingPage, /PRIMARY_AGENT_PLATFORMS\.map/);
+  assert.match(onboardingPage, /<AgentPlatformLogo platform=\{platform\}/);
+  assert.doesNotMatch(onboardingPage, /setStep\("install"\)/);
   assert.match(setupRoute, /isOpenClawPlatform\(platform\)/);
   assert.match(settingsPage, /isOpenClawPlatform\(settings\.agentPlatform\)/);
   assert.match(wakeStreamRoute, /reason === "platform_changed"/);

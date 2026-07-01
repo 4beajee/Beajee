@@ -47,26 +47,36 @@ export async function POST(request: NextRequest) {
 
     const newApiKey = `gny_${crypto.randomBytes(32).toString("hex")}`;
 
-    await prisma.$transaction([
-      prisma.owner.update({
+    const changedAt = new Date();
+    await prisma.$transaction(async (tx) => {
+      await tx.owner.update({
         where: { id: current.id },
         data: { agentPlatform },
-      }),
-      prisma.agent.update({
+      });
+      await tx.agent.update({
         where: { id: current.agent.id },
         data: {
           apiKey: newApiKey,
+          credentialVersion: { increment: 1 },
           webhookUrl: null,
           webhookToken: null,
           wakeWebhookEnabled: false,
           wakeWebhookLastPingAt: null,
           wakeWebhookLastPingOk: null,
           wakeWebhookLastPingError: null,
-          wakeStreamLastDisconnectedAt: new Date(),
+          wakeStreamLastDisconnectedAt: changedAt,
           wakeStreamLastError: null,
         },
-      }),
-    ]);
+      });
+      await tx.oAuthAccessToken.updateMany({
+        where: { agentId: current.agent.id, revokedAt: null },
+        data: { revokedAt: changedAt },
+      });
+      await tx.setupGrant.updateMany({
+        where: { agentId: current.agent.id, usedAt: null },
+        data: { usedAt: changedAt },
+      });
+    });
 
     closeAgentWakeStreams(current.agent.id, "platform_changed");
 
