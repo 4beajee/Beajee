@@ -1,6 +1,19 @@
+import Image from "next/image";
 import type { AgentPlatformValue } from "@/lib/agent-platform";
 
 export function AgentPlatformLogo({ platform }: { platform: AgentPlatformValue }) {
+  if (platform === "folk") {
+    return (
+      <Image
+        src="/agent-platforms/folk.webp"
+        alt=""
+        width={24}
+        height={24}
+        className="h-6 w-6 shrink-0 rounded-md object-cover"
+      />
+    );
+  }
+
   if (platform === "open_claw") {
     return (
       <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0" aria-hidden="true">

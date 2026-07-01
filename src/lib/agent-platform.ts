@@ -5,6 +5,7 @@ export const AGENT_PLATFORM_OPTIONS = [
   "codex",
   "claude_code",
   "manus",
+  "folk",
   "claude_desktop",
   "nemo_claw",
   "zero_claw",
@@ -21,6 +22,7 @@ export const PRIMARY_AGENT_PLATFORMS = [
   "codex",
   "claude_code",
   "manus",
+  "folk",
 ] as const satisfies readonly AgentPlatformValue[];
 
 export const PLATFORM_LABELS: Record<AgentPlatformValue, string> = {
@@ -30,6 +32,7 @@ export const PLATFORM_LABELS: Record<AgentPlatformValue, string> = {
   codex: "Codex",
   claude_code: "Claude Code",
   manus: "Manus",
+  folk: "Folk",
   claude_desktop: "Claude Desktop",
   nemo_claw: "Nemo Claw",
   zero_claw: "Zero Claw",
@@ -83,6 +86,7 @@ export function supportsNativeProfilePrompts(platform: string | null | undefined
   return NATIVE_CONTEXT_QUESTION_PLATFORM_SET.has(platform) || [
     "custom",
     "manus",
+    "folk",
     "claude_desktop",
   ].includes(platform);
 }

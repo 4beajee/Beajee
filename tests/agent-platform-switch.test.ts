@@ -30,6 +30,7 @@ function ok(label: string) {
   assert.ok(AGENT_PLATFORM_OPTIONS.includes("hermes"));
   assert.ok(AGENT_PLATFORM_OPTIONS.includes("fork"));
   assert.ok(AGENT_PLATFORM_OPTIONS.includes("manus"));
+  assert.ok(AGENT_PLATFORM_OPTIONS.includes("folk"));
   assert.equal(isOpenClawPlatform("zero_claw"), true);
   assert.equal(isOpenClawPlatform("codex"), false);
 
@@ -92,6 +93,10 @@ function ok(label: string) {
     path.join(ROOT, "src/app/api/agent/wake/stream/route.ts"),
     "utf8"
   );
+  const platformLogo = fs.readFileSync(
+    path.join(ROOT, "src/components/agent-platform-logo.tsx"),
+    "utf8"
+  );
 
   assert.match(switchRoute, /apiKey: newApiKey/);
   assert.match(switchRoute, /credentialVersion: \{ increment: 1 \}/);
@@ -109,6 +114,8 @@ function ok(label: string) {
   assert.match(setupRoute, /isOpenClawPlatform\(platform\)/);
   assert.match(settingsPage, /isOpenClawPlatform\(settings\.agentPlatform\)/);
   assert.match(wakeStreamRoute, /reason === "platform_changed"/);
+  assert.match(platformLogo, /\/agent-platforms\/folk\.webp/);
+  assert.equal(fs.existsSync(path.join(ROOT, "public/agent-platforms/folk.webp")), true);
 
   ok("the UI uses the side-effect-safe switch endpoint and setup stays platform-aware");
 }

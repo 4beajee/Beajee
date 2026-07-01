@@ -14,7 +14,6 @@ import {
   dangerButtonSmallClass,
   dangerSubtleButtonClass,
   getMattePillClass,
-  inputClass,
   pageFrameClass,
   panelSoftClass,
   primaryButtonClass,
@@ -32,6 +31,7 @@ import {
   isOpenClawPlatform,
 } from "@/lib/agent-platform";
 import { ContextCheckInDelivery } from "@/components/context-check-in-delivery";
+import { AgentPlatformLogo } from "@/components/agent-platform-logo";
 import { FormField, PasswordInput, TextInput, useFieldId } from "@/components/ui/form-field";
 
 /* ── Constants ── */
@@ -55,7 +55,6 @@ const SECTION_SHELL = sectionShellClass;
 const SECTION_TITLE = sectionTitleClass;
 const SUBTLE_SURFACE = panelSoftClass;
 const CODE_SURFACE = codePanelClass;
-const INPUT = inputClass;
 const PRIMARY_BUTTON = primaryButtonClass;
 const PRIMARY_BUTTON_SM = primaryButtonSmallClass;
 const SECONDARY_BUTTON = subtleButtonClass;
@@ -437,7 +436,10 @@ function ChangeAgentPlatformSection({
                   )}
                 >
                   <span className="flex items-center justify-between gap-3 text-sm">
-                    <span>{getAgentPlatformLabel(platform)}</span>
+                    <span className="flex items-center gap-3">
+                      <AgentPlatformLogo platform={platform} />
+                      {getAgentPlatformLabel(platform)}
+                    </span>
                     {isCurrent && (
                       <span className="text-xs text-neutral-500">
                         {t("settings.currentAgentPlatform")}

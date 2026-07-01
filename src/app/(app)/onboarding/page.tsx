@@ -31,7 +31,7 @@ type OpenClawStatus = "using" | "installed_later" | null;
 
 const FILE_NAME = "SOUL.md";
 const ONBOARDING_AGENT_PLATFORMS = [
-  "open_claw", "hermes", "fork", "codex", "claude_code", "manus",
+  "open_claw", "hermes", "fork", "codex", "claude_code", "manus", "folk",
 ] as const satisfies readonly AgentPlatformValue[];
 const ONBOARDING_TITLE = "text-xl font-semibold text-white mb-3 text-center";
 const ONBOARDING_TITLE_TIGHT = "text-xl font-semibold text-white mb-2 text-center";
