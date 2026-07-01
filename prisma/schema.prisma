@@ -41,6 +41,7 @@ model Owner {
   agent                  Agent?
   accounts               Account[]
   consentLogs            ConsentLog[]
+  cookieConsents         CookieConsent[]
   blockedUsers           Block[]                @relation("Blocker")
   blockedBy              Block[]                @relation("Blocked")
   reports                Report[]
@@ -105,17 +106,44 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+// Append-only website consent audit log. Database triggers reject updates/deletes.
+model CookieConsent {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId        String   @unique(map: "cookie_consents_event_id_key") @map("event_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  action         String
+  policyVersion  String   @map("policy_version")
+  consents       Json     @default("{}") @db.JsonB
+  ipHash         String?  @map("ip_hash")
+  userAgent      String?  @map("user_agent")
+  ownerId        String?  @map("owner_id")
+  owner          Owner?   @relation(fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  sessionId      String?  @map("session_id")
+  source         String   @default("website")
+  siteHost       String?  @map("site_host")
+  pageUrl        String?  @map("page_url")
+  country        String?  @db.Char(2)
+  bannerTextHash String?  @map("banner_text_hash")
+
+  @@index([createdAt], map: "idx_cookie_consents_created_at")
+  @@index([policyVersion], map: "idx_cookie_consents_policy_version")
+  @@index([ownerId], map: "idx_cookie_consents_owner_id")
+  @@index([sessionId], map: "idx_cookie_consents_session_id")
+  @@index([source], map: "idx_cookie_consents_source")
+  @@map("cookie_consents")
+}
+
 model Agent {
-  id           String   @id @default(cuid())
-  agentId      String   @unique @map("agent_id") // "agent_arlan_001"
-  ownerId      String   @unique @map("owner_id")
-  owner        Owner    @relation(fields: [ownerId], references: [id])
-  apiKey       String   @unique @map("api_key")
-  credentialVersion Int @default(0) @map("credential_version")
-  isActive     Boolean  @default(true) @map("is_active")
-  searchPaused Boolean  @default(false) @map("search_paused")
-  createdAt    DateTime @default(now()) @map("created_at")
-  lastActiveAt DateTime @default(now()) @map("last_active_at")
+  id                String             @id @default(cuid())
+  agentId           String             @unique @map("agent_id") // "agent_arlan_001"
+  ownerId           String             @unique @map("owner_id")
+  owner             Owner              @relation(fields: [ownerId], references: [id])
+  apiKey            String             @unique @map("api_key")
+  credentialVersion Int                @default(0) @map("credential_version")
+  isActive          Boolean            @default(true) @map("is_active")
+  searchPaused      Boolean            @default(false) @map("search_paused")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  lastActiveAt      DateTime           @default(now()) @map("last_active_at")
   oauthAccessTokens OAuthAccessToken[]
   setupGrants       SetupGrant[]
 
@@ -161,11 +189,13 @@ model Agent {
   beacons                Beacon[]
   matchesAsA             Match[]                @relation("AgentA")
   matchesAsB             Match[]                @relation("AgentB")
+  initiatedMatches       Match[]                @relation("MatchInitiator")
   negotiationLogs        NegotiationLog[]
   contextQuestionBatches ContextQuestionBatch[]
 
   @@index([isDemo])
   @@index([isDemo, lastDemoTickAt])
+  @@index([isActive, searchPaused, lastActiveAt])
   @@map("agents")
 }
 
@@ -259,6 +289,7 @@ model AgentContext {
   freshnessState          FreshnessState @default(ACTIVE) @map("freshness_state")
   lastSignificantUpdateAt DateTime       @default(now()) @map("last_significant_update_at")
 
+  @@index([freshnessState, networkingGoal])
   @@map("agent_contexts")
 }
 
@@ -292,6 +323,7 @@ model Beacon {
   triggeredAt          DateTime?                    @map("triggered_at")
 
   @@index([isActive])
+  @@index([agentId, isActive, triggeredAt])
   @@map("beacons")
 }
 
@@ -305,6 +337,7 @@ model Match {
   // Which agent actually initiated the negotiation. (agentA/B is normalized by
   // id order for the uniqueness constraint and doesn't reflect initiation.)
   initiatorAgentId String @map("initiator_agent_id")
+  initiatorAgent   Agent  @relation("MatchInitiator", fields: [initiatorAgentId], references: [id])
 
   overlapSummary String @map("overlap_summary") // what agents decided in negotiation
   framingForA    String @map("framing_for_a") // how to present to owner A
@@ -337,6 +370,9 @@ model Match {
   comments        MatchComment[]
 
   @@unique([agentAId, agentBId])
+  @@index([agentAId, status, createdAt])
+  @@index([agentBId, status, createdAt])
+  @@index([status, isPublic, matchedAt])
   @@map("matches")
 }
 
@@ -655,6 +691,7 @@ model InboxEvent {
   dismissedAt DateTime? @map("dismissed_at") // agent acknowledged delivery to owner
 
   @@index([agentId, dismissedAt])
+  @@index([agentId, dismissedAt, createdAt])
   @@index([ownerId, type, referenceId])
   @@index([createdAt])
   @@map("inbox_events")

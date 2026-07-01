@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { prisma } from "@/lib/db";
+import { getUnreadMessageCounts } from "@/lib/services/unread-messages";
 import { blockOwner } from "@/lib/services/owner-block";
 import { SendMessageSchema } from "@/types/chat-input";
 import { rateLimit } from "@/lib/rate-limit";
@@ -80,18 +81,14 @@ export async function GET(request: NextRequest) {
       orderBy: { matchedAt: "desc" },
     });
 
-    const chats = await Promise.all(matches.map(async (match) => {
+    const unreadCounts = await getUnreadMessageCounts(
+      auth.ownerId,
+      matches.flatMap((match) => (match.chat ? [match.chat.id] : []))
+    );
+    const chats = matches.map((match) => {
       const isOwnerA = match.agentA.owner.id === auth.ownerId;
       const other = isOwnerA ? match.agentB : match.agentA;
       const chat = match.chat!;
-      const lastReadAt = isOwnerA ? chat.lastReadByA : chat.lastReadByB;
-      const unreadCount = await prisma.message.count({
-        where: {
-          chatId: chat.id,
-          fromOwner: { not: auth.ownerId },
-          ...(lastReadAt ? { createdAt: { gt: lastReadAt } } : {}),
-        },
-      });
       return {
         matchId: match.id,
         chatId: chat.id,
@@ -109,9 +106,9 @@ export async function GET(request: NextRequest) {
           fromOwner: chat.messages[0].fromOwner,
           createdAt: chat.messages[0].createdAt,
         } : null,
-        unreadCount,
+        unreadCount: unreadCounts.get(chat.id) ?? 0,
       };
-    }));
+    });
     return NextResponse.json({ ok: true, chats });
   } catch (error) {
     if (error instanceof TelegramAuthError) {

@@ -7,6 +7,7 @@ import { getPrivacySyncStatus } from "@/lib/services/privacy-sync";
 import { detectSchedulingProvider, schedulingProviderLabel } from "@/lib/scheduling-url";
 import { TelegramAuthError, verifyUnifiedToken } from "@/lib/telegram/auth";
 import { buildMatchCardPerson } from "@/lib/services/match-card-view";
+import { getUnreadMessageCounts } from "@/lib/services/unread-messages";
 
 function bearer(request: NextRequest) {
   return request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim() ?? "";
@@ -50,21 +51,16 @@ export async function GET(request: NextRequest) {
       take: 50,
     });
 
-    const result = await Promise.all(matches.map(async (match) => {
+    const unreadCounts = await getUnreadMessageCounts(
+      owner.id,
+      matches.flatMap((match) => (match.chat ? [match.chat.id] : []))
+    );
+    const result = matches.map((match) => {
       const isAgentA = match.agentAId === owner.agent!.id;
       const otherAgent = isAgentA ? match.agentB : match.agentA;
       const confirmedByMe = isAgentA ? match.confirmedByA : match.confirmedByB;
       const confirmedByOther = isAgentA ? match.confirmedByB : match.confirmedByA;
-      const lastReadAt = match.chat ? (isAgentA ? match.chat.lastReadByA : match.chat.lastReadByB) : null;
-      const unreadCount = match.chat
-        ? await prisma.message.count({
-            where: {
-              chatId: match.chat.id,
-              fromOwner: { not: owner.id },
-              ...(lastReadAt ? { createdAt: { gt: lastReadAt } } : {}),
-            },
-          })
-        : 0;
+      const unreadCount = match.chat ? (unreadCounts.get(match.chat.id) ?? 0) : 0;
 
       let schedulingRole: "guest" | "host" | null = null;
       let partnerSchedulingUrl: string | null = null;
@@ -126,7 +122,7 @@ export async function GET(request: NextRequest) {
           })),
         } : null,
       };
-    }));
+    });
 
     const context = await prisma.agentContext.findUnique({
       where: { agentId: owner.agent.id },

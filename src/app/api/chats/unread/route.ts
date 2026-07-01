@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { getAuthenticatedOwner } from "@/lib/auth";
+import { getUnreadMessageCounts } from "@/lib/services/unread-messages";
 
 // GET /api/chats/unread — total unread message count across all chats
 export async function GET() {
@@ -11,39 +11,8 @@ export async function GET() {
 
   const ownerId = auth.ownerId;
 
-  const matches = await prisma.match.findMany({
-    where: {
-      status: "MATCHED",
-      chat: { isNot: null },
-      OR: [
-        { agentA: { ownerId } },
-        { agentB: { ownerId } },
-      ],
-    },
-    include: {
-      agentA: { select: { ownerId: true } },
-      agentB: { select: { ownerId: true } },
-      chat: { select: { id: true, lastReadByA: true, lastReadByB: true } },
-    },
-  });
-
-  let total = 0;
-
-  for (const match of matches) {
-    if (!match.chat) continue;
-    const isOwnerA = match.agentA.ownerId === ownerId;
-    const lastReadAt = isOwnerA ? match.chat.lastReadByA : match.chat.lastReadByB;
-
-    const where: Record<string, unknown> = {
-      chatId: match.chat.id,
-      fromOwner: { not: ownerId },
-    };
-    if (lastReadAt) {
-      where.createdAt = { gt: lastReadAt };
-    }
-
-    total += await prisma.message.count({ where });
-  }
+  const counts = await getUnreadMessageCounts(ownerId);
+  const total = Array.from(counts.values()).reduce((sum, count) => sum + count, 0);
 
   return NextResponse.json({ unread: total });
 }

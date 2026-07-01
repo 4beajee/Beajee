@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedOwner } from "@/lib/auth";
+import { getUnreadMessageCounts } from "@/lib/services/unread-messages";
 
 // GET /api/chats — list all chats for authenticated owner
 export async function GET() {
@@ -37,12 +38,15 @@ export async function GET() {
     orderBy: { matchedAt: "desc" },
   });
 
+  const unreadCounts = await getUnreadMessageCounts(
+    ownerId,
+    matches.flatMap((match) => (match.chat ? [match.chat.id] : []))
+  );
   const chats = matches.map((match) => {
     const isOwnerA = match.agentA.owner.id === ownerId;
     const other = isOwnerA ? match.agentB : match.agentA;
     const chat = match.chat!;
     const lastMessage = chat.messages[0] ?? null;
-    const lastReadAt = isOwnerA ? chat.lastReadByA : chat.lastReadByB;
 
     return {
       matchId: match.id,
@@ -62,45 +66,10 @@ export async function GET() {
             createdAt: lastMessage.createdAt,
           }
         : null,
-      unreadCount: lastReadAt
-        ? 0 // Will be computed below
-        : chat._count.messages, // Never read = all unread (minus agent messages handled below)
+      unreadCount: unreadCounts.get(chat.id) ?? 0,
       overlapSummary: match.overlapSummary,
     };
   });
-
-  // Compute accurate unread counts with a separate query per chat
-  // (batched for efficiency)
-  const chatIds = chats.map((c) => c.chatId);
-  const ownerSides = new Map<string, { isOwnerA: boolean; lastReadAt: Date | null }>();
-
-  for (const match of matches) {
-    const isOwnerA = match.agentA.owner.id === ownerId;
-    const chat = match.chat!;
-    ownerSides.set(chat.id, {
-      isOwnerA,
-      lastReadAt: isOwnerA ? chat.lastReadByA : chat.lastReadByB,
-    });
-  }
-
-  if (chatIds.length > 0) {
-    // Get unread counts: messages created after lastReadAt, not from this owner
-    for (const chatEntry of chats) {
-      const side = ownerSides.get(chatEntry.chatId);
-      if (!side) continue;
-
-      const where: Record<string, unknown> = {
-        chatId: chatEntry.chatId,
-        fromOwner: { not: ownerId },
-      };
-
-      if (side.lastReadAt) {
-        where.createdAt = { gt: side.lastReadAt };
-      }
-
-      chatEntry.unreadCount = await prisma.message.count({ where });
-    }
-  }
 
   return NextResponse.json({ chats });
 }
