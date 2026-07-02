@@ -231,6 +231,7 @@ export async function sendOwnerLivePhotoCard(args: {
   caption: string;
   livePhotoUrl?: string | null;
   photoUrl?: string | null;
+  profileTelegramId?: string | null;
   replyMarkup?: { inline_keyboard: TelegramInlineKeyboard };
 }): Promise<TelegramApiResult> {
   if (process.env.NODE_ENV === "test") {
@@ -276,6 +277,45 @@ export async function sendOwnerLivePhotoCard(args: {
       }
     }
 
+    if (args.profileTelegramId) {
+      try {
+        const profilePhotos = await callTelegramApi<{
+          photos: Array<Array<{ file_id: string; width: number; height: number }>>;
+        }>("getUserProfilePhotos", {
+          user_id: args.profileTelegramId,
+          offset: 0,
+          limit: 3,
+        });
+        const photoFileIds = selectLargestProfilePhotoFileIds(profilePhotos.photos);
+
+        if (photoFileIds.length > 1) {
+          await callTelegramApi("sendMediaGroup", {
+            chat_id: chatId,
+            ...(topic ? { message_thread_id: topic.messageThreadId } : {}),
+            media: photoFileIds.map((fileId) => ({ type: "photo", media: fileId })),
+          });
+          await sendTelegramMessageToChat({
+            chatId,
+            messageThreadId: topic?.messageThreadId,
+            text: args.caption,
+            replyMarkup: args.replyMarkup,
+          });
+          return { sent: true, mode: topic ? "topic" : "dm" };
+        }
+
+        if (photoFileIds[0]) {
+          await callTelegramApi("sendPhoto", {
+            ...common,
+            photo: photoFileIds[0],
+          });
+          return { sent: true, mode: topic ? "topic" : "dm" };
+        }
+      } catch {
+        // Telegram profile photos may be private or unavailable. Fall back to
+        // the stored profile image URL and finally the text-only card.
+      }
+    }
+
     if (args.photoUrl) {
       try {
         await callTelegramApi("sendPhoto", {
@@ -298,6 +338,15 @@ export async function sendOwnerLivePhotoCard(args: {
   } catch (error) {
     return { sent: false, error: error instanceof Error ? error.message : String(error) };
   }
+}
+
+export function selectLargestProfilePhotoFileIds(
+  photos: Array<Array<{ file_id: string; width: number; height: number }>>
+) {
+  return photos
+    .slice(0, 3)
+    .map((sizes) => [...sizes].sort((a, b) => b.width * b.height - a.width * a.height)[0]?.file_id)
+    .filter((fileId): fileId is string => Boolean(fileId));
 }
 
 export const __test = {

@@ -148,7 +148,7 @@ async function main() {
   const { verifyInitData, issueUnifiedToken, __test: authTest } = await import(
     "../src/lib/telegram/auth"
   );
-  const { createUserTopics, sendOwnerTopicMessage, __test: topicsTest } = await import(
+  const { createUserTopics, sendOwnerTopicMessage, selectLargestProfilePhotoFileIds, __test: topicsTest } = await import(
     "../src/lib/telegram/topics"
   );
   const { buildMatchCardKeyboard, buildMatchCardCaption } = await import(
@@ -265,14 +265,18 @@ async function main() {
     });
     assert.deepEqual(keyboard.inline_keyboard[0], [
       {
-        text: "LinkedIn",
+        text: "in  LinkedIn",
         style: "primary",
         url: "https://www.linkedin.com/in/grace",
       },
-      { text: "𝕏  X", url: "https://x.com/grace_builds" },
+      { text: "𝕏", url: "https://x.com/grace_builds" },
     ]);
     assert.match(keyboard.inline_keyboard[1][0].web_app?.url ?? "", /tab=matches/);
     assert.match(keyboard.inline_keyboard[1][0].web_app?.url ?? "", /matchId=match_123/);
+    assert.deepEqual(selectLargestProfilePhotoFileIds([
+      [{ file_id: "small", width: 80, height: 80 }, { file_id: "large", width: 640, height: 640 }],
+      [{ file_id: "second", width: 320, height: 320 }],
+    ]), ["large", "second"]);
     const caption = buildMatchCardCaption({
       otherOwnerName: "Grace",
       otherAgentDisplayName: null,

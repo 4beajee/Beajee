@@ -33,13 +33,13 @@ export function buildMatchCardKeyboard(
   const socialRow: TelegramInlineKeyboard[number] = [];
   if (socialProfiles?.linkedin) {
     socialRow.push({
-      text: "LinkedIn",
+      text: "in  LinkedIn",
       style: "primary",
       url: socialProfiles.linkedin.url,
     });
   }
   if (socialProfiles?.twitter) {
-    socialRow.push({ text: "𝕏  X", url: socialProfiles.twitter.url });
+    socialRow.push({ text: "𝕏", url: socialProfiles.twitter.url });
   }
   const reviewRow: TelegramInlineKeyboard[number] = reviewUrl
     ? [{ text: "Review introduction", web_app: { url: reviewUrl } }]
@@ -88,6 +88,7 @@ export async function sendTelegramMatchCard(args: {
   overlapSummary: string;
   similarity?: number | null;
   otherOwnerImage?: string | null;
+  otherOwnerTelegramId?: string | null;
   socialProfiles?: SocialProfiles;
 }) {
   return sendOwnerLivePhotoCard({
@@ -96,6 +97,7 @@ export async function sendTelegramMatchCard(args: {
     caption: buildMatchCardCaption(args),
     livePhotoUrl: process.env.TELEGRAM_MATCH_CARD_LIVE_PHOTO_URL ?? null,
     photoUrl: args.otherOwnerImage ?? process.env.TELEGRAM_MATCH_CARD_PHOTO_URL ?? null,
+    profileTelegramId: args.otherOwnerTelegramId,
     replyMarkup: buildMatchCardKeyboard(args.matchId, args.socialProfiles),
   });
 }

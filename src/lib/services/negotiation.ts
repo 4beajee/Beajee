@@ -582,6 +582,7 @@ export async function proposeMatch(matchId: string, proposingAgentExternalId?: s
       overlapSummary: match.overlapSummary,
       similarity: match.matchSimilarity,
       otherOwnerImage: ownerB.image,
+      otherOwnerTelegramId: ownerB.telegramId,
       socialProfiles: socialProfilesFromOwner(ownerB),
     }),
     sendTelegramMatchCard({
@@ -593,6 +594,7 @@ export async function proposeMatch(matchId: string, proposingAgentExternalId?: s
       overlapSummary: match.overlapSummary,
       similarity: match.matchSimilarity,
       otherOwnerImage: ownerA.image,
+      otherOwnerTelegramId: ownerA.telegramId,
       socialProfiles: socialProfilesFromOwner(ownerA),
     }),
   ]).catch(() => undefined);
