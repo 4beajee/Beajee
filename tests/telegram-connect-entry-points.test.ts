@@ -11,7 +11,10 @@ const home = fs.readFileSync(path.join(ROOT, "src/app/(app)/home/page.tsx"), "ut
 const matches = fs.readFileSync(path.join(ROOT, "src/app/(app)/matches/page.tsx"), "utf8");
 
 assert.match(component, /bg-\[#229ED9\]/, "Telegram CTA uses Telegram's brand blue");
-assert.match(component, /<svg/, "Telegram CTA includes an inline SVG logo");
+assert.match(component, /viewBox="0 0 240\.1 240\.1"/, "Telegram CTA uses the official logo geometry");
+assert.match(component, /stopColor="#2AABEE"/);
+assert.match(component, /stopColor="#229ED9"/);
+assert.match(component, /fill="#FFFFFF"/);
 assert.match(component, /fetch\("\/api\/telegram\/link", \{ method: "POST" \}\)/);
 assert.match(component, /if \(connected\) return null/, "CTA disappears after account sync");
 assert.match(home, /placement="home"/, "Home renders the Telegram entry point");
