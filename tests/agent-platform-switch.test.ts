@@ -128,9 +128,9 @@ function ok(label: string) {
   assert.match(platformLogo, /\/agent-platforms\/openclaw\.svg/);
   assert.match(platformLogo, /\/agent-platforms\/hermes\.svg/);
   assert.match(platformLogo, /\/agent-platforms\/cursor\.svg/);
-  assert.match(platformLogo, /\/agent-platforms\/perplexity\.svg/);
+  assert.match(platformLogo, /\/agent-platforms\/perplexity\.png/);
   assert.equal(fs.existsSync(path.join(ROOT, "public/agent-platforms/folk.webp")), true);
-  for (const asset of ["openclaw.svg", "hermes.svg", "cursor.svg", "perplexity.svg"]) {
+  for (const asset of ["openclaw.svg", "hermes.svg", "cursor.svg", "perplexity.png"]) {
     assert.equal(fs.existsSync(path.join(ROOT, "public/agent-platforms", asset)), true);
   }
   assert.match(invalidPlatformMigration, /SET "agent_platform" = 'other_mcp'/);

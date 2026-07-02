@@ -8,7 +8,7 @@ const OFFICIAL_ASSETS: Partial<Record<AgentPlatformValue, string>> = {
   nano_claw: "/agent-platforms/openclaw.svg",
   hermes: "/agent-platforms/hermes.svg",
   cursor: "/agent-platforms/cursor.svg",
-  perplexity_personal_computer: "/agent-platforms/perplexity.svg",
+  perplexity_personal_computer: "/agent-platforms/perplexity.png",
   folk: "/agent-platforms/folk.webp",
 };
 
