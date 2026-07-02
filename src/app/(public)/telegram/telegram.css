@@ -1,9 +1,9 @@
 .telegram-app-shell {
   /* Some Telegram clients report a zero content inset even while their native
-     toolbar is visible. The fixed 88px floor keeps our header clear there too. */
+     toolbar is visible. The fixed 96px floor keeps our header clear there too. */
   padding-top: max(
-    88px,
-    calc(max(env(safe-area-inset-top, 0px), var(--telegram-safe-top, 0px)) + 20px)
+    96px,
+    calc(max(env(safe-area-inset-top, 0px), var(--telegram-safe-top, 0px)) + 24px)
   );
   padding-bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--telegram-safe-bottom, 0px)) + 116px);
 }
