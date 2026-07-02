@@ -4,18 +4,9 @@ import { prisma } from "@/lib/db";
 import { blockOwner } from "@/lib/services/owner-block";
 import type { AnalyticsRange } from "@/lib/admin-analytics/range";
 import {
-  getAdviceAnalytics,
-  getAgentAnalytics,
-  getAnomalyAnalytics,
-  getBeaconAnalytics,
-  getCostAnalytics,
-  getCountryAnalytics,
-  getNetworkAnalytics,
-  getOverviewAnalytics,
-  getReportAnalytics,
-  getTrustAnalytics,
-  getUsersAnalytics,
-} from "@/lib/admin-analytics/service";
+  loadAdminAnalyticsBundle,
+  type AdminAnalyticsBundle,
+} from "@/lib/admin-analytics/bundle";
 import { estimateAnthropicCostUsd, getAnthropicSonnetModel, aiPricing } from "@/lib/ai-costs";
 import { recordAnalyticsEvent, recordComputeUsage } from "@/lib/analytics-tracking";
 import {
@@ -128,19 +119,7 @@ type SearchProviderConfig =
   | { provider: "tavily"; apiKey: string }
   | { provider: "custom"; apiKey: string; endpoint: string };
 
-interface OperatorAnalyticsPayload {
-  overview: Awaited<ReturnType<typeof getOverviewAnalytics>>;
-  trust: Awaited<ReturnType<typeof getTrustAnalytics>>;
-  network: Awaited<ReturnType<typeof getNetworkAnalytics>>;
-  beacons: Awaited<ReturnType<typeof getBeaconAnalytics>>;
-  advice: Awaited<ReturnType<typeof getAdviceAnalytics>>;
-  agents: Awaited<ReturnType<typeof getAgentAnalytics>>;
-  countries: Awaited<ReturnType<typeof getCountryAnalytics>>;
-  users: Awaited<ReturnType<typeof getUsersAnalytics>>;
-  costs: Awaited<ReturnType<typeof getCostAnalytics>>;
-  anomalies: Awaited<ReturnType<typeof getAnomalyAnalytics>>;
-  reports: Awaited<ReturnType<typeof getReportAnalytics>>;
-}
+type OperatorAnalyticsPayload = AdminAnalyticsBundle;
 
 interface OpenClawDigest {
   generatedAt: string;
@@ -586,48 +565,6 @@ export async function runOpenClawModerationReview(options: { now?: Date } = {}) 
       repeatPauseThreshold:
         "Pause the reported agent only after 3+ serious reports from 3+ unique reporters in 30 days, or severe evidence plus 2+ unique reporters.",
     },
-  };
-}
-
-async function loadOperatorAnalytics(range: AnalyticsRange): Promise<OperatorAnalyticsPayload> {
-  const [
-    overview,
-    trust,
-    network,
-    beacons,
-    advice,
-    agents,
-    countries,
-    users,
-    costs,
-    anomalies,
-    reports,
-  ] = await Promise.all([
-    getOverviewAnalytics(range),
-    getTrustAnalytics(range),
-    getNetworkAnalytics(range),
-    getBeaconAnalytics(range),
-    getAdviceAnalytics(range),
-    getAgentAnalytics(range),
-    getCountryAnalytics(range),
-    getUsersAnalytics(range),
-    getCostAnalytics(range),
-    getAnomalyAnalytics(range),
-    getReportAnalytics(range),
-  ]);
-
-  return {
-    overview,
-    trust,
-    network,
-    beacons,
-    advice,
-    agents,
-    countries,
-    users,
-    costs,
-    anomalies,
-    reports,
   };
 }
 
@@ -1087,7 +1024,7 @@ export async function buildOpenClawDigest(options: OperatorRunOptions = {}): Pro
   const now = options.now ?? new Date();
   const range = buildWeeklyAnalyticsRange(now);
   const [analytics, market] = await Promise.all([
-    loadOperatorAnalytics(range),
+    loadAdminAnalyticsBundle(range),
     collectMarketResearch(options.includeMarket ?? true),
   ]);
 
@@ -1133,7 +1070,7 @@ export async function runOpenClawOperator(options: OperatorRunOptions = {}) {
 
   const range = buildWeeklyAnalyticsRange(now);
   const [analytics, market] = await Promise.all([
-    loadOperatorAnalytics(range),
+    loadAdminAnalyticsBundle(range),
     collectMarketResearch(includeMarket),
   ]);
   const report = await generateWeeklyReport({ range, analytics, moderation, market });

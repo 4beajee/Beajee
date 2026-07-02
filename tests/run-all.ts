@@ -25,6 +25,7 @@ const tests = [
   "tests/social-profile.test.ts",
   "tests/match-call.test.ts",
   "tests/openclaw-operator.test.ts",
+  "tests/founder-analytics.test.ts",
   "tests/monitoring.test.ts",
   "tests/networking-goal.test.ts",
   "tests/privacy-sync.test.ts",

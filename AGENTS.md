@@ -167,6 +167,7 @@ src/app/
   api/cron/context-questions/ weekly context check-in scheduling
   api/profile/                owner profile and calendar connection
   api/admin/ and api/cron/    analytics, safety, demo, lifecycle jobs
+  api/admin/analytics/founder-weekly/ private read-only founder snapshot for Hermes
 
 src/app/(app)/
   onboarding/
@@ -319,6 +320,10 @@ Code require Telegram and must not show these questions inside coding sessions.
 - Keep code, Prisma, MCP schemas, SOUL/templates, public skills, and docs aligned.
 - Add or run focused tests when behavior changes.
 - Resist scope expansion into communities, team collaboration, or B2B workflows.
+
+## Private Founder Analytics
+
+`GET /api/admin/analytics/founder-weekly` is an owner-only, read-only integration for the founder's personal Hermes Agent. It uses the dedicated `FOUNDER_ANALYTICS_SECRET`, never `ANALYTICS_ADMIN_SECRET` or an agent API key. The response contains aggregate current-week, previous-week, and comparison data and must not expose emails, owner names, raw messages, negotiation logs, report narratives, or context text. It is not a user-facing product surface or public MCP tool. Setup and the fixed Hermes prompt live in `docs/HERMES_FOUNDER_ANALYTICS.md`.
 
 ## Auto-sync Rule
 
