@@ -137,8 +137,8 @@ export function CookieConsent() {
       <div className="max-w-6xl mx-auto rounded-xl border border-[#1a1a1a] bg-[#0a0a0a]/95 backdrop-blur-xl p-3 sm:px-5 sm:py-4 shadow-[0_-4px_40px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto">
         {!showCustomize ? (
           /* ── Default banner view ── */
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
-            <p className="text-sm text-neutral-400 leading-relaxed flex-1 sm:whitespace-nowrap">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-5">
+            <p className="flex-1 text-sm leading-relaxed text-neutral-400 lg:whitespace-nowrap">
               {t("message")}{" "}
               <Link
                 href="/cookie-policy"
