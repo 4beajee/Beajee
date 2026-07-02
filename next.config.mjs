@@ -23,6 +23,14 @@ const nextConfig = {
   output: 'standalone',
   allowedDevOrigins: ['beajee.local', 'app.beajee.local', '*.trycloudflare.com'],
   serverExternalPackages: ['@prisma/client', 'sharp'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+    ],
+  },
   async headers() {
     return [
       {

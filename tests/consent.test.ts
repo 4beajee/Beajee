@@ -176,8 +176,9 @@ function hashIp(rawIp: string, salt: string): string {
   assert.match(nextConfig, /developmentScriptPolicy/);
   assert.match(nextConfig, /'unsafe-eval'/);
   assert.match(nextConfig, /'\*\.trycloudflare\.com'/);
+  assert.match(nextConfig, /hostname: 'lh3\.googleusercontent\.com'/);
 
-  console.log("PASS: tunneled development origins can load the Next.js client runtime");
+  console.log("PASS: development tunnels and Google profile images are explicitly allowed");
 }
 
 console.log("\nAll 6 tests passed.");
