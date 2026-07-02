@@ -28,6 +28,12 @@ function ok(label: string) {
   assert.match(styles, /prefers-reduced-motion/);
   assert.match(layout, /themeColor:\s*"#000000"/);
   ok("the visual system stays monochrome, rounded, floating, and uses safe fixed bottom navigation");
+
+  assert.match(page, /function TelegramSocialIcon/);
+  assert.equal(page.match(/<TelegramSocialIcon provider=\{provider\} \/>/g)?.length, 2);
+  assert.doesNotMatch(page, /bg-\[#1D9BF0\]/);
+  assert.doesNotMatch(page, /linkedIn \? "in" : "𝕏"/);
+  ok("profile settings and match cards share the same LinkedIn and X icons");
 }
 
 {

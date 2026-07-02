@@ -452,9 +452,21 @@ function MatchDetail({ match, pending, onBack, onAction, onChat, onCall }: { mat
   </section>;
 }
 
+function TelegramSocialIcon({ provider }: { provider: "linkedin" | "twitter" }) {
+  return provider === "linkedin" ? (
+    <svg viewBox="0 0 24 24" className="h-[21px] w-[21px]" fill="currentColor" aria-hidden="true">
+      <path d="M6.5 8.25H3V21h3.5V8.25ZM4.75 3A2.05 2.05 0 1 0 4.75 7.1 2.05 2.05 0 0 0 4.75 3ZM21 13.7c0-3.84-2.05-5.63-4.78-5.63a4.12 4.12 0 0 0-3.72 2.05V8.25H9V21h3.5v-6.31c0-1.66.32-3.28 2.39-3.28 2.04 0 2.06 1.91 2.06 3.39V21H21v-7.3Z" />
+    </svg>
+  ) : (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.451-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z" />
+    </svg>
+  );
+}
+
 function TelegramSocialBadge({ provider, profile }: { provider: "linkedin" | "twitter"; profile: { url: string; label: string } }) {
   const linkedIn = provider === "linkedin";
-  return <a href={profile.url} target="_blank" rel="noopener noreferrer" className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold text-white shadow-[0_14px_38px_rgba(0,0,0,0.38)] transition-transform active:scale-95 ${linkedIn ? "border-transparent bg-[#0A66C2]" : "border-white/15 bg-black"}`} aria-label={`Open ${linkedIn ? "LinkedIn" : "Twitter / X"} profile ${profile.label}`}><span className={`grid h-7 w-7 shrink-0 place-items-center rounded-md ${linkedIn ? "bg-white/15" : "border border-white/15 bg-black"}`}>{linkedIn ? <svg viewBox="0 0 24 24" className="h-[21px] w-[21px]" fill="currentColor" aria-hidden="true"><path d="M6.5 8.25H3V21h3.5V8.25ZM4.75 3A2.05 2.05 0 1 0 4.75 7.1 2.05 2.05 0 0 0 4.75 3ZM21 13.7c0-3.84-2.05-5.63-4.78-5.63a4.12 4.12 0 0 0-3.72 2.05V8.25H9V21h3.5v-6.31c0-1.66.32-3.28 2.39-3.28 2.04 0 2.06 1.91 2.06 3.39V21H21v-7.3Z"/></svg> : <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.451-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z"/></svg>}</span>{profile.label}<span aria-hidden="true">↗</span></a>;
+  return <a href={profile.url} target="_blank" rel="noopener noreferrer" className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold text-white shadow-[0_14px_38px_rgba(0,0,0,0.38)] transition-transform active:scale-95 ${linkedIn ? "border-transparent bg-[#0A66C2]" : "border-white/15 bg-black"}`} aria-label={`Open ${linkedIn ? "LinkedIn" : "Twitter / X"} profile ${profile.label}`}><span className={`grid h-7 w-7 shrink-0 place-items-center rounded-md ${linkedIn ? "bg-white/15" : "border border-white/15 bg-black"}`}><TelegramSocialIcon provider={provider} /></span>{profile.label}<span aria-hidden="true">↗</span></a>;
 }
 
 function Chats({ chats, onOpen }: { chats: ChatSummary[]; onOpen: (id: string) => void }) {
@@ -489,7 +501,7 @@ function You({ settings, pending, onUpdate }: { settings: Settings; pending: str
 
 function TelegramProfileInput({ provider, label, value, onChange, placeholder }: { provider: "linkedin" | "twitter"; label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
   const linkedIn = provider === "linkedin";
-  return <label className="block"><span className="mb-2 flex items-center gap-2 text-sm font-medium text-neutral-300"><span className={`grid h-7 w-7 place-items-center rounded-lg text-[11px] font-bold text-white ${linkedIn ? "bg-[#0A66C2]" : "bg-[#1D9BF0]"}`}>{linkedIn ? "in" : "𝕏"}</span>{label}</span><input type="url" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} autoComplete="url" className="h-14 w-full rounded-full bg-black/[0.55] px-5 text-base text-white outline-none placeholder:text-neutral-700 focus:ring-2 focus:ring-white/20"/></label>;
+  return <label className="block"><span className="mb-2 flex items-center gap-2 text-sm font-medium text-neutral-300"><span className={`grid h-7 w-7 place-items-center rounded-lg text-white ${linkedIn ? "bg-[#0A66C2]" : "border border-white/15 bg-black"}`}><TelegramSocialIcon provider={provider} /></span>{label}</span><input type="url" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} autoComplete="url" className="h-14 w-full rounded-full bg-black/[0.55] px-5 text-base text-white outline-none placeholder:text-neutral-700 focus:ring-2 focus:ring-white/20"/></label>;
 }
 
 function SettingBlock({ title, body, children }: { title: string; body: string; children: ReactNode }) {
