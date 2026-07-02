@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   useCookieConsent,
@@ -74,6 +73,9 @@ export function CookieConsent() {
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
   const [functional, setFunctional] = useState(false);
+  const cookiePolicyHref = process.env.NEXT_PUBLIC_LANDING_URL
+    ? new URL("/cookie-policy", process.env.NEXT_PUBLIC_LANDING_URL).toString()
+    : "/cookie-policy";
 
   const dismiss = useCallback(
     (action: "accepted" | "rejected" | "partial", consents: ConsentCategories) => {
@@ -140,12 +142,12 @@ export function CookieConsent() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-5">
             <p className="flex-1 text-sm leading-relaxed text-neutral-400 lg:whitespace-nowrap">
               {t("message")}{" "}
-              <Link
-                href="/cookie-policy"
+              <a
+                href={cookiePolicyHref}
                 className="text-white underline underline-offset-2 hover:text-neutral-300 transition-colors"
               >
                 {t("policy")}
-              </Link>
+              </a>
             </p>
             <div className="grid grid-cols-3 sm:flex sm:items-center gap-2 sm:shrink-0">
               <button
