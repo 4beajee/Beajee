@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth-options";
-import { getSupabaseService } from "@/lib/supabase-service";
+import { prisma } from "@/lib/db";
 import { POLICY_VERSION } from "@/constants/consent";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -144,38 +144,33 @@ export async function POST(request: NextRequest) {
 
     const bannerTextHash = createHash("sha256").update(POLICY_VERSION).digest("hex");
 
-    const { data, error } = await getSupabaseService()
-      .from("cookie_consents")
-      .insert({
-        event_id: body.eventId,
-        action: body.action,
-        policy_version: POLICY_VERSION,
-        consents: body.consents,
-        ip_hash: ipHash,
-        user_agent: userAgent,
-        country,
-        owner_id: ownerId,
-        session_id: body.sessionId,
-        source: body.source,
-        site_host: siteHost,
-        page_url: pageUrl,
-        banner_text_hash: bannerTextHash,
-      })
-      .select("id")
-      .single();
+    try {
+      const data = await prisma.cookieConsent.create({
+        data: {
+          eventId: body.eventId,
+          action: body.action,
+          policyVersion: POLICY_VERSION,
+          consents: body.consents,
+          ipHash,
+          userAgent,
+          country,
+          ownerId,
+          sessionId: body.sessionId,
+          source: body.source,
+          siteHost,
+          pageUrl,
+          bannerTextHash,
+        },
+        select: { id: true },
+      });
 
-    if (error) {
-      if (isDuplicateEvent(error)) {
+      return NextResponse.json({ success: true, consentId: data.id });
+    } catch (error) {
+      if (isDuplicateEvent(error as { code?: string; message?: string })) {
         return NextResponse.json({ success: true, idempotent: true });
       }
-      console.error("[consent] insert error:", error.message);
-      return NextResponse.json(
-        { error: "Failed to record consent" },
-        { status: 500 }
-      );
+      throw error;
     }
-
-    return NextResponse.json({ success: true, consentId: data.id });
   } catch (err) {
     console.error("[consent] unexpected error:", err);
     return NextResponse.json(
