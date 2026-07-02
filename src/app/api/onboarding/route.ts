@@ -40,9 +40,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: messages.onboarding.errors.invalidInput }, { status: 400 });
     }
 
-    const baseUrl = request.headers.get("x-forwarded-proto") && request.headers.get("host")
-      ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get("host")}`
-      : process.env.NEXTAUTH_URL ?? "https://beajee.com";
+    const configuredBaseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL;
+    const baseUrl = new URL(configuredBaseUrl || request.nextUrl.origin).origin;
     return NextResponse.json(await completeOwnerOnboarding({
       ownerId: auth.ownerId,
       input: validated,
