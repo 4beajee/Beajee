@@ -142,12 +142,15 @@ export function buildFounderHeadlineChanges(current: FounderAnalytics, previous:
   };
 }
 
-export async function buildFounderWeeklySnapshot(now = new Date()) {
+export async function buildFounderWeeklySnapshot(
+  now = new Date(),
+  loadBundle: typeof loadAdminAnalyticsBundle = loadAdminAnalyticsBundle
+) {
   const ranges = buildFounderWeeklyRanges(now);
-  const [currentBundle, previousBundle] = await Promise.all([
-    loadAdminAnalyticsBundle(ranges.current),
-    loadAdminAnalyticsBundle(ranges.previous),
-  ]);
+  // Production uses a deliberately small Prisma pool. Each bundle already fans
+  // out internally, so running both periods together can exhaust the pool.
+  const currentBundle = await loadBundle(ranges.current);
+  const previousBundle = await loadBundle(ranges.previous);
   const current = sanitizeFounderAnalytics(currentBundle);
   const previous = sanitizeFounderAnalytics(previousBundle);
 

@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 import { requireAnalyticsAdmin, requireFounderAnalytics } from "../src/lib/admin-analytics/auth";
 import {
   buildFounderHeadlineChanges,
+  buildFounderWeeklySnapshot,
   buildFounderWeeklyRanges,
   sanitizeFounderAnalytics,
 } from "../src/lib/admin-analytics/bundle";
@@ -16,6 +17,8 @@ function ok(label: string) {
   passed += 1;
   console.log(`PASS: ${label}`);
 }
+
+async function main() {
 
 {
   const original = process.env.FOUNDER_ANALYTICS_SECRET;
@@ -129,6 +132,29 @@ function fixture() {
 }
 
 {
+  let activeLoads = 0;
+  let maxConcurrentLoads = 0;
+  const loadedLabels: string[] = [];
+  const loadBundle = async (range: { label: string }) => {
+    activeLoads += 1;
+    maxConcurrentLoads = Math.max(maxConcurrentLoads, activeLoads);
+    loadedLabels.push(range.label);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    activeLoads -= 1;
+    return fixture() as never;
+  };
+
+  const snapshot = await buildFounderWeeklySnapshot(
+    new Date("2026-07-02T18:00:00.000Z"),
+    loadBundle as never
+  );
+  assert.equal(maxConcurrentLoads, 1);
+  assert.deepEqual(loadedLabels, ["Current 7 days", "Previous 7 days"]);
+  assert.equal(snapshot.changes.proposals.current, 6);
+  ok("weekly periods load sequentially to stay within the production connection pool");
+}
+
+{
   const docs = fs.readFileSync(path.join(ROOT, "docs/HERMES_FOUNDER_ANALYTICS.md"), "utf8");
   assert.match(docs, /telegram:<chat_id>:<thread_id>/);
   assert.match(docs, /BEAJEE_FOUNDER_ANALYTICS_SECRET/);
@@ -139,3 +165,9 @@ function fixture() {
 }
 
 console.log(`\nAll ${passed} founder analytics tests passed.`);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
