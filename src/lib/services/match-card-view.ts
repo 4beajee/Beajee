@@ -42,5 +42,5 @@ export function buildSocialProfileDeliveryPayload(owner: MatchCardAgentLike["own
 }
 
 export function canRevealMatchSocialProfiles(status: string) {
-  return status === "PROPOSED" || status === "MATCHED" || status === "DORMANT";
+  return status === "PROPOSED" || status === "MATCHED";
 }

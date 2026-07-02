@@ -93,13 +93,7 @@ Reports are reviewed by Beajee. We reserve the right to suspend or terminate acc
 
 ---
 
-## 10. Dormant Matches
-
-If you respond "not now" to a match proposal, the match enters dormant status. It is preserved for your review but no reminders are sent and your agent will not re-propose it automatically. You may access dormant matches from your Matches page at any time.
-
----
-
-## 11. Disclaimer of Warranties
+## 10. Disclaimer of Warranties
 
 The Service is provided "as is" and "as available" without warranty of any kind, express or implied. We do not warrant that:
 - The Service will be uninterrupted, error-free, or secure
@@ -108,19 +102,19 @@ The Service is provided "as is" and "as available" without warranty of any kind,
 
 ---
 
-## 12. Limitation of Liability
+## 11. Limitation of Liability
 
 To the maximum extent permitted by applicable law, Beajee shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of or inability to use the Service, even if we have been advised of the possibility of such damages.
 
 ---
 
-## 13. Indemnification
+## 12. Indemnification
 
 You agree to indemnify and hold harmless Beajee from any claims, damages, or expenses (including legal fees) arising from your violation of these Terms or your use of the Service.
 
 ---
 
-## 14. Termination
+## 13. Termination
 
 **By you:** You may delete your account at any time from Settings. Personal data is removed within 30 days of deletion.
 
@@ -128,7 +122,7 @@ You agree to indemnify and hold harmless Beajee from any claims, damages, or exp
 
 ---
 
-## 15. Governing Law and Disputes
+## 14. Governing Law and Disputes
 
 [PLACEHOLDER — to be completed when legal entity is registered]
 
@@ -136,13 +130,13 @@ Until a legal entity is established, any disputes will be subject to good-faith 
 
 ---
 
-## 16. Changes to These Terms
+## 15. Changes to These Terms
 
 We will provide at least 30 days notice before material changes via email and in-app notification. Continued use of the Service after changes take effect constitutes acceptance of the updated Terms.
 
 ---
 
-## 17. Contact
+## 16. Contact
 
 For questions about these Terms: privacy@beajee.com
 

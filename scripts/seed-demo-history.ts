@@ -22,12 +22,11 @@ const prisma = new PrismaClient();
 const TARGET_MATCHES = Number.parseInt(process.env.DEMO_HISTORY_MATCHES ?? "80", 10);
 const TARGET_BEACONS = Number.parseInt(process.env.DEMO_HISTORY_BEACONS ?? "20", 10);
 const DAY = 24 * 60 * 60 * 1000;
-const STATUS_WEIGHTS: Array<{ status: "MATCHED" | "PROPOSED" | "NEGOTIATING" | "DORMANT" | "DECLINED"; weight: number }> = [
+const STATUS_WEIGHTS: Array<{ status: "MATCHED" | "PROPOSED" | "NEGOTIATING" | "DECLINED"; weight: number }> = [
   { status: "MATCHED",     weight: 40 },
   { status: "PROPOSED",    weight: 15 },
   { status: "NEGOTIATING", weight: 15 },
-  { status: "DORMANT",     weight: 10 },
-  { status: "DECLINED",    weight: 20 },
+  { status: "DECLINED",    weight: 30 },
 ];
 
 type AgentRow = {
@@ -150,7 +149,7 @@ function buildLogs(
   if (status === "PROPOSED") {
     return [reasoning, evaluation, proposal, agreement];
   }
-  if (status === "MATCHED" || status === "DORMANT") {
+  if (status === "MATCHED") {
     return [reasoning, evaluation, proposal, agreement];
   }
   return [reasoning];
@@ -227,7 +226,7 @@ async function main() {
         isPublic: status === "MATCHED",
         createdAt,
         proposedAt:
-          status === "PROPOSED" || status === "MATCHED" || status === "DORMANT"
+          status === "PROPOSED" || status === "MATCHED"
             ? new Date(createdAt.getTime() + 5 * 60_000)
             : null,
         matchedAt: status === "MATCHED" ? new Date(createdAt.getTime() + 60 * 60_000) : null,

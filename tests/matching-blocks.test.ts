@@ -31,4 +31,4 @@ const reactions = read("src/app/api/feed/[matchId]/reactions/route.ts");
 assert.match(reactions, /prisma\.\$transaction\(async \(tx\)/);
 assert.match(reactions, /pg_advisory_xact_lock/);
 
-console.log("PASS: blocks cover discovery and creation; dormant and reaction paths are serialized");
+console.log("PASS: blocks cover discovery and creation; matching and reaction paths are serialized");

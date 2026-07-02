@@ -852,7 +852,6 @@ async function main() {
     negotiate,
     proposeMatch,
     confirmMatch,
-    markDormant,
   } = await import("../src/lib/services/negotiation");
   const {
     requestModelAdvice,
@@ -1055,26 +1054,7 @@ async function main() {
       /not part of this match/
     );
 
-    const dormant = await markDormant(second.matchId, delta.owner.id);
-    assert.equal(dormant.status, "DORMANT");
-    assert.equal(
-      prisma.__db.chats.some((chat) => chat.matchId === second.matchId),
-      false,
-      "dormant matches must not open chat"
-    );
-    await assert.rejects(
-      () => confirmMatch(second.matchId, alpha.owner.id),
-      /PROPOSED state/
-    );
-    const dormantRetry = await initiateNegotiation("agent_delta_e2e", "agent_alpha_e2e");
-    assert.equal(dormantRetry.matchId, second.matchId);
-    assert.equal(dormantRetry.status, "DORMANT");
-    assert.equal(prisma.__db.matches.filter((match) =>
-      [match.agentAId, match.agentBId].includes(alpha.agent.id) &&
-      [match.agentAId, match.agentBId].includes(delta.agent.id)
-    ).length, 1);
-
-    ok("RBAC, malformed lifecycle actions, and dormant path reject unsafe state changes");
+    ok("RBAC and malformed lifecycle actions reject unsafe state changes");
   }
 
   {

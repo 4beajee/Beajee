@@ -38,7 +38,7 @@ type SocialProfiles = {
 
 type MatchItem = {
   matchId: string;
-  status: "PROPOSED" | "MATCHED" | "DORMANT";
+  status: "PROPOSED" | "MATCHED";
   overlapSummary: string;
   framingForMe: string;
   confirmedByMe: boolean;
@@ -311,13 +311,13 @@ export default function TelegramWebAppPage() {
     return () => window.clearInterval(timer);
   }, [api, selectedChatId]);
 
-  const matchAction = async (matchId: string, action: "confirm" | "dormant") => {
-    setPending(`${action}:${matchId}`); setNotice(null);
+  const matchAction = async (matchId: string) => {
+    setPending(`confirm:${matchId}`); setNotice(null);
     try {
-      await api("/api/telegram/matches", { method: "POST", body: JSON.stringify({ matchId, action }) });
-      telegramHost()?.HapticFeedback?.notificationOccurred?.(action === "confirm" ? "success" : "warning");
+      await api("/api/telegram/matches", { method: "POST", body: JSON.stringify({ matchId, action: "confirm" }) });
+      telegramHost()?.HapticFeedback?.notificationOccurred?.("success");
       await refresh(true);
-      setNotice(action === "confirm" ? "Your answer is saved." : "Moved to Not now. No reminders will be sent.");
+      setNotice("Your answer is saved.");
     } catch (error) { setNotice(error instanceof Error ? error.message : "Could not update this match"); telegramHost()?.HapticFeedback?.notificationOccurred?.("error"); }
     finally { setPending(null); }
   };
@@ -433,16 +433,10 @@ function ActionRow({ label, title, body, onClick, quiet = false }: { label: stri
 }
 
 function Matches({ matches, openMatch }: { matches: MatchItem[]; openMatch: (id: string) => void }) {
-  const [filter, setFilter] = useState<"active" | "dormant">("active");
-  const visible = matches.filter((match) => filter === "dormant" ? match.status === "DORMANT" : match.status !== "DORMANT");
-  return <section><SectionTitle eyebrow="People your agents agreed on">Matches</SectionTitle><div className="mb-6 inline-flex rounded-full bg-white/[0.06] p-1.5 backdrop-blur-2xl"><Filter active={filter === "active"} onClick={() => setFilter("active")}>Active</Filter><Filter active={filter === "dormant"} onClick={() => setFilter("dormant")}>Not now</Filter></div><div className="space-y-4">{visible.length ? visible.map((match) => <button key={match.matchId} onClick={() => openMatch(match.matchId)} className="telegram-lift flex w-full items-center gap-4 rounded-[30px] bg-white/[0.05] p-5 text-left shadow-[0_24px_70px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-[transform,background-color] hover:bg-white/[0.08] active:scale-[0.985]"><Avatar name={match.otherPerson.name} image={match.otherPerson.image}/><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-3"><h2 className="truncate font-semibold text-white">{personLabel(match)}</h2><span className="rounded-full bg-white/[0.08] px-3 py-1 text-[10px] text-neutral-400">{match.status === "MATCHED" ? "Connected" : match.confirmedByMe ? "Waiting" : "Review"}</span></div><p className="mt-2 line-clamp-2 text-sm leading-5 text-neutral-500">{match.framingForMe}</p></div><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-black">›</span></button>) : <Empty title={filter === "dormant" ? "Nothing in Not now" : "Your agent is searching"} body="Strong matches appear here only after both agents find a specific reason to introduce you."/>}</div></section>;
+  return <section><SectionTitle eyebrow="People your agents agreed on">Matches</SectionTitle><div className="space-y-4">{matches.length ? matches.map((match) => <button key={match.matchId} onClick={() => openMatch(match.matchId)} className="telegram-lift flex w-full items-center gap-4 rounded-[30px] bg-white/[0.05] p-5 text-left shadow-[0_24px_70px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-[transform,background-color] hover:bg-white/[0.08] active:scale-[0.985]"><Avatar name={match.otherPerson.name} image={match.otherPerson.image}/><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-3"><h2 className="truncate font-semibold text-white">{personLabel(match)}</h2><span className="rounded-full bg-white/[0.08] px-3 py-1 text-[10px] text-neutral-400">{match.status === "MATCHED" ? "Connected" : match.confirmedByMe ? "Waiting" : "Review"}</span></div><p className="mt-2 line-clamp-2 text-sm leading-5 text-neutral-500">{match.framingForMe}</p></div><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-black">›</span></button>) : <Empty title="Your agent is searching" body="Strong matches appear here only after both agents find a specific reason to introduce you."/>}</div></section>;
 }
 
-function Filter({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
-  return <button onClick={onClick} className={`min-h-11 rounded-full px-5 text-sm font-medium transition-[background-color,color,transform] active:scale-95 ${active ? "bg-white text-black" : "text-neutral-500 hover:text-white"}`}>{children}</button>;
-}
-
-function MatchDetail({ match, pending, onBack, onAction, onChat, onCall }: { match: MatchItem; pending: string | null; onBack: () => void; onAction: (id: string, action: "confirm" | "dormant") => void; onChat: (id: string) => void; onCall: () => void }) {
+function MatchDetail({ match, pending, onBack, onAction, onChat, onCall }: { match: MatchItem; pending: string | null; onBack: () => void; onAction: (id: string) => void; onChat: (id: string) => void; onCall: () => void }) {
   return <section>
     <button onClick={onBack} className="mb-8 inline-flex min-h-11 items-center gap-2 rounded-full bg-white/[0.07] px-4 text-sm text-neutral-400 backdrop-blur-xl transition-transform active:scale-95">← Matches</button>
     <div className="telegram-float rounded-[38px] bg-white/[0.055] p-6 shadow-[0_32px_95px_rgba(0,0,0,0.62)] backdrop-blur-2xl">
@@ -452,7 +446,7 @@ function MatchDetail({ match, pending, onBack, onAction, onChat, onCall }: { mat
       {(match.otherPerson.socialProfiles.linkedin || match.otherPerson.socialProfiles.twitter) ? <div className="mt-5"><p className="mb-3 text-[10px] uppercase tracking-[0.18em] text-neutral-500">Public profiles</p><div className="flex flex-wrap gap-2">{match.otherPerson.socialProfiles.linkedin ? <TelegramSocialBadge provider="linkedin" profile={match.otherPerson.socialProfiles.linkedin}/> : null}{match.otherPerson.socialProfiles.twitter ? <TelegramSocialBadge provider="twitter" profile={match.otherPerson.socialProfiles.twitter}/> : null}</div><p className="mt-3 text-xs leading-5 text-neutral-600">Shared by {personLabel(match)}. Beajee does not import or analyse these profiles.</p></div> : null}
       <details className="mt-4 rounded-[26px] bg-black/40 p-5"><summary className="cursor-pointer text-sm font-medium text-neutral-300">How the agents decided</summary><p className="mt-4 text-sm leading-6 text-neutral-500">{match.overlapSummary}</p><p className="mt-4 text-xs leading-5 text-neutral-600">Only privacy-filtered published context was used. Neither agent saw the other person’s raw memory.</p></details>
     </div>
-    {match.status === "PROPOSED" && !match.confirmedByMe ? <div className="telegram-float-delayed mt-5 grid grid-cols-[1fr_auto] gap-3 rounded-full bg-white/[0.055] p-2 shadow-[0_28px_80px_rgba(0,0,0,0.58)] backdrop-blur-2xl"><button disabled={!!pending} onClick={() => onAction(match.matchId, "confirm")} className="h-14 rounded-full bg-white px-6 text-sm font-semibold text-black transition-transform active:scale-[0.98] disabled:opacity-40">{pending ? "Saving…" : "Meet"}</button><button disabled={!!pending} onClick={() => onAction(match.matchId, "dormant")} className="h-14 rounded-full px-5 text-sm font-medium text-neutral-400 transition-colors hover:bg-white/[0.06] hover:text-white">Not now</button></div> : null}
+    {match.status === "PROPOSED" && !match.confirmedByMe ? <div className="telegram-float-delayed mt-5 rounded-full bg-white/[0.055] p-2 shadow-[0_28px_80px_rgba(0,0,0,0.58)] backdrop-blur-2xl"><button disabled={!!pending} onClick={() => onAction(match.matchId)} className="h-14 w-full rounded-full bg-white px-6 text-sm font-semibold text-black transition-transform active:scale-[0.98] disabled:opacity-40">{pending ? "Saving…" : "Meet"}</button></div> : null}
     {match.status === "PROPOSED" && match.confirmedByMe ? <div className="telegram-float-delayed mt-5 rounded-[30px] bg-white/[0.055] p-6 shadow-[0_28px_80px_rgba(0,0,0,0.55)]"><p className="font-medium text-white">Your answer is saved.</p><p className="mt-2 text-sm leading-6 text-neutral-500">Chat opens only if {personLabel(match)} also says yes.</p></div> : null}
     {match.status === "MATCHED" ? <div className="telegram-float-delayed mt-5 flex flex-wrap gap-3 rounded-[32px] bg-white/[0.055] p-3 shadow-[0_28px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl"><button onClick={() => onChat(match.matchId)} className="min-h-14 flex-1 rounded-full bg-white px-6 text-sm font-semibold text-black transition-transform active:scale-[0.98]">Open chat{match.unreadCount ? ` · ${match.unreadCount} new` : ""}</button>{match.partnerSchedulingUrl ? <a href={match.partnerSchedulingUrl} target="_blank" rel="noreferrer" className="min-h-14 flex-1 rounded-full bg-white/[0.08] px-6 text-center text-sm font-medium leading-[56px] text-white">Book with {match.schedulingHostName ?? personLabel(match)}</a> : <button disabled={pending === "call"} onClick={onCall} className="min-h-14 flex-1 rounded-full bg-white/[0.08] px-6 text-sm font-medium text-white">{match.call?.wantsCallByMe ? "Call requested" : "Request a Zoom call"}</button>}{match.call?.zoomUrl ? <a href={match.call.zoomUrl} target="_blank" rel="noreferrer" className="min-h-14 w-full rounded-full bg-white px-6 text-center text-sm font-semibold leading-[56px] text-black">Join Zoom</a> : null}</div> : null}
   </section>;

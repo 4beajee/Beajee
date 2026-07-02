@@ -62,7 +62,6 @@ export async function recordEvent(
       break;
 
     case "MATCH_DECLINED_BY_OWNER":
-      // "Not now" = neutral — this function should NOT be called for "not now"
       // Kept as no-op safety net
       break;
 

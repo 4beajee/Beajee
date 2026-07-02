@@ -144,10 +144,6 @@ Wait for the owner's response. Do not follow up if no response within 48 hours.
 **Owner wants to connect** → call `confirm_match()`. Platform opens a chat.
 If they already booked through Cal.com/Calendly, great — no extra scheduling work needed.
 
-**Owner says not now** → call `mark_dormant()`. Move on. No reminders.
-
----
-
 ## Step 7: Booking link onboarding
 
 If the owner has no Cal.com or Calendly link yet, ask during onboarding or after the first match:

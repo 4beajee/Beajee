@@ -252,24 +252,10 @@ export default async function TermsOfServicePage() {
             </p>
           </section>
 
-          {/* 10. Dormant Matches */}
+          {/* 10. Disclaimer of Warranties */}
           <section>
             <h2 className="text-lg font-medium text-white mb-3">
-              10. Dormant Matches
-            </h2>
-            <p>
-              If you respond &quot;not now&quot; to a match proposal, the match
-              enters dormant status. It is preserved for your review but no
-              reminders are sent and your agent will not re-propose it
-              automatically. You may access dormant matches from your Matches
-              page at any time.
-            </p>
-          </section>
-
-          {/* 11. Disclaimer of Warranties */}
-          <section>
-            <h2 className="text-lg font-medium text-white mb-3">
-              11. Disclaimer of Warranties
+              10. Disclaimer of Warranties
             </h2>
             <p className="mb-3">
               The Service is provided &quot;as is&quot; and &quot;as
@@ -291,10 +277,10 @@ export default async function TermsOfServicePage() {
             </ul>
           </section>
 
-          {/* 12. Limitation of Liability */}
+          {/* 11. Limitation of Liability */}
           <section>
             <h2 className="text-lg font-medium text-white mb-3">
-              12. Limitation of Liability
+              11. Limitation of Liability
             </h2>
             <p>
               To the maximum extent permitted by applicable law, Beajee shall
@@ -305,10 +291,10 @@ export default async function TermsOfServicePage() {
             </p>
           </section>
 
-          {/* 13. Indemnification */}
+          {/* 12. Indemnification */}
           <section>
             <h2 className="text-lg font-medium text-white mb-3">
-              13. Indemnification
+              12. Indemnification
             </h2>
             <p>
               You agree to indemnify and hold harmless Beajee from any claims,
@@ -317,10 +303,10 @@ export default async function TermsOfServicePage() {
             </p>
           </section>
 
-          {/* 14. Termination */}
+          {/* 13. Termination */}
           <section>
             <h2 className="text-lg font-medium text-white mb-3">
-              14. Termination
+              13. Termination
             </h2>
             <p className="mb-3">
               <strong className="text-neutral-300">By you:</strong> You may
@@ -336,10 +322,10 @@ export default async function TermsOfServicePage() {
             </p>
           </section>
 
-          {/* 15. Governing Law */}
+          {/* 14. Governing Law */}
           <section>
             <h2 className="text-lg font-medium text-white mb-3">
-              15. Governing Law and Disputes
+              14. Governing Law and Disputes
             </h2>
             <p>
               Any disputes will be subject to good-faith negotiation. If
@@ -348,10 +334,10 @@ export default async function TermsOfServicePage() {
             </p>
           </section>
 
-          {/* 16. Changes */}
+          {/* 15. Changes */}
           <section>
             <h2 className="text-lg font-medium text-white mb-3">
-              16. Changes to These Terms
+              15. Changes to These Terms
             </h2>
             <p>
               We will provide at least 30 days notice before material changes
@@ -361,7 +347,7 @@ export default async function TermsOfServicePage() {
             </p>
           </section>
 
-          {/* 17. Contact */}
+          {/* 16. Contact */}
           <section className="pt-6 border-t border-[#1a1a1a]">
             <p className="text-neutral-500">
               Questions about these Terms:{" "}

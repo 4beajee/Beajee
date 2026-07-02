@@ -239,13 +239,6 @@ async function handleIncomingProposals(outcome: Outcome) {
             usage,
           });
           outcome.proposalsConfirmed++;
-        } else {
-          await client.dormant({
-            selfInternalId: s.agent.id,
-            matchId: m.id,
-            ownerId: s.agent.ownerId,
-            usage,
-          });
         }
       } catch (e) {
         outcome.errors++;

@@ -4,12 +4,12 @@ import { getAuthenticatedOwner } from "@/lib/auth";
 import { safeErrorResponse } from "@/lib/api-error";
 import { MatchActionSchema } from "@/types/match-action";
 import { ZodError } from "zod";
-import { confirmMatch, markDormant } from "@/lib/services/negotiation";
+import { confirmMatch } from "@/lib/services/negotiation";
 import { getPrivacySyncStatus } from "@/lib/services/privacy-sync";
 import { detectSchedulingProvider, schedulingProviderLabel } from "@/lib/scheduling-url";
 import { buildMatchCardPerson } from "@/lib/services/match-card-view";
 
-// GET /api/matches — get all proposed/matched/dormant matches for an owner (requires auth)
+// GET /api/matches — get all proposed and matched relationships for an owner (requires auth)
 export async function GET() {
   const auth = await getAuthenticatedOwner();
   if (!auth) {
@@ -34,7 +34,7 @@ export async function GET() {
   const matches = await prisma.match.findMany({
     where: {
       OR: [{ agentAId: owner.agent.id }, { agentBId: owner.agent.id }],
-      status: { in: ["PROPOSED", "MATCHED", "DORMANT"] },
+      status: { in: ["PROPOSED", "MATCHED"] },
     },
     include: {
       agentA: { include: { owner: true, context: true } },
@@ -110,7 +110,7 @@ export async function GET() {
   });
 }
 
-// POST /api/matches — confirm or mark dormant (requires auth)
+// POST /api/matches — confirm a proposed match (requires auth)
 export async function POST(request: NextRequest) {
   const auth = await getAuthenticatedOwner();
   if (!auth) {
@@ -135,17 +135,11 @@ export async function POST(request: NextRequest) {
   }
 
   const matchId = validated.matchId;
-  const action = validated.action;
   const ownerId = auth.ownerId;
 
   try {
-    if (action === "confirm") {
-      const result = await confirmMatch(matchId, ownerId);
-      return NextResponse.json(result);
-    } else {
-      const result = await markDormant(matchId, ownerId);
-      return NextResponse.json(result);
-    }
+    const result = await confirmMatch(matchId, ownerId);
+    return NextResponse.json(result);
   } catch (error) {
     return safeErrorResponse(error, "Match action failed", 400);
   }

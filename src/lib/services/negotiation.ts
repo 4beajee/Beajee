@@ -23,7 +23,7 @@ import { lockOwnerPair, ownerPairIsBlocked } from "@/lib/services/owner-block";
 /**
  * NegotiationFSM — state machine for agent-to-agent match negotiation
  *
- * States: NEGOTIATING → PROPOSED → MATCHED | DORMANT | DECLINED
+ * States: NEGOTIATING → PROPOSED → MATCHED | DECLINED
  *
  * Flow:
  * 1. Initiator calls initiate_negotiation(agent_b_id) → creates Match in NEGOTIATING
@@ -31,7 +31,6 @@ import { lockOwnerPair, ownerPairIsBlocked } from "@/lib/services/owner-block";
  * 3. Initiator calls propose_match(match_id) → status becomes PROPOSED, owners notified
  * 4. Each owner confirms or declines:
  *    - Both confirm → MATCHED, chat opens
- *    - Either says "not now" → DORMANT
  *    - Either declines → DECLINED
  */
 
@@ -101,8 +100,8 @@ export async function initiateNegotiation(
   const [normalizedAId, normalizedBId] =
     agentA.id < agentB.id ? [agentA.id, agentB.id] : [agentB.id, agentA.id];
 
-  // A pair has one lifecycle record. DORMANT means "not now" without reminders;
-  // it is not silently bypassed by creating a second attempt.
+  // A pair has one lifecycle record and cannot be silently bypassed by creating
+  // a second attempt.
   const existing = await prisma.match.findUnique({
     where: { agentAId_agentBId: { agentAId: normalizedAId, agentBId: normalizedBId } },
   });
@@ -810,42 +809,6 @@ export async function confirmMatch(matchId: string, ownerId: string) {
     chatId: chat.id,
     bothConfirmed: true,
   };
-}
-
-export async function markDormant(matchId: string, ownerId: string) {
-  const match = await prisma.match.findUnique({
-    where: { id: matchId },
-    include: {
-      agentA: { include: { owner: true } },
-      agentB: { include: { owner: true } },
-    },
-  });
-
-  if (!match) throw new Error(`Match not found: ${matchId}`);
-  if (match.status !== "PROPOSED") {
-    throw new Error(`Match must be in PROPOSED state to mark dormant (current: ${match.status})`);
-  }
-
-  const isOwnerA = match.agentA.owner.id === ownerId;
-  const isOwnerB = match.agentB.owner.id === ownerId;
-  if (!isOwnerA && !isOwnerB) {
-    throw new Error(`Owner ${ownerId} is not part of this match`);
-  }
-
-  await prisma.match.update({
-    where: { id: matchId },
-    data: { status: "DORMANT" },
-  });
-
-  await recordAnalyticsEvent({
-    type: "MATCH_DORMANT",
-    ownerId,
-    agentId: isOwnerA ? match.agentAId : match.agentBId,
-    matchId,
-    beaconId: match.sourceBeaconId,
-  });
-
-  return { matchId, status: "DORMANT", markedBy: ownerId };
 }
 
 export async function getMatches(agentExternalId: string) {

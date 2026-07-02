@@ -102,7 +102,7 @@ ok("canonical match-card person includes the same social profile shape");
 assert.equal(canRevealMatchSocialProfiles("NEGOTIATING"), false);
 assert.equal(canRevealMatchSocialProfiles("PROPOSED"), true);
 assert.equal(canRevealMatchSocialProfiles("MATCHED"), true);
-assert.equal(canRevealMatchSocialProfiles("DORMANT"), true);
+assert.equal(canRevealMatchSocialProfiles("DECLINED"), false);
 ok("social profiles stay hidden until mutual agent agreement");
 
 process.env.TELEGRAM_MINI_APP_URL = "https://app.beajee.com/telegram";

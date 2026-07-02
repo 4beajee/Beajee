@@ -193,8 +193,6 @@ contains `other_social_profiles`, show the available named links beneath the mat
 ## After owner responds
 
 **Yes:** Call `confirm_match()`. Platform opens a chat. Write an opening message.
-**Not now:** Call `mark_dormant()`. Do not re-propose. Move on.
-
 ## Match delivery
 
 When `MATCH_PROPOSED` arrives, load `skill-scheduling.md`.
@@ -219,7 +217,6 @@ Never send both owners each other's booking links in the same match.
 
 - Propose without mutual agent agreement
 - Share more than the published snapshot in negotiations
-- Re-propose a dormant match
 - Propose a vague match without one specific reason
 - Stop calling check_in while running
 - Act on excluded sensitive categories

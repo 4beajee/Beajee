@@ -4,7 +4,6 @@ import {
   negotiate,
   proposeMatch,
   confirmMatch,
-  markDormant,
 } from "@/lib/services/negotiation";
 import { findMatches } from "@/lib/services/match-engine";
 import type { LlmUsage } from "@/lib/demo/responder-brain";
@@ -22,7 +21,6 @@ export type ResponderEvent =
   | "NEGOTIATE_RESPOND"
   | "PROPOSE_MATCH"
   | "CONFIRM_MATCH"
-  | "MARK_DORMANT"
   | "CHAT_REPLY";
 
 interface LogArgs {
@@ -216,38 +214,6 @@ export async function confirm(args: {
   }
 }
 
-export async function dormant(args: {
-  selfInternalId: string;
-  matchId: string;
-  ownerId: string;
-  usage?: LlmUsage;
-}) {
-  try {
-    const result = await markDormant(args.matchId, args.ownerId);
-    await writeLog({
-      demoAgentId: args.selfInternalId,
-      event: "MARK_DORMANT",
-      targetId: args.matchId,
-      targetType: "match",
-      mcpTool: "mark_dormant",
-      usage: args.usage,
-      success: true,
-    });
-    return result;
-  } catch (e) {
-    await writeLog({
-      demoAgentId: args.selfInternalId,
-      event: "MARK_DORMANT",
-      targetId: args.matchId,
-      targetType: "match",
-      mcpTool: "mark_dormant",
-      usage: args.usage,
-      success: false,
-      errorMessage: e instanceof Error ? e.message : String(e),
-    });
-    throw e;
-  }
-}
 
 /**
  * Posts a chat message on behalf of a demo owner. Runs the same DB write the

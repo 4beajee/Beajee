@@ -435,7 +435,6 @@ enum MatchStatus {
   NEGOTIATING
   PROPOSED
   MATCHED
-  DORMANT
   DECLINED
 }
 

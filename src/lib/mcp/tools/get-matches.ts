@@ -4,7 +4,7 @@ import { requireMcpActor, type McpActor } from "@/lib/mcp/actor";
 export const getMatchesTool = {
   name: "get_matches" as const,
   description:
-    "Get all matches for an agent — active, proposed, matched, and dormant. " +
+    "Get all matches for an agent — active, proposed, and matched. " +
     "Returns the other agent's context, framing, and chat ID if matched.",
   inputSchema: {
     type: "object" as const,

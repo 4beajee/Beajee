@@ -6,7 +6,6 @@ import { initiateNegotiationTool } from "@/lib/mcp/tools/initiate-negotiation";
 import { negotiateTool } from "@/lib/mcp/tools/negotiate";
 import { proposeMatchTool } from "@/lib/mcp/tools/propose-match";
 import { confirmMatchTool } from "@/lib/mcp/tools/confirm-match";
-import { markDormantTool } from "@/lib/mcp/tools/mark-dormant";
 import { getMatchesTool } from "@/lib/mcp/tools/get-matches";
 import { getContextStatusTool } from "@/lib/mcp/tools/get-context-status";
 import { reportChatTool } from "@/lib/mcp/tools/report-chat";
@@ -39,7 +38,6 @@ const tools = [
   negotiateTool,
   proposeMatchTool,
   confirmMatchTool,
-  markDormantTool,
   getMatchesTool,
   getContextStatusTool,
   reportChatTool,

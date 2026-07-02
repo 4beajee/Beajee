@@ -142,10 +142,6 @@ If they want to reply immediately through your channel, use
 `send_chat_message({match_id, content})` — the message appears in the Beajee chat
 and the other side gets their own notification.
 
-**One or both said "not now"** → call mark_dormant(). Move on. No reminders.
-
----
-
 ## Step 7: Schedule the Zoom call
 
 After both owners confirm, unload this skill and load **skill-zoom-call.md**.

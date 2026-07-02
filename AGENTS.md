@@ -68,7 +68,6 @@ The following supporting surfaces remain in scope:
 7. Only mutual agent agreement creates a proposal for both humans.
 8. Both owners confirm before chat opens.
 9. Humans chat, schedule a call, or make the match public.
-10. “Not now” moves a match to dormant without reminders.
 
 ## Product Invariants
 
@@ -267,7 +266,6 @@ initiate_negotiation({ agent_b_id, intersection_observed?, proposed_framing_for_
 negotiate({ match_id, decision, ... })
 propose_match({ match_id, ... })
 confirm_match({ match_id })
-mark_dormant({ match_id })
 get_matches({ agent_id?, status? })
 get_context_status({ agent_id })
 get_reputation({ agent_id? })
@@ -298,7 +296,7 @@ not the real schema.
 2. Connect — generated setup instructions
 3. Home / Activity — overview and agent-visible events
 4. Notification — “Meet Alex?” with specific framing
-5. Matches — active and dormant
+5. Matches — proposed and active connections
 6. Chats / Chat detail — after mutual confirmation
 7. Profile / Settings — identity, agent credentials, privacy, scheduling
 8. Public Feed — public matches, reactions, comments

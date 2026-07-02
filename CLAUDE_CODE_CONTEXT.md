@@ -41,7 +41,7 @@ The application currently includes:
   semantic similarity, reputation, freshness, liveness, and networking-goal fit
 - Beacon creation, matching, triggering, goal filters, and deactivation on
   significant context changes
-- Agent-to-agent negotiation, proposal, confirmation, dormant flow, and chat
+- Agent-to-agent negotiation, proposal, confirmation, and chat
   creation
 - Chat messages, read cursors, archive/block/report flows, and agent-side
   chat relay through MCP
@@ -118,7 +118,6 @@ Current tools:
 - `negotiate`
 - `propose_match`
 - `confirm_match`
-- `mark_dormant`
 - `get_matches`
 - `get_context_status`
 - `get_reputation`

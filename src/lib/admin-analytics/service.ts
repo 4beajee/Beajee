@@ -350,7 +350,6 @@ export async function getOverviewAnalytics(range: AnalyticsRange) {
         negotiating: matches.filter((match) => match.status === "NEGOTIATING").length,
         proposed: matches.filter((match) => match.status === "PROPOSED").length,
         matched: matches.filter((match) => match.status === "MATCHED").length,
-        dormant: matches.filter((match) => match.status === "DORMANT").length,
         declined: matches.filter((match) => match.status === "DECLINED").length,
         matchPrecision: {
           avgSimilarityConfirmed: round(
@@ -459,7 +458,6 @@ export async function getTrustAnalytics(range: AnalyticsRange) {
   );
   const proposedCohort = matches.filter((match) => isInRange(match.proposedAt, range));
   const matchedFromCohort = proposedCohort.filter((match) => match.status === "MATCHED");
-  const dormantFromCohort = proposedCohort.filter((match) => match.status === "DORMANT");
   const pendingFromCohort = proposedCohort.filter((match) => match.status === "PROPOSED");
   const declinedFromCohort = proposedCohort.filter((match) => match.status === "DECLINED");
   const ghostedNegotiations = matches.filter((match) => {
@@ -488,8 +486,6 @@ export async function getTrustAnalytics(range: AnalyticsRange) {
     ...buildMeta(range),
     trustGap: {
       mutualAgreementCount: mutualAgreementCohort.length,
-      dormantAfterAgreement: dormantFromCohort.length,
-      dormantRate: round(rate(dormantFromCohort.length, mutualAgreementCohort.length)),
       matchedRate: round(rate(matchedFromCohort.length, mutualAgreementCohort.length)),
       stillPendingRate: round(rate(pendingFromCohort.length, mutualAgreementCohort.length)),
       declinedRate: round(rate(declinedFromCohort.length, mutualAgreementCohort.length)),
@@ -504,7 +500,6 @@ export async function getTrustAnalytics(range: AnalyticsRange) {
     humanConversion: {
       proposedCohort: proposedCohort.length,
       matched: matchedFromCohort.length,
-      dormant: dormantFromCohort.length,
       pending: pendingFromCohort.length,
       declined: declinedFromCohort.length,
       proposedToMatchedRate: round(rate(matchedFromCohort.length, proposedCohort.length)),
@@ -1236,14 +1231,13 @@ export async function getUsersAnalytics(range: AnalyticsRange) {
 
   const filteredOwners = owners.filter((owner) => isInRange(owner.createdAt, range));
 
-  const matchCounts = new Map<string, { total: number; matched: number; proposed: number; dormant: number; declined: number }>();
+  const matchCounts = new Map<string, { total: number; matched: number; proposed: number; declined: number }>();
   for (const match of matches) {
     for (const ownerId of [match.agentA.ownerId, match.agentB.ownerId]) {
-      const current = matchCounts.get(ownerId) ?? { total: 0, matched: 0, proposed: 0, dormant: 0, declined: 0 };
+      const current = matchCounts.get(ownerId) ?? { total: 0, matched: 0, proposed: 0, declined: 0 };
       current.total += 1;
       if (match.status === "MATCHED") current.matched += 1;
       if (match.status === "PROPOSED") current.proposed += 1;
-      if (match.status === "DORMANT") current.dormant += 1;
       if (match.status === "DECLINED") current.declined += 1;
       matchCounts.set(ownerId, current);
     }
@@ -1269,7 +1263,7 @@ export async function getUsersAnalytics(range: AnalyticsRange) {
       pendingOnboarding: filteredOwners.filter((owner) => !owner.onboarded).length,
     },
     users: filteredOwners.map((owner) => {
-      const counts = matchCounts.get(owner.id) ?? { total: 0, matched: 0, proposed: 0, dormant: 0, declined: 0 };
+      const counts = matchCounts.get(owner.id) ?? { total: 0, matched: 0, proposed: 0, declined: 0 };
       return {
         ownerId: owner.id,
         email: owner.email,

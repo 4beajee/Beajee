@@ -8,7 +8,7 @@ import {
   answerTelegramCallbackQuery,
   isConfiguredTelegramChat,
 } from "@/lib/services/telegram";
-import { confirmMatch, markDormant } from "@/lib/services/negotiation";
+import { confirmMatch } from "@/lib/services/negotiation";
 import { requestZoomCall } from "@/lib/services/match-call";
 import { consumeTelegramLink } from "@/lib/telegram/link";
 import {
@@ -222,11 +222,6 @@ async function handleMatchCallback(command: { kind: string; matchId: string }, t
   if (command.kind === "match_confirm") {
     const result = await confirmMatch(command.matchId, ownerId);
     return result.status === "MATCHED" ? "Match confirmed. Chat is open." : "Confirmed. Waiting for the other owner.";
-  }
-
-  if (command.kind === "match_skip") {
-    await markDormant(command.matchId, ownerId);
-    return "Moved to dormant. No reminders will be sent.";
   }
 
   if (command.kind === "match_dialogue") {

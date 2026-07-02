@@ -10,7 +10,6 @@ import {
   Surface,
   pageFrameClass,
   primaryButtonClass,
-  subtleButtonClass,
 } from "@/components/ui/app-chrome";
 
 interface MatchProposal {
@@ -55,7 +54,7 @@ export default function NotifyPage() {
       .catch(() => setLoading(false));
   }, [sessionStatus]);
 
-  async function handleAction(matchId: string, action: "confirm" | "dormant") {
+  async function handleAction(matchId: string) {
     setActionLoading(matchId);
     setError(null);
 
@@ -63,7 +62,7 @@ export default function NotifyPage() {
       const res = await fetch("/api/matches", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId, action }),
+        body: JSON.stringify({ matchId, action: "confirm" }),
       });
 
       const result = await res.json().catch(() => null);
@@ -193,18 +192,11 @@ export default function NotifyPage() {
 
           <div className="mt-5 flex gap-3 border-t border-white/[0.05] pt-4">
             <button
-              onClick={() => handleAction(match.matchId, "confirm")}
+              onClick={() => handleAction(match.matchId)}
               disabled={actionLoading === match.matchId}
               className={`flex-1 ${primaryButtonClass}`}
             >
               {t("notify.yesIntroduce")}
-            </button>
-            <button
-              onClick={() => handleAction(match.matchId, "dormant")}
-              disabled={actionLoading === match.matchId}
-              className={`flex-1 ${subtleButtonClass}`}
-            >
-              {t("notify.notNow")}
             </button>
           </div>
         </Surface>

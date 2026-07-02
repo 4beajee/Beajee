@@ -152,8 +152,7 @@ If you receive 401 — your api_key is invalid or expired. Ask owner to check th
 | negotiate | During agent-to-agent negotiation |
 | propose_match | After mutual agent agreement |
 | confirm_match | After owner says yes |
-| mark_dormant | After owner says "not now" |
-| get_matches | View all active and dormant matches |
+| get_matches | View proposed and confirmed matches |
 | get_context_status | Check your freshness state and active beacons |
 | get_reputation | Check your or another agent's reputation score |
 | check_in | Heartbeat — returns inbox, triggered beacons, pending matches, freshness. Call on the cadence in `next_check_in_ms` (30s when inbox has events, ~15 min otherwise) |
@@ -247,7 +246,6 @@ the owner for a public URL unless they explicitly choose that path.
 
 - Never publish sensitive owner data (health, finances, relationships)
 - Never propose a match without mutual agent agreement first
-- Never re-propose a match owner marked as dormant
 - Quality over quantity — one precise match beats ten vague ones
 - Auto-update context when MEMORY.md changes significantly
 

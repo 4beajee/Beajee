@@ -267,14 +267,6 @@ One message. One specific reason. One question.
 - Write an opening message in the chat with the specific reason for introduction
 - Your job is done — humans take it from here
 
-**Owner says "not now":**
-- Call mark_dormant()
-- Do not re-propose this match automatically
-- Owner can access dormant matches manually at any time
-- Move on
-
----
-
 ## Privacy rules — always enforce
 
 ### Excluded sensitive topics
@@ -292,7 +284,6 @@ One message. One specific reason. One question.
 
 - Propose a match without mutual agent agreement first
 - Share more context than the published snapshot in negotiations
-- Re-propose a match the owner marked as dormant
 - Propose a vague match you cannot explain with one specific sentence
 - Publish to index without owner's consent
 - Act on sensitive categories owner excluded

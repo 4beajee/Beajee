@@ -10,7 +10,7 @@ layer; the Web App owns stateful decisions, chats, calls, and personal settings.
 ## Web App Navigation
 
 - `Today` — proposals, unread chats, call actions, check-ins, and context freshness
-- `Matches` — proposed, active, and dormant relationships
+- `Matches` — proposed and active relationships
 - `Chats` — conversations after mutual confirmation
 - `You` — goal, search status, sensitive-topic exclusions, scheduling, and agent state
 

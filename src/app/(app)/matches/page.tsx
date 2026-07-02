@@ -52,7 +52,7 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [freshnessState, setFreshnessState] = useState<string | null>(null);
   const [telegramConnected, setTelegramConnected] = useState(true);
-  const [tab, setTab] = useState<"active" | "sent" | "dormant">("active");
+  const [tab, setTab] = useState<"active" | "sent">("active");
   const [loading, setLoading] = useState(true);
   const t = useTranslations();
 
@@ -95,13 +95,7 @@ export default function MatchesPage() {
       m.status === "MATCHED" ||
       (m.status === "PROPOSED" && !(m.initiatedByMe && !m.confirmedByOther))
   );
-  const dormantMatches = matches.filter((m) => m.status === "DORMANT");
-  const displayed =
-    tab === "active"
-      ? activeMatches
-      : tab === "sent"
-      ? sentMatches
-      : dormantMatches;
+  const displayed = tab === "active" ? activeMatches : sentMatches;
 
   return (
     <div className={pageFrameClass}>
@@ -127,12 +121,6 @@ export default function MatchesPage() {
           className={cx(tabBaseClass, tab === "sent" ? tabActiveClass : tabIdleClass)}
         >
           {t("matches.sent", { count: sentMatches.length })}
-        </button>
-        <button
-          onClick={() => setTab("dormant")}
-          className={cx(tabBaseClass, tab === "dormant" ? tabActiveClass : tabIdleClass)}
-        >
-          {t("matches.dormant", { count: dormantMatches.length })}
         </button>
       </div>
 
@@ -167,13 +155,9 @@ export default function MatchesPage() {
                 </Link>
               </div>
             </>
-          ) : tab === "sent" ? (
-            <p className="text-neutral-500 text-sm">
-              {t("matches.noSent")}
-            </p>
           ) : (
             <p className="text-neutral-500 text-sm">
-              {t("matches.noDormant")}
+              {t("matches.noSent")}
             </p>
           )}
         </div>
@@ -293,11 +277,6 @@ export default function MatchesPage() {
                   {t("matches.reviewProposal")}
                 </Link>
               )}
-            {match.status === "DORMANT" && (
-              <span className="text-xs text-neutral-500 italic">
-                {t("matches.revisitMatch")}
-              </span>
-            )}
           </div>
         </Surface>
       ))}

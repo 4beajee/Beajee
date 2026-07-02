@@ -219,7 +219,6 @@ finalScore = semantic_similarity × 0.70
 
 ```
 NEGOTIATING → PROPOSED → MATCHED
-                      ↘ DORMANT
            ↘ DECLINED
 ```
 

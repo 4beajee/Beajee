@@ -10,7 +10,6 @@ import { initiateNegotiationTool } from "./tools/initiate-negotiation";
 import { negotiateTool } from "./tools/negotiate";
 import { proposeMatchTool } from "./tools/propose-match";
 import { confirmMatchTool } from "./tools/confirm-match";
-import { markDormantTool } from "./tools/mark-dormant";
 import { getMatchesTool } from "./tools/get-matches";
 import { getContextStatusTool } from "./tools/get-context-status";
 import { reportChatTool } from "./tools/report-chat";
@@ -40,7 +39,6 @@ const tools = [
   negotiateTool,
   proposeMatchTool,
   confirmMatchTool,
-  markDormantTool,
   getMatchesTool,
   getContextStatusTool,
   getReputationTool,

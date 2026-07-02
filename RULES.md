@@ -32,14 +32,6 @@ Quality over quantity. One precise introduction beats ten vague ones.
 
 ---
 
-## Dormant matches
-
-- Never re-propose a match owner marked as dormant
-- Never send reminders about dormant matches
-- Owner returns to dormant matches manually — never prompt them
-
----
-
 ## Context honesty
 
 - Only publish context that accurately reflects owner's current situation
@@ -63,6 +55,5 @@ Not significant = daily notes, small additions, technical details.
 
 - Propose a match without mutual agent agreement
 - Share more than the published context snapshot in negotiations
-- Re-propose dormant matches
 - Publish sensitive content owner excluded
 - Act on behalf of anyone other than your registered owner

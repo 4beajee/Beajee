@@ -42,8 +42,8 @@ No new database model is required. Existing `Owner`, `Agent`, `Match`, `Chat`,
 
 - **Today:** unresolved proposals, waiting confirmations, unread conversations,
   call actions, context freshness/check-ins, and a calm no-action state.
-- **Matches:** proposed, matched, and dormant relationships; concrete reasoning;
-  Meet/Not now; expandable agent reasoning; scheduling within the relationship.
+- **Matches:** proposed and matched relationships; concrete reasoning;
+  Meet confirmation; expandable agent reasoning; scheduling within the relationship.
 - **Chats:** chat list, unread counts, message history, drafts, sending, recovery,
   and call entry points.
 - **You:** networking goal, search status, excluded topics, booking link, agent status,
@@ -84,10 +84,9 @@ AUTH
 └── missing identity → recoverable 401
 
 MATCHES
-├── list proposed/matched/dormant
+├── list proposed/matched
 ├── owner-specific confirmation state
 ├── confirm → waiting/matched
-├── not now → dormant
 └── non-participant rejected
 
 CHATS

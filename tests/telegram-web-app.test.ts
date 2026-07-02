@@ -16,7 +16,7 @@ function ok(label: string) {
   const layout = read("src/app/(public)/telegram/layout.tsx");
   const styles = read("src/app/(public)/telegram/telegram.css");
   assert.match(page, /requestFullscreen/);
-  assert.match(page, /safe-area-inset-bottom/);
+  assert.match(styles, /safe-area-inset-bottom/);
   assert.match(layout, /viewportFit:\s*"cover"/);
   assert.doesNotMatch(page, />Mini App</);
   ok("Web App uses fullscreen safe-area layout without the legacy internal header");
@@ -24,10 +24,10 @@ function ok(label: string) {
   assert.match(page, /telegram-float/);
   assert.match(page, /rounded-full/);
   assert.doesNotMatch(page, /#d9ff7a|red-|green-|amber-|emerald-/);
-  assert.doesNotMatch(page, /<nav className="fixed|className="sticky/);
+  assert.match(page, /telegram-bottom-nav/);
   assert.match(styles, /prefers-reduced-motion/);
   assert.match(layout, /themeColor:\s*"#000000"/);
-  ok("the visual system stays monochrome, rounded, floating, and free of fixed navigation blocks");
+  ok("the visual system stays monochrome, rounded, floating, and uses safe fixed bottom navigation");
 }
 
 {
@@ -63,7 +63,7 @@ function ok(label: string) {
   }
   assert.match(read(routes[0]), /completeOwnerOnboarding/);
   assert.match(read(routes[2]), /confirmMatch/);
-  assert.match(read(routes[2]), /markDormant/);
+  assert.doesNotMatch(read(routes[2]), /markDormant|DORMANT|dormant/);
   assert.match(read(routes[3]), /createInboxEvent/);
   assert.match(read(routes[4]), /requestZoomCall/);
   ok("Telegram APIs cover onboarding, settings, decisions, chat delivery, and calls with owner auth");
@@ -76,12 +76,15 @@ function ok(label: string) {
   const webhook = read("src/app/api/telegram/webhook/route.ts");
   const card = read("src/lib/telegram/match-card.ts");
   const negotiation = read("src/lib/services/negotiation.ts");
+  const mcpRoute = read("src/app/api/mcp/route.ts");
   assert.doesNotMatch(bot, /Set up workspace topics/);
   assert.match(card, /Review introduction/);
   assert.match(card, /searchParams\.set\("matchId"/);
   assert.match(card, /sendTelegramChatNotification/);
   assert.match(card, /sendTelegramCallRequest/);
   assert.match(negotiation, /sendTelegramMatchCard/);
+  assert.doesNotMatch(page, /Not now|DORMANT/);
+  assert.doesNotMatch(mcpRoute, /markDormant|mark_dormant/);
   ok("bot entry points deep-link exact proposal, chat, and call actions into the Web App");
 
   assert.match(onboarding, /not a general AI chat/);

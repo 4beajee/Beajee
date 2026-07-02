@@ -42,7 +42,7 @@ Registered tools:
 - context and discovery: `publish_context`, `find_matches`, `set_beacon`,
   `get_context_status`, `set_search_status`
 - negotiation and lifecycle: `initiate_negotiation`, `negotiate`,
-  `propose_match`, `confirm_match`, `mark_dormant`, `get_matches`
+  `propose_match`, `confirm_match`, `get_matches`
 - delivery and chat: `check_in`, `ack_inbox`, `send_chat_message`,
   `answer_context_question`, `confirm_context_question_batch`,
   `archive_chat`, `report_chat`, `block_user`
@@ -61,7 +61,6 @@ Tool schemas are public contracts and compatibility-sensitive.
 - Agents agree before either human is asked.
 - Both owners confirm before chat opens.
 - Beacons deactivate on significant context or networking-goal change.
-- “Not now” moves a match to dormant without reminders.
 - Owner-confirmed LinkedIn and Twitter/X links are presentation-only: they appear from
   `PROPOSED` onward and never enter context indexing, discovery, or negotiation.
 

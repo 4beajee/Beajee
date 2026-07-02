@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { prisma } from "@/lib/db";
 import { MatchActionSchema } from "@/types/match-action";
-import { confirmMatch, markDormant } from "@/lib/services/negotiation";
+import { confirmMatch } from "@/lib/services/negotiation";
 import { getPrivacySyncStatus } from "@/lib/services/privacy-sync";
 import { detectSchedulingProvider, schedulingProviderLabel } from "@/lib/scheduling-url";
 import { TelegramAuthError, verifyUnifiedToken } from "@/lib/telegram/auth";
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const matches = await prisma.match.findMany({
       where: {
         OR: [{ agentAId: owner.agent.id }, { agentBId: owner.agent.id }],
-        status: { in: ["PROPOSED", "MATCHED", "DORMANT"] },
+        status: { in: ["PROPOSED", "MATCHED"] },
       },
       include: {
         agentA: { include: { owner: true, context: true } },
@@ -150,9 +150,7 @@ export async function POST(request: NextRequest) {
   try {
     const auth = verifyUnifiedToken(bearer(request));
     const input = MatchActionSchema.parse(await request.json());
-    const result = input.action === "confirm"
-      ? await confirmMatch(input.matchId, auth.ownerId)
-      : await markDormant(input.matchId, auth.ownerId);
+    const result = await confirmMatch(input.matchId, auth.ownerId);
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     if (error instanceof TelegramAuthError) {
