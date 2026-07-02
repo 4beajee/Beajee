@@ -132,7 +132,7 @@ function Avatar({ name, image, size = "md" }: { name: string | null; image?: str
 function Icon({ name }: { name: Tab }) {
   const path = {
     today: <><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></>,
-    matches: <><path d="M8.5 18.5 4 14a4.2 4.2 0 0 1 6-6l2 2 2-2a4.2 4.2 0 0 1 6 6l-4.5 4.5L12 22z"/></>,
+    matches: <><path d="m12 3 2.8 5.67 6.26.91-4.53 4.42 1.07 6.24L12 17.3l-5.6 2.94L7.47 14 2.94 9.58l6.26-.91L12 3z"/></>,
     chats: <><path d="M4 5h16v12H9l-5 4z"/><path d="M8 10h8M8 14h5"/></>,
     you: <><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></>,
   }[name];
