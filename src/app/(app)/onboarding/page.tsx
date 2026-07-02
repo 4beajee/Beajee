@@ -971,9 +971,11 @@ export default function OnboardingPage() {
             <h2 className={ONBOARDING_TITLE_TIGHT}>
               {t("onboarding.sensitiveTitle")}
             </h2>
-            <p className={cx(ONBOARDING_DESC, "mb-6 text-center")}
-              dangerouslySetInnerHTML={{ __html: t("onboarding.sensitiveDesc") }}
-            />
+            <p className={cx(ONBOARDING_DESC, "mb-6 text-center")}>
+              {t.rich("onboarding.sensitiveDesc", {
+                strong: (chunks) => <strong className="font-semibold text-neutral-300">{chunks}</strong>,
+              })}
+            </p>
 
             <div className="space-y-2 mb-8">
               {SENSITIVE_CATEGORIES.map((topic) => {
