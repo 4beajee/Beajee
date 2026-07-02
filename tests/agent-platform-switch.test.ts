@@ -28,9 +28,12 @@ function ok(label: string) {
   assert.ok(AGENT_PLATFORM_OPTIONS.includes("codex"));
   assert.ok(AGENT_PLATFORM_OPTIONS.includes("claude_code"));
   assert.ok(AGENT_PLATFORM_OPTIONS.includes("hermes"));
-  assert.ok(AGENT_PLATFORM_OPTIONS.includes("fork"));
   assert.ok(AGENT_PLATFORM_OPTIONS.includes("manus"));
   assert.ok(AGENT_PLATFORM_OPTIONS.includes("folk"));
+  assert.ok(AGENT_PLATFORM_OPTIONS.includes("cursor"));
+  assert.ok(AGENT_PLATFORM_OPTIONS.includes("perplexity_personal_computer"));
+  assert.ok(AGENT_PLATFORM_OPTIONS.includes("other_mcp"));
+  assert.equal(AGENT_PLATFORM_OPTIONS.some((platform) => platform === ("fork" as never)), false);
   assert.equal(isOpenClawPlatform("zero_claw"), true);
   assert.equal(isOpenClawPlatform("codex"), false);
 
@@ -53,7 +56,7 @@ function ok(label: string) {
     excludedTopics: ["Finances"],
   });
 
-  assert.match(codex, /^# Codex/);
+  assert.match(codex, /^# OpenAI Codex/);
   assert.match(codex, /authoritative delivery path/);
   assert.doesNotMatch(codex, /beajee-openclaw-bridge\.mjs/);
   assert.match(getRealtimeSetup("open_claw"), /beajee-openclaw-bridge\.mjs/);
@@ -97,6 +100,10 @@ function ok(label: string) {
     path.join(ROOT, "src/components/agent-platform-logo.tsx"),
     "utf8"
   );
+  const invalidPlatformMigration = fs.readFileSync(
+    path.join(ROOT, "prisma/migrations/20260702_remove_invalid_fork_platform/migration.sql"),
+    "utf8"
+  );
 
   assert.match(switchRoute, /apiKey: newApiKey/);
   assert.match(switchRoute, /credentialVersion: \{ increment: 1 \}/);
@@ -112,10 +119,22 @@ function ok(label: string) {
   assert.match(onboardingPage, /<AgentPlatformLogo platform=\{platform\}/);
   assert.doesNotMatch(onboardingPage, /setStep\("install"\)/);
   assert.match(setupRoute, /isOpenClawPlatform\(platform\)/);
+  assert.match(setupRoute, /\[mcp_servers\.beajee\]/);
+  assert.match(setupRoute, /hermes mcp test beajee/);
+  assert.match(setupRoute, /\.cursor\/mcp\.json/);
   assert.match(settingsPage, /isOpenClawPlatform\(settings\.agentPlatform\)/);
   assert.match(wakeStreamRoute, /reason === "platform_changed"/);
   assert.match(platformLogo, /\/agent-platforms\/folk\.webp/);
+  assert.match(platformLogo, /\/agent-platforms\/openclaw\.svg/);
+  assert.match(platformLogo, /\/agent-platforms\/hermes\.svg/);
+  assert.match(platformLogo, /\/agent-platforms\/cursor\.svg/);
+  assert.match(platformLogo, /\/agent-platforms\/perplexity\.svg/);
   assert.equal(fs.existsSync(path.join(ROOT, "public/agent-platforms/folk.webp")), true);
+  for (const asset of ["openclaw.svg", "hermes.svg", "cursor.svg", "perplexity.svg"]) {
+    assert.equal(fs.existsSync(path.join(ROOT, "public/agent-platforms", asset)), true);
+  }
+  assert.match(invalidPlatformMigration, /SET "agent_platform" = 'other_mcp'/);
+  assert.match(invalidPlatformMigration, /WHERE "agent_platform" = 'fork'/);
 
   ok("the UI uses the side-effect-safe switch endpoint and setup stays platform-aware");
 }

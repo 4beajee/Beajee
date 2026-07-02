@@ -82,13 +82,13 @@ export async function GET(
   });
 
   // Build MCP config snippet per platform
-  const mcpConfig = getMcpConfig(platform, agent.apiKey);
+  const mcpSetup = getMcpSetup(platform, agent.apiKey);
 
   // Build the setup document
   const setupDoc = buildSetupDocument({
     fileName,
     fileContent,
-    mcpConfig,
+    mcpSetup,
     agentId: agent.agentId,
     apiKey: agent.apiKey,
     platform,
@@ -103,33 +103,110 @@ export async function GET(
   });
 }
 
-function getMcpConfig(_platform: AgentPlatform, apiKey: string): string | null {
-  // Portable connection values. The receiving agent applies them using the
-  // current configuration format supported by its own runtime.
-  return JSON.stringify(
-    {
-      mcpServers: {
-        beajee: {
-          type: "url",
-          url: "https://api.beajee.com/mcp",
-          headers: { Authorization: `Bearer ${apiKey}` },
+interface McpSetup {
+  language: "json" | "toml" | "yaml";
+  config: string;
+  instructions: string;
+  verification: string;
+  documentationUrl: string;
+}
+
+function getMcpSetup(platform: AgentPlatform, apiKey: string): McpSetup {
+  const endpoint = "https://api.beajee.com/mcp";
+
+  if (isOpenClawPlatform(platform)) {
+    return {
+      language: "json",
+      config: JSON.stringify({
+        url: endpoint,
+        transport: "streamable-http",
+        headers: { Authorization: `Bearer ${apiKey}` },
+      }, null, 2),
+      instructions: "Run `openclaw mcp set beajee '<JSON below>'`, keeping the JSON as one shell argument.",
+      verification: "Run `openclaw mcp doctor beajee --probe` and confirm that Beajee tools are listed.",
+      documentationUrl: "https://docs.openclaw.ai/cli/mcp",
+    };
+  }
+
+  if (platform === "hermes") {
+    return {
+      language: "yaml",
+      config: [
+        "mcp_servers:",
+        "  beajee:",
+        `    url: \"${endpoint}\"`,
+        "    headers:",
+        `      Authorization: \"Bearer ${apiKey}\"`,
+      ].join("\n"),
+      instructions: "Add this entry to `~/.hermes/config.yaml`, then run `/reload-mcp` or restart Hermes.",
+      verification: "Run `hermes mcp test beajee`, then confirm that Beajee tools are available.",
+      documentationUrl: "https://hermes-agent.nousresearch.com/docs/guides/use-mcp-with-hermes",
+    };
+  }
+
+  if (platform === "codex") {
+    return {
+      language: "toml",
+      config: [
+        "[mcp_servers.beajee]",
+        `url = \"${endpoint}\"`,
+        `http_headers = { Authorization = \"Bearer ${apiKey}\" }`,
+      ].join("\n"),
+      instructions: "Add this block to `~/.codex/config.toml` or a trusted project's `.codex/config.toml`.",
+      verification: "Open Codex and run `/mcp`; confirm that the Beajee server and tools are available.",
+      documentationUrl: "https://developers.openai.com/codex/mcp",
+    };
+  }
+
+  if (platform === "cursor") {
+    return {
+      language: "json",
+      config: JSON.stringify({
+        mcpServers: {
+          beajee: {
+            url: endpoint,
+            headers: { Authorization: `Bearer ${apiKey}` },
+          },
         },
+      }, null, 2),
+      instructions: "Save this as `.cursor/mcp.json` in the project or merge it into `~/.cursor/mcp.json` for global use.",
+      verification: "Open Cursor Customize → MCP and confirm that Beajee is enabled and its tools are listed.",
+      documentationUrl: "https://cursor.com/docs/context/mcp",
+    };
+  }
+
+  const config = JSON.stringify({
+    mcpServers: {
+      beajee: {
+        type: "http",
+        url: endpoint,
+        headers: { Authorization: `Bearer ${apiKey}` },
       },
     },
-    null,
-    2
-  );
+  }, null, 2);
+
+  const documentationUrl = platform === "claude_code"
+    ? "https://docs.anthropic.com/en/docs/claude-code/mcp"
+    : "https://modelcontextprotocol.io/docs";
+
+  return {
+    language: "json",
+    config,
+    instructions: `Add Beajee as a custom remote Streamable HTTP MCP server in ${PLATFORM_LABELS[platform]}. Use the values below if its UI asks for URL and headers separately.`,
+    verification: "Confirm that the MCP connection succeeds and that `check_in` and `publish_context` are available before saving any persistent instructions.",
+    documentationUrl,
+  };
 }
 
 function buildSetupDocument(opts: {
   fileName: string;
   fileContent: string;
-  mcpConfig: string | null;
+  mcpSetup: McpSetup;
   agentId: string;
   apiKey: string;
   platform: AgentPlatform;
 }): string {
-  const { fileName, fileContent, mcpConfig, agentId, apiKey, platform } = opts;
+  const { fileName, fileContent, mcpSetup, agentId, apiKey, platform } = opts;
   const platformLabel = PLATFORM_LABELS[platform];
   const { appOrigin, bridgeConfigPath, bridgeDocsUrl, bridgeScriptUrl } = getOpenClawBridgePaths();
   const bridgeConfig = buildOpenClawBridgeConfig({ agentId, apiKey });
@@ -150,18 +227,15 @@ function buildSetupDocument(opts: {
   sections.push(fileContent);
   sections.push("````\n");
 
-  // Step 2: MCP config
-  if (mcpConfig) {
-    sections.push(`## Step 2 — Configure MCP server\n`);
-    sections.push(
-      `Configure this remote HTTP MCP server using the current configuration method supported by ${platformLabel}. The JSON below contains the connection values; adapt only the surrounding runtime-specific config shape if needed:\n`
-    );
-    sections.push("```json");
-    sections.push(mcpConfig);
-    sections.push("```\n");
-  }
+  // Step 2: platform-specific MCP config
+  sections.push(`## Step 2 — Configure MCP server\n`);
+  sections.push(`${mcpSetup.instructions}\n`);
+  sections.push(`Official platform documentation: ${mcpSetup.documentationUrl}\n`);
+  sections.push(`\`\`\`${mcpSetup.language}`);
+  sections.push(mcpSetup.config);
+  sections.push("```\n");
 
-  const wakeStep = mcpConfig ? 3 : 2;
+  const wakeStep = 3;
   if (isOpenClawPlatform(platform)) {
     sections.push(`## Step ${wakeStep} — Install the Beajee OpenClaw Bridge\n`);
     sections.push(
@@ -185,9 +259,19 @@ function buildSetupDocument(opts: {
     sections.push(`Reference documentation: ${bridgeDocsUrl}\n`);
   } else {
     sections.push(`## Step ${wakeStep} — Enable reliable check-ins\n`);
-    sections.push(
-      `This runtime does not use the OpenClaw bridge. Call \`check_in({ agent_id: "${agentId}" })\` when a session starts and at least every 15 minutes while it is running. Treat \`check_in\` as the authoritative source of pending Beajee work.\n`
-    );
+    if (platform === "hermes") {
+      sections.push(`Use Hermes cron with its gateway running. Create a recurring job that calls \`check_in({ agent_id: "${agentId}" })\`, delivers every inbox event through the owner's configured Hermes channel, and calls \`ack_inbox\` only after delivery. Follow \`next_check_in_ms\` from each response.\n`);
+    } else if (platform === "codex" || platform === "cursor") {
+      sections.push(`This is a session-based setup helper. Call \`check_in({ agent_id: "${agentId}" })\` at session start and publish context only with owner approval. Tell the owner to connect Telegram in Beajee for background match and context-question delivery; do not claim this coding session stays alive.\n`);
+    } else if (platform === "claude_code") {
+      sections.push(`Call \`check_in({ agent_id: "${agentId}" })\` at session start and while the session is active. Beajee context questions must be delivered through linked Telegram, never inside the coding session.\n`);
+    } else if (platform === "manus" || platform === "folk") {
+      sections.push(`Before proceeding, verify that ${platformLabel} supports both custom remote MCP servers with Bearer headers and recurring/background tasks. If either capability is unavailable, stop and tell the owner that this platform cannot run Beajee persistently; do not simulate a successful integration.\n`);
+    } else if (platform === "perplexity_personal_computer") {
+      sections.push(`Verify that this is Perplexity Personal Computer on an Apple silicon Mac and that its current build accepts custom remote MCP servers. Schedule \`check_in({ agent_id: "${agentId}" })\` in its background workflow; if either capability is absent, stop and report it.\n`);
+    } else {
+      sections.push(`Call \`check_in({ agent_id: "${agentId}" })\` when the agent starts and on the cadence returned in \`next_check_in_ms\`. The agent must have a real owner-delivery channel before it acknowledges inbox events.\n`);
+    }
   }
 
   // Step 4: Verify
@@ -197,7 +281,7 @@ function buildSetupDocument(opts: {
   sections.push(
     isOpenClawPlatform(platform)
       ? `Confirm the bridge is connected at \`${statusUrl}\`. Success means the wake stream is live and ${platformLabel} can now process Beajee inbox events through its normal runtime.\n`
-      : `Call \`check_in({ agent_id: "${agentId}" })\` through the configured MCP server. Success means ${platformLabel} is authenticated and can retrieve Beajee work.\n`
+      : `${mcpSetup.verification}\nThen call \`check_in({ agent_id: "${agentId}" })\`. Success means ${platformLabel} is authenticated and can retrieve Beajee work.\n`
   );
 
   sections.push(`---\n`);

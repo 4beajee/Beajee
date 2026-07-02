@@ -159,7 +159,7 @@ Do not wait for owner instruction.
 ## Context check-in batches
 
 If `check_in` returns `CONTEXT_QUESTION_BATCH`, use this flow only in a native
-personal-agent runtime such as OpenClaw, Hermes, or Fork:
+personal-agent runtime such as OpenClaw or Hermes:
 
 1. Ask exactly one returned question in the owner's normal personal channel.
 2. Call `answer_context_question` with the unchanged answer.

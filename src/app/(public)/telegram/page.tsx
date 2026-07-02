@@ -2,7 +2,7 @@
 
 import { FormEvent, ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { getCountryOptions } from "@/lib/countries";
-import { PLATFORM_LABELS } from "@/lib/agent-platform";
+import { ONBOARDING_AGENT_PLATFORMS, PLATFORM_LABELS } from "@/lib/agent-platform";
 import { TELEGRAM_SUPPORT_URL, TELEGRAM_SUPPORT_USERNAME } from "@/lib/telegram/onboarding";
 import type { AgentPlatform } from "@/types/onboarding";
 
@@ -97,7 +97,7 @@ const GOALS = [
   ["peer", "Meet relevant peers"],
 ] as const;
 
-const PLATFORMS: AgentPlatform[] = ["open_claw", "hermes", "fork", "codex", "claude_code"];
+const PLATFORMS: AgentPlatform[] = [...ONBOARDING_AGENT_PLATFORMS];
 const countries = getCountryOptions("en");
 
 function webApp() {

@@ -20,12 +20,12 @@ function ok(label: string) {
 }
 
 {
-  for (const platform of ["open_claw", "hermes", "fork", "nano_claw"]) {
+  for (const platform of ["open_claw", "hermes", "nano_claw"]) {
     assert.equal(supportsNativeContextQuestions(platform), true);
     assert.equal(getContextQuestionDeliveryMode(platform, false), "native_agent");
     assert.equal(getContextQuestionDeliveryMode(platform, true), "telegram");
   }
-  for (const platform of ["codex", "claude_code", "claude_desktop", "custom"]) {
+  for (const platform of ["codex", "claude_code", "manus", "folk", "cursor", "other_mcp"]) {
     assert.equal(supportsNativeContextQuestions(platform), false);
     assert.equal(getContextQuestionDeliveryMode(platform, false), "telegram_required");
     assert.equal(getContextQuestionDeliveryMode(platform, true), "telegram");
@@ -87,7 +87,8 @@ function ok(label: string) {
     path.join(ROOT, "public/skills/skill-context.md"),
     "utf8"
   );
-  assert.match(onboarding, /"open_claw", "hermes", "fork", "codex", "claude_code"/);
+  assert.match(onboarding, /ONBOARDING_AGENT_PLATFORMS\.map/);
+  assert.doesNotMatch(onboarding, /"fork"/);
   assert.match(onboarding, /ContextCheckInDelivery/);
   assert.match(settings, /ContextCheckInDelivery/);
   assert.match(home, /TelegramConnectCard/);

@@ -306,7 +306,7 @@ Model Advice code and APIs remain available but the ordinary user entry point
 must stay hidden until the feature is explicitly enabled.
 
 Context check-in delivery is platform-aware: linked Telegram always wins;
-OpenClaw, Hermes, Fork, and Claw variants may deliver natively; Codex and Claude
+OpenClaw, Hermes, and Claw variants may deliver natively; Codex and Claude
 Code require Telegram and must not show these questions inside coding sessions.
 
 ## Current Priorities

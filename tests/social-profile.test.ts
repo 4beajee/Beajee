@@ -118,7 +118,7 @@ assert.match(keyboard.inline_keyboard[1]?.[0]?.web_app?.url ?? "", /matchId=matc
 ok("Telegram match card exposes styled provider links above an exact match deep link");
 
 assert.equal(supportsNativeProfilePrompts("open_claw"), true);
-assert.equal(supportsNativeProfilePrompts("custom"), true);
+assert.equal(supportsNativeProfilePrompts("other_mcp"), true);
 assert.equal(supportsNativeProfilePrompts("codex"), false);
 assert.equal(supportsNativeProfilePrompts("claude_code"), false);
 ok("profile prompts respect the coding-session delivery boundary");

@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { prisma, withDbRetry } from "@/lib/db";
 import { normalizeSchedulingUrl } from "@/lib/scheduling-url";
 import { buildSetupPrompt, getConnectionInstructions } from "@/lib/onboarding/connection-instructions";
-import { PLATFORM_FILE_NAMES, type AgentPlatform, type OnboardingInput } from "@/types/onboarding";
+import { PLATFORM_FILE_NAMES, PLATFORM_LABELS, type AgentPlatform, type OnboardingInput } from "@/types/onboarding";
 import type { Locale } from "@/i18n/config";
 import { createSetupGrant } from "@/lib/setup-grants";
 
@@ -93,7 +93,13 @@ export async function completeOwnerOnboarding(args: {
     agentType: "OPENCLAW" as const,
     fileName,
     soulMdEndpoint: `/api/soul/${agent.agentId}`,
-    setupPrompt: buildSetupPrompt(agent.agentId, setupGrant, args.baseUrl, args.locale),
+    setupPrompt: buildSetupPrompt(
+      agent.agentId,
+      setupGrant,
+      args.baseUrl,
+      args.locale,
+      PLATFORM_LABELS[agentPlatform as AgentPlatform]
+    ),
     connectionInstructions: getConnectionInstructions(
       agent.agentId,
       agent.apiKey,

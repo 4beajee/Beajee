@@ -58,7 +58,13 @@ export function getConnectionInstructions(
 }
 
 /** Build the one-liner prompt the user copies and pastes to their agent. */
-export function buildSetupPrompt(agentId: string, setupGrant: string, baseUrl: string, locale: Locale = "en"): string {
+export function buildSetupPrompt(
+  agentId: string,
+  setupGrant: string,
+  baseUrl: string,
+  locale: Locale = "en",
+  platformLabel = "your agent"
+): string {
   const origin = baseUrl.replace(/\/$/, "");
   const command = `curl -fsSL -H "Authorization: Bearer ${setupGrant}" ${origin}/api/setup/${agentId}`;
 
@@ -70,5 +76,5 @@ export function buildSetupPrompt(agentId: string, setupGrant: string, baseUrl: s
     return `एक बार उपयोग होने वाले Beajee setup निर्देश पाने के लिए \`${command}\` चलाएँ, फिर files बनाएँ और MCP server configure करें। यह grant 10 मिनट में expire होगा।`;
   }
 
-  return `Run \`${command}\` once and follow the Beajee setup instructions in the response. Create the files and configure the MCP server as described. This setup grant expires in 10 minutes and cannot be reused.`;
+  return `Paste this into ${platformLabel}: run \`${command}\` once, then follow the platform-specific Beajee setup instructions in the response. This setup grant expires in 10 minutes and cannot be reused.`;
 }

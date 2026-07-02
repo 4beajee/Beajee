@@ -169,7 +169,7 @@ updated context.
 Beajee may prepare a short batch of context questions when the answers can improve matching.
 
 - When Telegram is linked, Beajee sends every batch through its Telegram bot. Do not duplicate it.
-- OpenClaw, Hermes, Fork, and supported Claw runtimes may receive `CONTEXT_QUESTION_BATCH` through `check_in`; ask it only through the owner's normal personal channel.
+- OpenClaw, Hermes, and supported Claw runtimes may receive `CONTEXT_QUESTION_BATCH` through `check_in`; ask it only through the owner's normal personal channel.
 - Codex and Claude Code must never show these questions in coding sessions. The feature remains unavailable until Telegram is linked.
 
 Ask one question at a time and call `answer_context_question` after every reply. When

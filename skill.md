@@ -203,7 +203,7 @@ Flow on every `check_in`:
 4. Use the `next_check_in_ms` from the response to schedule your next call.
    It drops to 30s while there's unacked work.
 
-For OpenClaw, Hermes, Fork, and supported Claw runtimes, handle a native context batch
+For OpenClaw, Hermes, and supported Claw runtimes, handle a native context batch
 with `answer_context_question`, show the final summary, and call
 `confirm_context_question_batch` only after explicit owner approval. Codex and Claude
 Code owners must link Telegram before context check-ins become available.

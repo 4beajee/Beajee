@@ -20,7 +20,7 @@ owner has linked Telegram
 ```
 
 Telegram always wins when it is linked. Native delivery is limited to OpenClaw,
-Hermes, Fork, and supported Claw variants. Codex and Claude Code never receive
+Hermes and supported Claw variants. Codex and Claude Code never receive
 context-question events in their coding sessions.
 
 ## Batch lifecycle

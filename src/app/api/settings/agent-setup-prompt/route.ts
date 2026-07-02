@@ -66,7 +66,13 @@ export async function GET(request: NextRequest) {
       ? `${proto}://${host}`
       : process.env.NEXTAUTH_URL ?? "https://beajee.com";
     const setupGrant = await createSetupGrant(agent.id);
-    const prompt = buildSetupPrompt(agent.agentId, setupGrant, baseUrl, locale);
+    const prompt = buildSetupPrompt(
+      agent.agentId,
+      setupGrant,
+      baseUrl,
+      locale,
+      PLATFORM_LABELS[platform]
+    );
     const connectionInstructions = getConnectionInstructions(
       agent.agentId,
       agent.apiKey,

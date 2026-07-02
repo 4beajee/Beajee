@@ -20,7 +20,10 @@ import { ContextCheckInDelivery } from "@/components/context-check-in-delivery";
 import { AgentPlatformLogo } from "@/components/agent-platform-logo";
 import {
   getContextQuestionDeliveryMode,
+  MAC_ONLY_AGENT_PLATFORMS,
+  ONBOARDING_AGENT_PLATFORMS,
   PLATFORM_LABELS,
+  SETUP_HELPER_AGENT_PLATFORMS,
   type AgentPlatformValue,
 } from "@/lib/agent-platform";
 
@@ -30,9 +33,6 @@ type OS = "unix" | "windows";
 type OpenClawStatus = "using" | "installed_later" | null;
 
 const FILE_NAME = "SOUL.md";
-const ONBOARDING_AGENT_PLATFORMS = [
-  "open_claw", "hermes", "fork", "codex", "claude_code", "manus", "folk",
-] as const satisfies readonly AgentPlatformValue[];
 const ONBOARDING_TITLE = "text-xl font-semibold text-white mb-3 text-center";
 const ONBOARDING_TITLE_TIGHT = "text-xl font-semibold text-white mb-2 text-center";
 const ONBOARDING_DESC = "text-sm leading-6 text-neutral-400";
@@ -434,6 +434,16 @@ export default function OnboardingPage() {
                 );
               })}
             </div>
+            {selectedAgentPlatform && MAC_ONLY_AGENT_PLATFORMS.has(selectedAgentPlatform) && (
+              <p className="mt-4 text-center text-xs text-amber-300/90">
+                This option requires Perplexity Personal Computer on an Apple silicon Mac.
+              </p>
+            )}
+            {selectedAgentPlatform && SETUP_HELPER_AGENT_PLATFORMS.has(selectedAgentPlatform) && (
+              <p className="mt-4 text-center text-xs text-sky-200/90">
+                This coding agent can connect and publish context during a session, but it cannot keep Beajee running in the background by itself.
+              </p>
+            )}
             <button
               onClick={() => setStep("thesis")}
               disabled={!selectedAgentPlatform}

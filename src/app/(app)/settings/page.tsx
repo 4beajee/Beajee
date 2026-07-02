@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/app-chrome";
 import {
   PRIMARY_AGENT_PLATFORMS,
+  getAgentInstructionFileName,
   getAgentPlatformLabel,
   isOpenClawPlatform,
 } from "@/lib/agent-platform";
@@ -1801,10 +1802,11 @@ function DownloadSoulSection({
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileName = getAgentInstructionFileName(platform);
 
   const fetchSoulContent = async (): Promise<string> => {
     const res = await fetch(`/api/soul/${agentId}`);
-    if (!res.ok) throw new Error("Failed to fetch SOUL.md");
+    if (!res.ok) throw new Error(`Failed to fetch ${fileName}`);
     return res.text();
   };
 
@@ -1817,11 +1819,11 @@ function DownloadSoulSection({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "SOUL.md";
+      a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setError("Failed to download SOUL.md");
+      setError(`Failed to download ${fileName}`);
     } finally {
       setDownloading(false);
     }
@@ -1852,7 +1854,7 @@ function DownloadSoulSection({
             {copied ? t("common.copied") : t("settings.copyContent")}
           </button>
           <button onClick={handleDownload} disabled={downloading} className={SECONDARY_BUTTON}>
-            {downloading ? t("settings.downloading") : t("settings.downloadSoul")}
+            {downloading ? t("settings.downloading") : `Download ${fileName}`}
           </button>
         </div>
       </Surface>
