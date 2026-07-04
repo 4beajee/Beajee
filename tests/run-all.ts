@@ -28,6 +28,7 @@ const tests = [
   "tests/founder-analytics.test.ts",
   "tests/monitoring.test.ts",
   "tests/networking-goal.test.ts",
+  "tests/network-stats.test.ts",
   "tests/privacy-sync.test.ts",
   "tests/public-match-privacy.test.ts",
   "tests/sensitive-topics.test.ts",
