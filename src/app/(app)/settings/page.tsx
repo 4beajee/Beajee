@@ -328,7 +328,7 @@ function SaveStatus({ saving, saved, err }: { saving: boolean; saved: boolean; e
 }
 
 function Surface({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`${SUBTLE_SURFACE} ${className}`}>{children}</div>;
+  return <div className={`rounded-xl bg-white/[0.015] ${className}`}>{children}</div>;
 }
 
 function StatusPill({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -951,19 +951,23 @@ function SocialProfileField({
   const fieldId = useFieldId(`${provider}-url`);
   return (
     <FormField label={label} inputId={fieldId} optional optionalLabel={optionalLabel} helperText={!errorText ? helperText : undefined} errorText={errorText}>
-      <TextInput
-        id={fieldId}
-        type="url"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        autoComplete="url"
-        inputMode="url"
-        disabled={disabled}
-        tone={errorText ? "error" : "default"}
-        describedBy={`${fieldId}-message`}
-        leading={<SocialProfileLogo provider={provider} />}
-      />
+      <div className="flex items-center gap-3">
+        <SocialProfileLogo provider={provider} />
+        <div className="flex-1">
+          <TextInput
+            id={fieldId}
+            type="url"
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder={placeholder}
+            autoComplete="url"
+            inputMode="url"
+            disabled={disabled}
+            tone={errorText ? "error" : "default"}
+            describedBy={`${fieldId}-message`}
+          />
+        </div>
+      </div>
     </FormField>
   );
 }
@@ -971,8 +975,8 @@ function SocialProfileField({
 function SocialProfileLogo({ provider }: { provider: "linkedin" | "twitter" }) {
   if (provider === "linkedin") {
     return (
-      <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#0A66C2]" aria-hidden="true">
-        <svg viewBox="0 0 24 24" className="h-6 w-6 fill-white">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#0A66C2]/12 text-[#0A66C2] ring-1 ring-inset ring-[#0A66C2]/20" aria-hidden="true">
+        <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
           <path d="M5.34 3.5A1.84 1.84 0 1 1 5.34 7.18 1.84 1.84 0 0 1 5.34 3.5ZM3.75 8.62h3.18V20.5H3.75V8.62Zm5.1 0h3.05v1.62h.04c.43-.8 1.47-1.95 3.58-1.95 3.83 0 4.54 2.52 4.54 5.8v6.41h-3.18v-5.68c0-1.36-.03-3.1-1.9-3.1-1.89 0-2.18 1.47-2.18 3v5.78H8.85V8.62Z" />
         </svg>
       </span>
@@ -980,8 +984,8 @@ function SocialProfileLogo({ provider }: { provider: "linkedin" | "twitter" }) {
   }
 
   return (
-    <span className="grid h-9 w-9 place-items-center rounded-lg bg-black ring-1 ring-inset ring-white/15" aria-hidden="true">
-      <svg viewBox="0 0 24 24" className="h-[22px] w-[22px] fill-white">
+    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/5 text-white ring-1 ring-inset ring-white/10" aria-hidden="true">
+      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-current">
         <path d="M18.9 2.75h3.68l-8.04 9.19L24 21.25h-7.4l-5.8-7.58-6.63 7.58H.48l8.6-9.83L0 2.75h7.59l5.24 6.93 6.07-6.93Zm-1.3 16.86h2.04L6.48 4.3H4.3L17.6 19.61Z" />
       </svg>
     </span>

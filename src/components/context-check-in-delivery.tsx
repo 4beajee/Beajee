@@ -81,7 +81,7 @@ export function ContextCheckInDelivery({
 
   const effectiveMode = connected ? "telegram" : mode;
   return (
-    <section className={`rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 ${className}`}>
+    <section className={`rounded-xl bg-white/[0.015] p-4 ${className}`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-white">Context check-ins</p>
@@ -96,7 +96,8 @@ export function ContextCheckInDelivery({
         </div>
 
         {effectiveMode === "telegram" ? (
-          <span className="shrink-0 rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300 ring-1 ring-inset ring-emerald-400/15">
+          <span className="shrink-0 rounded-full bg-emerald-500/5 px-3 py-1 text-xs font-medium text-emerald-400 flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
             Telegram connected
           </span>
         ) : (
@@ -113,7 +114,7 @@ export function ContextCheckInDelivery({
               type="button"
               onClick={verify}
               disabled={loading}
-              className="rounded-xl px-3 py-2 text-xs font-medium text-neutral-400 ring-1 ring-inset ring-white/[0.09] transition hover:text-white disabled:opacity-50"
+              className="rounded-xl bg-white/5 px-3 py-2 text-xs font-medium text-neutral-400 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
             >
               Verify
             </button>
