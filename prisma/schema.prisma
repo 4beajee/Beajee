@@ -106,7 +106,7 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-// Append-only website consent audit log. Database triggers reject updates/deletes.
+// Append-only website consent audit log. Only owner_id anonymization on account deletion is mutable.
 model CookieConsent {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   eventId        String   @unique(map: "cookie_consents_event_id_key") @map("event_id") @db.Uuid

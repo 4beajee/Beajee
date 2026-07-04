@@ -181,4 +181,31 @@ function hashIp(rawIp: string, salt: string): string {
   console.log("PASS: development tunnels and Google profile images are explicitly allowed");
 }
 
-console.log("\nAll 6 tests passed.");
+/* ─── 7. Account deletion anonymizes, but cannot mutate, consent records ─── */
+
+{
+  const root = process.cwd();
+  const schema = fs.readFileSync(path.join(root, "prisma/schema.prisma"), "utf8");
+  const migration = fs.readFileSync(
+    path.join(
+      root,
+      "prisma/migrations/20260704130000_allow_cookie_consent_owner_anonymization/migration.sql"
+    ),
+    "utf8"
+  );
+
+  assert.match(schema, /owner\s+Owner\?\s+@relation\([^\n]*onDelete: SetNull/);
+  assert.match(migration, /TG_OP = 'UPDATE'/);
+  assert.match(migration, /OLD\.owner_id IS NOT NULL/);
+  assert.match(migration, /NEW\.owner_id IS NULL/);
+  assert.match(
+    migration,
+    /\(to_jsonb\(NEW\) - 'owner_id'\) IS NOT DISTINCT FROM \(to_jsonb\(OLD\) - 'owner_id'\)/
+  );
+  assert.match(migration, /RAISE EXCEPTION 'cookie_consents is append-only'/);
+  assert.doesNotMatch(migration, /DROP TRIGGER[^;]*cookie_consents_no_delete/);
+
+  console.log("PASS: account deletion may anonymize only the consent owner reference");
+}
+
+console.log("\nAll 7 tests passed.");
