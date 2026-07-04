@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  APP_ASSET_PREFIXES,
   isPublicApiPath,
   matchesAnySegment,
   matchesSegment,
@@ -14,8 +15,11 @@ assert.equal(matchesSegment("/feed/match-1", "/feed"), true);
 assert.equal(matchesSegment("/feedback", "/feed"), false);
 assert.equal(matchesAnySegment("/feed/match-1", PUBLIC_PAGE_PREFIXES), true);
 assert.equal(matchesAnySegment("/agent-platforms/folk.webp", PUBLIC_FILE_PREFIXES), true);
+assert.equal(matchesAnySegment("/agent-platforms/folk.webp", APP_ASSET_PREFIXES), true);
+assert.equal(matchesAnySegment("/sounds/notification.mp3", APP_ASSET_PREFIXES), true);
 const proxySource = fs.readFileSync(path.resolve(process.cwd(), "src/proxy.ts"), "utf8");
 assert.match(proxySource, /useSubdomainRouting = process\.env\.NODE_ENV === "production"/);
+assert.match(proxySource, /!matchesAnySegment\(pathname, APP_ASSET_PREFIXES\)/);
 
 for (const path of [
   "/api/auth/signin",

@@ -129,6 +129,9 @@ function ok(label: string) {
   assert.match(platformLogo, /\/agent-platforms\/hermes\.svg/);
   assert.match(platformLogo, /\/agent-platforms\/cursor\.svg/);
   assert.match(platformLogo, /\/agent-platforms\/perplexity\.png/);
+  assert.match(settingsPage, /function SocialProfileLogo/);
+  assert.match(settingsPage, /bg-black ring-1 ring-inset ring-white\/15/);
+  assert.match(settingsPage, /className="h-\[22px\] w-\[22px\] fill-white"/);
   assert.equal(fs.existsSync(path.join(ROOT, "public/agent-platforms/folk.webp")), true);
   for (const asset of ["openclaw.svg", "hermes.svg", "cursor.svg", "perplexity.png"]) {
     assert.equal(fs.existsSync(path.join(ROOT, "public/agent-platforms", asset)), true);

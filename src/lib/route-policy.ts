@@ -14,6 +14,7 @@ export const PUBLIC_FILE_PREFIXES = [
   "/agent-platforms",
   "/sounds",
 ] as const;
+export const APP_ASSET_PREFIXES = ["/agent-platforms", "/sounds"] as const;
 export const APP_PREFIXES = [
   "/home",
   "/matches",

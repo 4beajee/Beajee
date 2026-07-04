@@ -947,7 +947,6 @@ function SocialProfileField({
   disabled?: boolean;
   optionalLabel: string;
 }) {
-  const accent = provider === "linkedin" ? "bg-[#0A66C2]" : "bg-[#1D9BF0]";
   const fieldId = useFieldId(`${provider}-url`);
   return (
     <FormField label={label} inputId={fieldId} optional optionalLabel={optionalLabel} helperText={!errorText ? helperText : undefined} errorText={errorText}>
@@ -962,9 +961,29 @@ function SocialProfileField({
         disabled={disabled}
         tone={errorText ? "error" : "default"}
         describedBy={`${fieldId}-message`}
-        leading={<span className={cx("grid h-6 w-6 place-items-center rounded-md text-[11px] font-bold text-white", accent)}>{provider === "linkedin" ? "in" : "𝕏"}</span>}
+        leading={<SocialProfileLogo provider={provider} />}
       />
     </FormField>
+  );
+}
+
+function SocialProfileLogo({ provider }: { provider: "linkedin" | "twitter" }) {
+  if (provider === "linkedin") {
+    return (
+      <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#0A66C2]" aria-hidden="true">
+        <svg viewBox="0 0 24 24" className="h-6 w-6 fill-white">
+          <path d="M5.34 3.5A1.84 1.84 0 1 1 5.34 7.18 1.84 1.84 0 0 1 5.34 3.5ZM3.75 8.62h3.18V20.5H3.75V8.62Zm5.1 0h3.05v1.62h.04c.43-.8 1.47-1.95 3.58-1.95 3.83 0 4.54 2.52 4.54 5.8v6.41h-3.18v-5.68c0-1.36-.03-3.1-1.9-3.1-1.89 0-2.18 1.47-2.18 3v5.78H8.85V8.62Z" />
+        </svg>
+      </span>
+    );
+  }
+
+  return (
+    <span className="grid h-9 w-9 place-items-center rounded-lg bg-black ring-1 ring-inset ring-white/15" aria-hidden="true">
+      <svg viewBox="0 0 24 24" className="h-[22px] w-[22px] fill-white">
+        <path d="M18.9 2.75h3.68l-8.04 9.19L24 21.25h-7.4l-5.8-7.58-6.63 7.58H.48l8.6-9.83L0 2.75h7.59l5.24 6.93 6.07-6.93Zm-1.3 16.86h2.04L6.48 4.3H4.3L17.6 19.61Z" />
+      </svg>
+    </span>
   );
 }
 

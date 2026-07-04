@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
   APP_EXACT,
+  APP_ASSET_PREFIXES,
   APP_PREFIXES,
   LANDING_EXACT,
   PUBLIC_FILE_EXACT,
@@ -39,7 +40,7 @@ function isPublicFile(pathname: string) {
 function isLandingRoute(pathname: string) {
   return (
     LANDING_EXACT.includes(pathname as (typeof LANDING_EXACT)[number]) ||
-    isPublicFile(pathname)
+    (isPublicFile(pathname) && !matchesAnySegment(pathname, APP_ASSET_PREFIXES))
   );
 }
 
