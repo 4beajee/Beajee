@@ -60,4 +60,8 @@ next-env.d.ts
 
 # tooling
 .gstack/
-.claude/
+# ignore local Claude tooling, but version-control the auto-commit automation
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+!.claude/hooks/**

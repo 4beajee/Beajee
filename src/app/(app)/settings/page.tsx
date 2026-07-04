@@ -15,7 +15,6 @@ import {
   dangerSubtleButtonClass,
   getMattePillClass,
   pageFrameClass,
-  panelSoftClass,
   primaryButtonClass,
   primaryButtonSmallClass,
   sectionDescriptionClass,
@@ -54,7 +53,6 @@ const SENSITIVE_CATEGORY_KEYS: { value: string; labelKey: string }[] = [
 const WAKE_PATH = "/hooks/wake";
 const SECTION_SHELL = sectionShellClass;
 const SECTION_TITLE = sectionTitleClass;
-const SUBTLE_SURFACE = panelSoftClass;
 const CODE_SURFACE = codePanelClass;
 const PRIMARY_BUTTON = primaryButtonClass;
 const PRIMARY_BUTTON_SM = primaryButtonSmallClass;
