@@ -19,7 +19,7 @@ export function ContextCheckInDelivery({
 
   useEffect(() => {
     if (!awaitingVerification || connected) return;
-    const timer = window.setInterval(() => {
+    const checkConnection = () => {
       fetch("/api/telegram/link")
         .then((response) => response.json())
         .then((data) => {
@@ -30,8 +30,16 @@ export function ContextCheckInDelivery({
           }
         })
         .catch(() => undefined);
-    }, 3_000);
-    return () => window.clearInterval(timer);
+    };
+    const timer = window.setInterval(checkConnection, 3_000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") checkConnection();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [awaitingVerification, connected]);
 
   const connect = async () => {
@@ -46,8 +54,8 @@ export function ContextCheckInDelivery({
         return;
       }
       if (!data.url) throw new Error("Telegram sync link is unavailable");
-      window.open(data.url, "_blank", "noopener,noreferrer");
       setAwaitingVerification(true);
+      window.location.assign(data.url);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not start Telegram sync");
     } finally {

@@ -3,6 +3,7 @@ import { getAuthenticatedOwner } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 import { createTelegramLink } from "@/lib/telegram/link";
+import { redactTelegramSecrets } from "@/lib/telegram/auth";
 import { safeErrorResponse } from "@/lib/api-error";
 
 export async function GET() {
@@ -43,6 +44,18 @@ export async function POST(request: NextRequest) {
       expiresAt: link.expiresAt.toISOString(),
     });
   } catch (error) {
-    return safeErrorResponse(error, "Failed to create Telegram sync link");
+    const safeMessage = redactTelegramSecrets(
+      error instanceof Error ? error.message : String(error)
+    );
+    console.error("[telegram-link] failed:", safeMessage);
+    const configurationMissing =
+      error instanceof Error && error.message === "TELEGRAM_BOT_USERNAME is not configured";
+    return safeErrorResponse(
+      error,
+      configurationMissing
+        ? "Telegram sync is temporarily unavailable"
+        : "Failed to create Telegram sync link",
+      configurationMissing ? 503 : 500
+    );
   }
 }

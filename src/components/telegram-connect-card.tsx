@@ -65,8 +65,6 @@ export function TelegramConnectCard({
   }, [awaitingVerification, connected]);
 
   const connect = async () => {
-    const telegramWindow = window.open("", "_blank");
-    if (telegramWindow) telegramWindow.opener = null;
     setLoading(true);
     setError(null);
     try {
@@ -74,19 +72,15 @@ export function TelegramConnectCard({
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Could not start Telegram sync");
       if (data.connected) {
-        telegramWindow?.close();
         setConnected(true);
         return;
       }
       if (!data.url) throw new Error("Telegram sync link is unavailable");
-      if (telegramWindow) {
-        telegramWindow.location.href = data.url;
-      } else {
-        window.location.assign(data.url);
-      }
       setAwaitingVerification(true);
+      // Same-tab navigation is reliable on mobile Safari and Chrome. Opening a
+      // new window after an async request is commonly blocked as a popup.
+      window.location.assign(data.url);
     } catch (cause) {
-      telegramWindow?.close();
       setError(cause instanceof Error ? cause.message : "Could not start Telegram sync");
     } finally {
       setLoading(false);
