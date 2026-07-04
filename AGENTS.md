@@ -179,6 +179,7 @@ src/app/(app)/
   chat/[matchId]/
   profile/
   settings/
+    reconnect/[platform]/       post-switch reconnection instructions
 
 src/app/(public)/
   feed/
@@ -299,7 +300,7 @@ not the real schema.
 4. Notification — “Meet Alex?” with specific framing
 5. Matches — proposed and active connections
 6. Chats / Chat detail — after mutual confirmation
-7. Profile / Settings — identity, agent credentials, privacy, scheduling
+7. Profile / Settings — identity, agent credentials, privacy, scheduling, and post-switch agent reconnection
 8. Public Feed — public matches, reactions, comments
 9. Telegram Web App — full-screen Today, matches, chats, calls, onboarding, and personal settings
 

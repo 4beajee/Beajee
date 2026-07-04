@@ -14,6 +14,7 @@ import {
   AGENT_PLATFORM_OPTIONS,
   isOpenClawPlatform,
 } from "../src/types/onboarding";
+import { getReconnectionGuide } from "../src/lib/onboarding/reconnection-guide";
 
 const ROOT = path.resolve(__dirname, "..");
 
@@ -84,6 +85,10 @@ function ok(label: string) {
     path.join(ROOT, "src/app/(app)/settings/page.tsx"),
     "utf8"
   );
+  const reconnectPage = fs.readFileSync(
+    path.join(ROOT, "src/app/(app)/settings/reconnect/[platform]/reconnect-agent-page.tsx"),
+    "utf8"
+  );
   const onboardingPage = fs.readFileSync(
     path.join(ROOT, "src/app/(app)/onboarding/page.tsx"),
     "utf8"
@@ -111,10 +116,15 @@ function ok(label: string) {
   assert.match(switchRoute, /tx\.setupGrant\.updateMany/);
   assert.match(switchRoute, /wakeWebhookEnabled: false/);
   assert.match(switchRoute, /closeAgentWakeStreams\(agent\.id, "platform_changed"\)/);
+  assert.match(switchRoute, /reconnectPath: `\/settings\/reconnect\/\$\{agentPlatform\}/);
   assert.doesNotMatch(settingsSchema, /agentPlatform:/);
   assert.match(settingsPage, /\/api\/settings\/agent-platform/);
   assert.match(settingsPage, /function ChangeAgentPlatformSection/);
   assert.match(settingsPage, /PRIMARY_AGENT_PLATFORMS\.map/);
+  assert.match(settingsPage, /router\.push\(result\.reconnectPath/);
+  assert.match(reconnectPage, /reconnectionGuide/);
+  assert.match(reconnectPage, /guide\.verificationSteps/);
+  assert.match(reconnectPage, /guide\.deliveryNote/);
   assert.match(onboardingPage, /ONBOARDING_AGENT_PLATFORMS\.map/);
   assert.match(onboardingPage, /<AgentPlatformLogo platform=\{platform\}/);
   assert.doesNotMatch(onboardingPage, /setStep\("install"\)/);
@@ -140,6 +150,23 @@ function ok(label: string) {
   assert.match(invalidPlatformMigration, /WHERE "agent_platform" = 'fork'/);
 
   ok("the UI uses the side-effect-safe switch endpoint and setup stays platform-aware");
+}
+
+{
+  for (const platform of AGENT_PLATFORM_OPTIONS) {
+    const guide = getReconnectionGuide(platform);
+    assert.equal(guide.platform, platform);
+    assert.ok(guide.pasteTarget.length > 20);
+    assert.ok(guide.setupNotes.length >= 2);
+    assert.ok(guide.verificationSteps.length >= 3);
+    assert.ok(guide.deliveryNote.length > 20);
+  }
+
+  assert.match(getReconnectionGuide("hermes").verificationSteps.join(" "), /hermes mcp test/);
+  assert.match(getReconnectionGuide("codex").deliveryNote, /Telegram/);
+  assert.match(getReconnectionGuide("open_claw").setupNotes.join(" "), /bridge/);
+
+  ok("every supported platform has complete reconnection and verification guidance");
 }
 
 console.log(`\nAll ${passed} agent platform switch tests passed.`);

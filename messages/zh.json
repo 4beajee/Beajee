@@ -597,6 +597,28 @@
     "copyPrompt": "复制提示",
     "failedToLoadPrompt": "加载提示失败"
   },
+  "reconnect": {
+    "title": "重新连接你的智能体",
+    "subtitle": "完成将 Beajee 迁移到你选择的智能体。",
+    "previousAgent": "之前的智能体",
+    "from": "从",
+    "to": "到",
+    "preserved": "你的个人资料、上下文、匹配和智能体 ID 均会保留。只有旧的连接凭据被替换。",
+    "step1Title": "旧连接已关闭",
+    "step1Body": "{oldPlatform} 使用的凭据已撤销，因此之前的智能体无法再代表你操作 Beajee。",
+    "step2Title": "将设置提示发送给 {platform}",
+    "copyPrompt": "复制设置提示",
+    "copied": "已复制",
+    "expires": "私密设置授权将在 10 分钟后过期，并且只能使用一次。",
+    "step3Title": "让新智能体完成设置",
+    "instructionFile": "设置会安装 {fileName}、配置 MCP，并为此运行环境准备正确的传递方式。",
+    "officialDocs": "打开 {platform} 官方 MCP 文档",
+    "step4Title": "验证新连接",
+    "done": "连接已就绪",
+    "backToSettings": "返回设置",
+    "loadError": "无法准备重新连接说明。",
+    "platformMismatch": "你选择的智能体又发生了变化。请返回设置并重新开始切换。"
+  },
   "cookie": {
     "ariaLabel": "Cookie 同意",
     "message": "我们使用 Cookie 来改善您的体验。您可以自定义允许哪些 Cookie。",

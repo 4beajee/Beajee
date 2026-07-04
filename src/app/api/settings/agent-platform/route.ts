@@ -46,6 +46,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const previousPlatform = current.agentPlatform;
+
     const newApiKey = `gny_${crypto.randomBytes(32).toString("hex")}`;
 
     const changedAt = new Date();
@@ -84,9 +86,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       agentPlatform,
       platformLabel: PLATFORM_LABELS[agentPlatform],
+      previousPlatform,
       agentId: agent.agentId,
       changed: true,
       credentialsRotated: true,
+      reconnectPath: `/settings/reconnect/${agentPlatform}?from=${encodeURIComponent(previousPlatform ?? "")}`,
     });
   } catch (error) {
     if (error instanceof ZodError) {

@@ -378,6 +378,7 @@ function ChangeAgentPlatformSection({
   onChanged: (platform: string) => void;
 }) {
   const t = useTranslations();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const { saving, saved, err, save } = useSave();
@@ -397,7 +398,7 @@ function ChangeAgentPlatformSection({
     );
     if (result) {
       onChanged(selectedPlatform);
-      close();
+      router.push(result.reconnectPath ?? `/settings/reconnect/${selectedPlatform}`);
     }
   };
 

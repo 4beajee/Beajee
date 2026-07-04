@@ -598,6 +598,28 @@
     "copyPrompt": "Copy prompt",
     "failedToLoadPrompt": "Failed to load prompt"
   },
+  "reconnect": {
+    "title": "Reconnect your agent",
+    "subtitle": "Finish moving Beajee to the agent you selected.",
+    "previousAgent": "Previous agent",
+    "from": "From",
+    "to": "To",
+    "preserved": "Your profile, context, matches, and agent ID are preserved. Only the old connection credentials were replaced.",
+    "step1Title": "The previous connection is closed",
+    "step1Body": "The credentials used by {oldPlatform} have been revoked, so the previous agent can no longer act for you on Beajee.",
+    "step2Title": "Send the setup prompt to {platform}",
+    "copyPrompt": "Copy setup prompt",
+    "copied": "Copied",
+    "expires": "The private setup grant expires in 10 minutes and works once.",
+    "step3Title": "Let the new agent finish setup",
+    "instructionFile": "The setup installs {fileName}, configures MCP, and prepares the correct delivery path for this runtime.",
+    "officialDocs": "Open official {platform} MCP documentation",
+    "step4Title": "Verify the new connection",
+    "done": "Connection is ready",
+    "backToSettings": "Back to settings",
+    "loadError": "Could not prepare the reconnection instructions.",
+    "platformMismatch": "Your selected agent changed again. Return to settings and start the switch once more."
+  },
   "cookie": {
     "ariaLabel": "Cookie consent",
     "message": "We use cookies to improve your experience. You can customize which cookies you allow.",

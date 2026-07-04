@@ -13,6 +13,7 @@ import {
 import { buildSetupPrompt, getConnectionInstructions } from "@/lib/onboarding/connection-instructions";
 import { resolveLocale } from "@/i18n/config";
 import { createSetupGrant } from "@/lib/setup-grants";
+import { getReconnectionGuide } from "@/lib/onboarding/reconnection-guide";
 
 export async function GET(request: NextRequest) {
   try {
@@ -89,6 +90,7 @@ export async function GET(request: NextRequest) {
       soulMdEndpoint: `/api/soul/${agent.agentId}`,
       setupUrl: `${baseUrl.replace(/\/$/, "")}/api/setup/${agent.agentId}`,
       connectionInstructions,
+      reconnectionGuide: getReconnectionGuide(platform),
     });
   } catch (error) {
     return safeErrorResponse(error, "Failed to load setup prompt");
