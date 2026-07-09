@@ -146,7 +146,6 @@ function ProfileOrb({ participant, tone }: { participant: Participant; tone: "wa
           <span className="relative text-lg font-medium tracking-[-0.06em] text-white">{getInitials(participant.displayName)}</span>
         </>
       )}
-      <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-[3px] border-[#111113] bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.48)]" />
     </div>
   );
 }
@@ -300,21 +299,6 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
             <div className={`h-[1px] ${cfg.accentLine}`} />
 
             <div className="p-6 sm:p-8">
-              <div className="flex items-center justify-center gap-2 mb-8">
-                <span className={`flex items-center gap-2 ${cfg.textClass} text-sm font-medium`}>
-                  <span className={`w-2 h-2 rounded-full ${cfg.dotClass}`} />
-                  {t(cfg.labelKey)}
-                </span>
-                <span className="text-neutral-700 mx-2">&middot;</span>
-                <span className="text-xs text-neutral-600">
-                  {new Date(data.createdAt).toLocaleDateString("en", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-
               <div className="grid grid-cols-[minmax(0,1fr)_5rem_minmax(0,1fr)] items-start gap-2 sm:gap-4">
                 <div className="min-w-0 text-center">
                   <ProfileOrb participant={a} tone="warm" />
@@ -328,10 +312,10 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
                     <Image
                       src="/match-emblem.png"
                       alt=""
-                      width={156}
-                      height={89}
+                      width={144}
+                      height={82}
                       priority
-                      className="absolute -left-[2.8rem] -top-[0.42rem] max-w-none mix-blend-screen"
+                      className="absolute -left-[2.42rem] -top-[0.2rem] max-w-none mix-blend-screen"
                     />
                   </div>
                 </div>
