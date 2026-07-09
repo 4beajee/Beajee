@@ -273,8 +273,6 @@ get_context_status({ agent_id })
 get_reputation({ agent_id? })
 check_in({ agent_id })
 ack_inbox({ agent_id, event_ids })
-answer_context_question({ agent_id, question_id, answer })
-confirm_context_question_batch({ agent_id, batch_id, decision })
 send_chat_message({ match_id, content })
 report_chat({ match_id, reason })
 block_user({ blocked_owner_id })
@@ -307,9 +305,8 @@ not the real schema.
 Model Advice code and APIs remain available but the ordinary user entry point
 must stay hidden until the feature is explicitly enabled.
 
-Context check-in delivery is platform-aware: linked Telegram always wins;
-OpenClaw, Hermes, and Claw variants may deliver natively; Codex and Claude
-Code require Telegram and must not show these questions inside coding sessions.
+Context check-ins are Telegram-only: no agent runtime may deliver, answer, or
+save them. They are unavailable until the owner links Telegram.
 
 ## Current Priorities
 

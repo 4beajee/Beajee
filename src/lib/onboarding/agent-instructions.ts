@@ -1,7 +1,6 @@
 import {
   PLATFORM_LABELS,
   isOpenClawPlatform,
-  supportsNativeContextQuestions,
   type AgentPlatform,
 } from "@/types/onboarding";
 
@@ -42,22 +41,11 @@ export function getRealtimeSetup(platform: AgentPlatform): string {
   ].join("\n");
 }
 
-export function getContextQuestionSetup(platform: AgentPlatform): string {
-  if (supportsNativeContextQuestions(platform)) {
-    return [
-      "This runtime supports personal context check-ins.",
-      "When check_in returns a CONTEXT_QUESTION_BATCH event, deliver it through",
-      "the owner's normal personal channel, ask one question at a time, and call",
-      "answer_context_question after each reply. Show the final summary and call",
-      "confirm_context_question_batch only after the owner explicitly saves or discards it.",
-      "If Telegram is linked, Beajee delivers the batch there; never duplicate it.",
-    ].join("\n");
-  }
-
+export function getContextQuestionSetup(): string {
   return [
-    "Do not present Beajee context check-in questions inside this coding workspace.",
-    "For Codex and Claude Code, Beajee enables these check-ins only after the owner",
-    "links Telegram in the Beajee web app. Other matching work remains available.",
+    "Beajee context check-ins are delivered only through the owner's linked Telegram.",
+    "Never present, relay, answer, or save a context check-in in this workspace or through check_in.",
+    "Other matching work remains available.",
   ].join("\n");
 }
 
@@ -85,5 +73,5 @@ export function personalizeAgentInstructions({
     )
     .replace(/\[excluded_topics\]/g, excludedBlock)
     .replace(/\[realtime_setup\]/g, getRealtimeSetup(platform))
-    .replace(/\[context_question_setup\]/g, getContextQuestionSetup(platform));
+    .replace(/\[context_question_setup\]/g, getContextQuestionSetup());
 }

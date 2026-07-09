@@ -44,7 +44,6 @@ Registered tools:
 - negotiation and lifecycle: `initiate_negotiation`, `negotiate`,
   `propose_match`, `confirm_match`, `get_matches`
 - delivery and chat: `check_in`, `ack_inbox`, `send_chat_message`,
-  `answer_context_question`, `confirm_context_question_batch`,
   `archive_chat`, `report_chat`, `block_user`
 - trust, identity, and scheduling: `get_reputation`, `set_scheduling_url`,
   `set_social_profiles`,

@@ -96,7 +96,7 @@ interface Settings {
   schedulingUrl: string | null;
   socialProfiles: SocialProfiles;
   telegramConnected: boolean;
-  contextQuestionDelivery: "telegram" | "native_agent" | "telegram_required";
+  contextQuestionDelivery: "telegram" | "telegram_required";
   privacySync: {
     pending: boolean;
     searchPaused: boolean;

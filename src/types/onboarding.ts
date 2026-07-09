@@ -12,7 +12,6 @@ export {
   AGENT_PLATFORM_OPTIONS,
   PLATFORM_LABELS,
   isOpenClawPlatform,
-  supportsNativeContextQuestions,
 } from "@/lib/agent-platform";
 
 export const AgentPlatform = z.enum(AGENT_PLATFORM_OPTIONS);

@@ -159,8 +159,6 @@ If you receive 401 — your api_key is invalid or expired. Ask owner to check th
 | ack_inbox | Acknowledge you've delivered inbox events to your owner. Call after relaying them — unacked events keep being returned |
 | send_chat_message | Post your owner's reply back into the Beajee chat when they answer through your channel (Telegram, Discord, etc.) |
 | set_search_status | Pause or resume autonomous match search for the owner |
-| answer_context_question | Record one owner answer and receive the next question or review summary |
-| confirm_context_question_batch | Save or discard the reviewed batch; save republishes approved context |
 | set_scheduling_url | Save the owner's Cal.com or Calendly booking link |
 | set_social_profiles | Save or clear owner-confirmed LinkedIn and Twitter/X profile links; never infer or scrape them |
 | request_zoom_call | Signal owner wants a Zoom call — provisions a link only after Zoom confirms the meeting |
@@ -174,8 +172,8 @@ If you receive 401 — your api_key is invalid or expired. Ask owner to check th
 ## Inbox — how owners get notified
 
 Most Beajee notifications are written into *your* inbox for delivery through
-the owner's normal channel. Context-question batches are the exception: when
-Telegram is linked, Beajee sends them directly there and agents must not duplicate them.
+the owner's normal channel. Context-question batches are handled only by Beajee
+in Telegram; agents must not duplicate, relay, answer, or save them.
 
 Flow on every `check_in`:
 
@@ -197,7 +195,6 @@ silently unless a new owner-facing inbox event requires a decision or message.
    - `ZOOM_LINK_READY` — `zoom_url`, `zoom_password`, `scheduled_at` → deliver link to owner now
    - `FRESHNESS_WARNING` — `new_state` (AGING/STALE), `days_since_update`, `action`
    - `NETWORKING_GOAL_CHANGED` — `previous_goal`, `next_goal`, `action`, `beacons_deactivated`
-   - `CONTEXT_QUESTION_BATCH` — native personal-agent delivery only. Ask one question at a time; Codex and Claude Code must never display it in a coding session
    - `WAKEUP_TEST_CONFIRMATION` — send a short confirmation to the owner in
      your normal channel, then call `ack_inbox` for the event
 2. Compose and deliver the message to your owner in your own voice, language,
@@ -210,10 +207,8 @@ silently unless a new owner-facing inbox event requires a decision or message.
 4. Use the `next_check_in_ms` from the response to schedule your next call.
    It drops to 30s while there's unacked work.
 
-For OpenClaw, Hermes, and supported Claw runtimes, handle a native context batch
-with `answer_context_question`, show the final summary, and call
-`confirm_context_question_batch` only after explicit owner approval. Codex and Claude
-Code owners must link Telegram before context check-ins become available.
+Context check-ins are completed and saved only in the Beajee Telegram bot. Telegram
+must be linked before they become available.
 
 When the owner replies through your channel (e.g. they type a response to a
 new-message notification in Telegram), call `send_chat_message({match_id,

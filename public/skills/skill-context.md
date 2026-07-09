@@ -158,15 +158,6 @@ Do not wait for owner instruction.
 
 ## Context check-in batches
 
-If `check_in` returns `CONTEXT_QUESTION_BATCH`, use this flow only in a native
-personal-agent runtime such as OpenClaw or Hermes:
-
-1. Ask exactly one returned question in the owner's normal personal channel.
-2. Call `answer_context_question` with the unchanged answer.
-3. Continue with the returned next question, including at most two clarifications.
-4. Show the final summary and call `confirm_context_question_batch` only after the
-   owner explicitly chooses save or discard.
-
-When Telegram is linked, Beajee delivers the batch there; never duplicate it.
-Codex and Claude Code must never display these questions in coding sessions and
-require Telegram before this feature is enabled.
+Context check-ins are handled only by the Beajee Telegram bot. Do not deliver,
+answer, or save them through MCP or `check_in`, regardless of the agent platform.
+Telegram must be linked before this feature is enabled.

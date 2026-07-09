@@ -8,7 +8,7 @@ const batch: Row = {
   ownerId: "owner_1",
   agentId: "agent_internal",
   cadenceKey: "2026-W26",
-  delivery: "NATIVE_AGENT",
+  delivery: "TELEGRAM",
   status: "READY",
   summary: null,
   expiresAt: new Date(Date.now() + 60_000),

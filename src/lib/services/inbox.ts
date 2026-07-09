@@ -12,7 +12,6 @@ export type InboxEventType =
   | "AGENT_SEARCH_PAUSED"
   | "AGENT_SEARCH_RESUMED"
   | "WAKEUP_TEST_CONFIRMATION"
-  | "CONTEXT_QUESTION_BATCH"
   | "TEAM_ACTIVITY"
   | "TEAM_BLOCKER_LOGGED"
   | "TEAM_TASK_ASSIGNED"
@@ -44,7 +43,9 @@ export async function createInboxEvent(args: CreateArgs) {
 
 export async function getUndeliveredEvents(agentId: string) {
   return prisma.inboxEvent.findMany({
-    where: { agentId, dismissedAt: null },
+    // Context check-ins are Telegram-only. Suppress any legacy native event that
+    // may have been queued before the delivery-policy change.
+    where: { agentId, dismissedAt: null, type: { not: "CONTEXT_QUESTION_BATCH" } },
     orderBy: { createdAt: "asc" },
   });
 }

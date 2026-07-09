@@ -8,8 +8,6 @@ import {
 } from "@/lib/context-questions";
 import { assertContextRespectsExclusions } from "@/lib/sensitive-topics";
 import { getContextQuestionDeliveryMode } from "@/lib/agent-platform";
-import { createInboxEvent } from "@/lib/services/inbox";
-import { signalAgentWork } from "@/lib/services/agent-delivery";
 import { publishContext } from "@/lib/services/context-index";
 import { escapeTelegramHtml } from "@/lib/services/telegram";
 import { sendOwnerTopicMessage } from "@/lib/telegram/topics";
@@ -86,35 +84,11 @@ async function dispatchBatch(batchId: string) {
     });
   }
 
-  const firstQuestion = batch.questions[0];
-  await createInboxEvent({
-    ownerId: batch.ownerId,
-    agentId: batch.agentId,
-    type: "CONTEXT_QUESTION_BATCH",
-    referenceId: batch.id,
-    payload: {
-      batch_id: batch.id,
-      expires_at: batch.expiresAt.toISOString(),
-      question_count: batch.questions.filter((question) => !question.isFollowUp).length,
-      first_question: firstQuestion
-        ? { question_id: firstQuestion.id, prompt: firstQuestion.prompt, reason: firstQuestion.reason }
-        : null,
-      action:
-        "Ask one question at a time in the owner's normal personal channel. Never present this inside Codex or Claude Code.",
-    },
-  });
-  const deliveredBatch = await prisma.contextQuestionBatch.update({
+  return prisma.contextQuestionBatch.update({
     where: { id: batch.id },
-    data: { deliveredAt: new Date(), deliveryError: null },
+    data: { deliveryError: "Telegram is required for context check-ins" },
     include: { questions: true },
   });
-  signalAgentWork({
-    agentId: batch.agentId,
-    kind: "CONTEXT_QUESTION_BATCH",
-    reason: "A short owner context check-in is ready",
-    referenceId: batch.id,
-  }).catch((error) => console.error("[context-questions] Failed to wake agent:", error));
-  return deliveredBatch;
 }
 
 export async function createWeeklyContextQuestionBatches(options: {
@@ -187,12 +161,11 @@ export async function createWeeklyContextQuestionBatches(options: {
   return result;
 }
 
-async function loadOwnedBatch(args: { batchId: string; ownerId?: string; agentExternalId?: string }) {
+async function loadOwnedBatch(args: { batchId: string; ownerId: string }) {
   const batch = await prisma.contextQuestionBatch.findFirst({
     where: {
       id: args.batchId,
-      ...(args.ownerId ? { ownerId: args.ownerId } : {}),
-      ...(args.agentExternalId ? { agent: { agentId: args.agentExternalId } } : {}),
+      ownerId: args.ownerId,
     },
     include: { questions: true },
   });
@@ -230,8 +203,7 @@ export async function skipContextQuestionBatch(args: { batchId: string; ownerId:
 export async function answerContextQuestion(args: {
   questionId: string;
   answer: string;
-  ownerId?: string;
-  agentExternalId?: string;
+  ownerId: string;
 }) {
   const answer = args.answer.trim();
   if (!answer || answer.length > 2_000) throw new Error("Answer must be between 1 and 2000 characters");
@@ -249,17 +221,7 @@ export async function answerContextQuestion(args: {
     },
   });
   if (!question) throw new Error("Context question not found");
-  if (args.ownerId && question.batch.ownerId !== args.ownerId) throw new Error("Context question not found");
-  if (args.agentExternalId && question.batch.agent.agentId !== args.agentExternalId) {
-    throw new Error("Context question not found");
-  }
-  if (question.batch.status === "READY" && args.agentExternalId) {
-    await prisma.contextQuestionBatch.update({
-      where: { id: question.batchId },
-      data: { status: "ACTIVE", startedAt: new Date() },
-    });
-    question.batch.status = "ACTIVE";
-  }
+  if (question.batch.ownerId !== args.ownerId) throw new Error("Context question not found");
   if (question.batch.status !== "ACTIVE") throw new Error("This batch is not accepting answers");
   const expected = nextUnanswered(question.batch);
   if (!expected || expected.id !== question.id) throw new Error("Answer the current question first");
@@ -361,8 +323,7 @@ async function publishApprovedBatch(batch: BatchWithQuestions) {
 export async function confirmContextQuestionBatch(args: {
   batchId: string;
   decision: "save" | "discard";
-  ownerId?: string;
-  agentExternalId?: string;
+  ownerId: string;
 }) {
   const batch = await loadOwnedBatch(args);
   if (batch.status !== "REVIEW") throw new Error("This batch is not ready for review");

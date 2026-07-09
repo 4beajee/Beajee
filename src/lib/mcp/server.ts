@@ -26,8 +26,6 @@ import { confirmCallTimeTool } from "./tools/confirm-call-time";
 import { getCallStatusTool } from "./tools/get-call-status";
 import { setSchedulingUrlTool } from "./tools/set-scheduling-url";
 import { setSearchStatusTool } from "./tools/set-search-status";
-import { answerContextQuestionTool } from "./tools/answer-context-question";
-import { confirmContextQuestionBatchTool } from "./tools/confirm-context-question-batch";
 import { setSocialProfilesTool } from "./tools/set-social-profiles";
 import type { McpActor } from "./actor";
 
@@ -55,8 +53,6 @@ const tools = [
   getCallStatusTool,
   setSchedulingUrlTool,
   setSearchStatusTool,
-  answerContextQuestionTool,
-  confirmContextQuestionBatchTool,
   setSocialProfilesTool,
 ];
 

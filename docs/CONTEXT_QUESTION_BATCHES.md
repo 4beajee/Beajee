@@ -12,16 +12,11 @@ owner has linked Telegram
         |
         +-- yes --> deliver through the Beajee Telegram bot
         |
-        +-- no  --> platform supports native personal delivery?
-                         |
-                         +-- yes --> deliver CONTEXT_QUESTION_BATCH through agent inbox
-                         |
-                         +-- no  --> feature unavailable; show Telegram connect CTA
+        +-- no  --> feature unavailable; show Telegram connect CTA
 ```
 
-Telegram always wins when it is linked. Native delivery is limited to OpenClaw,
-Hermes and supported Claw variants. Codex and Claude Code never receive
-context-question events in their coding sessions.
+Telegram is the only delivery channel. No agent runtime, including OpenClaw,
+Hermes, Codex, and Claude Code, receives context-question events.
 
 ## Batch lifecycle
 
@@ -43,7 +38,7 @@ primary answer. Questions are presented one at a time.
 weekly cron
   -> ContextQuestionService selects eligible owners
   -> creates one idempotent weekly batch per owner
-  -> TelegramDelivery OR InboxEvent + agent wake
+  -> Telegram delivery
   -> owner answers one question at a time
   -> answer is stored but not indexed
   -> owner reviews a concise summary
@@ -65,8 +60,6 @@ to a real owner is rejected.
 
 ## What already exists
 
-- `InboxEvent`, `check_in`, `ack_inbox`, SSE wake, and the OpenClaw bridge provide
-  native agent delivery.
 - Telegram identity, Mini App authentication, personal topics, bot callbacks, and
   owner-topic delivery provide the Telegram transport.
 - `publishContext` owns privacy synchronization, embeddings, freshness, beacon
@@ -84,16 +77,14 @@ to a real owner is rejected.
 | Duplicate cron execution | Unique owner/cadence key | No duplicate batch |
 | User replies without active batch | Ignore as a question answer | Bot gives no misleading acknowledgement |
 | Context publish fails after approval | Keep batch in REVIEW | User can retry save |
-| Native agent never checks in | Inbox event remains unacked | No silent loss; event is retried |
+| Telegram is not linked | Batch is not created | App asks the owner to connect Telegram |
 | Answer touches an excluded sensitive category | Omit it from the approved context | Exclusion remains enforced |
 
 ## Test plan
 
 ```text
 Platform policy (unit)
-  - Telegram overrides every platform
-  - native platforms work without Telegram
-  - Codex/Claude require Telegram
+  - every platform requires Telegram
 
 Telegram linking (integration)
   - issue, consume, expire, reuse, collision, placeholder merge
@@ -105,8 +96,7 @@ Batch service (unit/integration)
 
 Delivery (integration)
   - Telegram start/skip/save callbacks and free-text answers
-  - native inbox event and wake
-  - no event for Codex/Claude without Telegram
+  - no event is created for any agent without Telegram
 
 UI (source assertions + QA)
   - platform selection during onboarding
@@ -114,8 +104,7 @@ UI (source assertions + QA)
   - connected/active state on Home and Settings
 
 Prompts (contract tests)
-  - native platforms receive batch instructions
-  - Codex/Claude instructions explicitly prohibit coding-session delivery
+  - all agent instructions explicitly prohibit context-question delivery
 ```
 
 ## Not in scope
@@ -123,6 +112,6 @@ Prompts (contract tests)
 - Folk CRM enrichment: explicitly outside the personal-networking product boundary.
 - Arbitrary personal-life questionnaires: questions remain tied to match quality.
 - More than two batches per week: cadence optimization needs real usage data.
-- Claude research-preview channels or a custom Codex daemon: Telegram is the stable
-  delivery channel for coding tools.
+- Native agent, research-preview, and custom daemon delivery: Telegram is the only
+  supported check-in channel.
 - Automatic publication before owner review: raw answers remain private until saved.

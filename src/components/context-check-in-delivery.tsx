@@ -88,9 +88,7 @@ export function ContextCheckInDelivery({
           <p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-400">
             {effectiveMode === "telegram"
               ? "Active in Telegram. Beajee will send one short batch of questions at a time."
-              : effectiveMode === "native_agent"
-                ? "Active through your personal agent. Linking Telegram will move future check-ins there."
-                : "Connect Telegram to enable short weekly check-ins. Nothing will be sent into Codex or Claude Code."}
+              : "Connect Telegram to enable short weekly check-ins. They are never sent through an agent workspace."}
           </p>
           {error ? <p className="mt-2 text-xs text-red-400">{error}</p> : null}
         </div>

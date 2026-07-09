@@ -3,7 +3,6 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   getContextQuestionDeliveryMode,
-  supportsNativeContextQuestions,
 } from "../src/lib/agent-platform";
 import {
   buildContextQuestions,
@@ -20,17 +19,11 @@ function ok(label: string) {
 }
 
 {
-  for (const platform of ["open_claw", "hermes", "nano_claw"]) {
-    assert.equal(supportsNativeContextQuestions(platform), true);
-    assert.equal(getContextQuestionDeliveryMode(platform, false), "native_agent");
-    assert.equal(getContextQuestionDeliveryMode(platform, true), "telegram");
-  }
-  for (const platform of ["codex", "claude_code", "manus", "folk", "cursor", "other_mcp"]) {
-    assert.equal(supportsNativeContextQuestions(platform), false);
+  for (const platform of ["open_claw", "hermes", "nano_claw", "codex", "claude_code", "manus", "folk", "cursor", "other_mcp"]) {
     assert.equal(getContextQuestionDeliveryMode(platform, false), "telegram_required");
     assert.equal(getContextQuestionDeliveryMode(platform, true), "telegram");
   }
-  ok("Telegram wins globally and coding agents require Telegram");
+  ok("Every platform requires Telegram for context check-ins");
 }
 
 {
@@ -87,17 +80,29 @@ function ok(label: string) {
     path.join(ROOT, "public/skills/skill-context.md"),
     "utf8"
   );
+  const telegramWebhook = fs.readFileSync(
+    path.join(ROOT, "src/app/api/telegram/webhook/route.ts"),
+    "utf8"
+  );
+  const telegramTopics = fs.readFileSync(
+    path.join(ROOT, "src/lib/telegram/topics.ts"),
+    "utf8"
+  );
   assert.match(onboarding, /ONBOARDING_AGENT_PLATFORMS\.map/);
   assert.doesNotMatch(onboarding, /"fork"/);
   assert.match(onboarding, /ContextCheckInDelivery/);
   assert.match(settings, /ContextCheckInDelivery/);
   assert.match(home, /TelegramConnectCard/);
   assert.match(template, /\[context_question_setup\]/);
-  assert.match(mcpRoute, /answerContextQuestionTool/);
-  assert.match(mcpRoute, /confirmContextQuestionBatchTool/);
+  assert.doesNotMatch(mcpRoute, /answerContextQuestionTool/);
+  assert.doesNotMatch(mcpRoute, /confirmContextQuestionBatchTool/);
   assert.match(cronRoute, /isAuthorizedCronRequest/);
-  assert.match(publicContextSkill, /Codex and Claude Code must never display/);
-  ok("Onboarding, Home, Settings, and generated agent instructions expose Telegram delivery");
+  assert.match(publicContextSkill, /only by the Beajee Telegram bot/);
+  assert.match(telegramWebhook, /Обдумываю ответы/);
+  assert.match(telegramWebhook, /Обновляю информацию в твоём профиле/);
+  assert.match(telegramWebhook, /Профиль обновлён/);
+  assert.match(telegramTopics, /message_effect_id/);
+  ok("Onboarding, Home, Settings, and generated agent instructions require Telegram delivery");
 }
 
 console.log(`\nAll context question tests passed (${passed} checks).`);

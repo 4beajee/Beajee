@@ -3,7 +3,11 @@ import { prisma } from "@/lib/db";
 import { safeErrorResponse } from "@/lib/api-error";
 import { buildMiniAppReplyMarkup } from "@/lib/telegram/bot";
 import { redactTelegramSecrets } from "@/lib/telegram/auth";
-import { sendTelegramMessageToChat } from "@/lib/telegram/topics";
+import {
+  editTelegramMessageText,
+  sendContextCheckInStatus,
+  sendTelegramMessageToChat,
+} from "@/lib/telegram/topics";
 import {
   answerTelegramCallbackQuery,
   isConfiguredTelegramChat,
@@ -143,9 +147,16 @@ async function handleTelegramSync(message: TelegramMessage, rawToken: string) {
   }
 }
 
+const CONTEXT_STATUS_DELAY_MS = 900;
+
+function waitForContextStatus() {
+  return new Promise((resolve) => setTimeout(resolve, CONTEXT_STATUS_DELAY_MS));
+}
+
 async function handleContextCallback(
   command: { kind: string; batchId: string },
-  telegramUserId?: number
+  telegramUserId?: number,
+  chatId?: number | string
 ) {
   try {
     const ownerId = await ownerIdFromTelegramUser(telegramUserId);
@@ -156,12 +167,42 @@ async function handleContextCallback(
       return "Skipped for this week";
     }
     if (command.kind === "context_save" || command.kind === "context_discard") {
+      let progressMessage: { message_id: number } | null = null;
+      if (command.kind === "context_save" && chatId) {
+        try {
+          progressMessage = await sendContextCheckInStatus({
+            chatId,
+            text: "<b>Обдумываю ответы…</b>",
+          });
+          await waitForContextStatus();
+          await editTelegramMessageText({
+            chatId,
+            messageId: progressMessage.message_id,
+            text: "<b>Обновляю информацию в твоём профиле…</b>",
+          });
+        } catch (error) {
+          console.warn("[telegram] Could not show context check-in progress", error);
+        }
+      }
       const result = await confirmContextQuestionBatch({
         batchId: command.batchId,
         ownerId,
         decision: command.kind === "context_save" ? "save" : "discard",
       });
-      return result.status === "COMPLETED" ? "Saved to your Beajee context" : "Answers discarded";
+      if (result.status === "COMPLETED" && chatId) {
+        try {
+          await sendTelegramMessageToChat({
+            chatId,
+            text:
+              "<b>Профиль обновлён.</b>\n" +
+              "Я добавил подтверждённые тобой изменения в контекст профиля и обновил matching. " +
+              "Теперь новые мэтчи будут точнее соответствовать твоим текущим целям.",
+          });
+        } catch (error) {
+          console.warn("[telegram] Could not send context check-in completion", error);
+        }
+      }
+      return result.status === "COMPLETED" ? "Профиль обновлён" : "Ответы не сохранены";
     }
 
     const started = await startContextQuestionBatch({ batchId: command.batchId, ownerId });
@@ -299,7 +340,11 @@ export async function POST(request: NextRequest) {
       command.kind === "context_save" ||
       command.kind === "context_discard"
     ) {
-      callbackAnswer = await handleContextCallback(command, update.callback_query?.from?.id);
+      callbackAnswer = await handleContextCallback(
+        command,
+        update.callback_query?.from?.id,
+        update.callback_query?.message?.chat?.id
+      );
     } else if (command.kind === "social_profiles_dismiss") {
       const ownerId = await ownerIdFromTelegramUser(update.callback_query?.from?.id);
       if (ownerId) {
