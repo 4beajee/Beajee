@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { getPublicMatchUrl } from "@/lib/public-url";
@@ -121,22 +120,11 @@ function ChevronDownIcon({ className }: { className?: string }) {
   );
 }
 
-function MatchEmblem({ status }: { status: string }) {
-  const isMatched = status === "MATCHED";
-
+function SparkleSymbol({ className }: { className?: string }) {
   return (
-    <div className="relative flex h-[4.75rem] w-[4.75rem] shrink-0 items-center justify-center" aria-label="Beajee match">
-      <span className={`absolute inset-1 rounded-[1.45rem] border ${isMatched ? "border-emerald-200/[0.24]" : "border-white/[0.12]"} bg-white/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.24),0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl`} />
-      <span className={`absolute inset-0 rounded-[1.8rem] ${isMatched ? "bg-emerald-300/[0.10]" : "bg-white/[0.04]"} blur-xl`} />
-      <Image
-        src="/icon.png"
-        alt=""
-        width={42}
-        height={42}
-        priority
-        className="relative drop-shadow-[0_4px_11px_rgba(255,255,255,0.24)]"
-      />
-    </div>
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 2.75c.7 5.48 3.77 8.55 9.25 9.25-5.48.7-8.55 3.77-9.25 9.25C11.3 15.77 8.23 12.7 2.75 12 8.23 11.3 11.3 8.23 12 2.75Z" fill="currentColor" />
+    </svg>
   );
 }
 
@@ -164,41 +152,37 @@ function MatchStory({ a, b, overlapSummary }: { a: Participant; b: Participant; 
   ];
 
   return (
-    <div className="mt-7 rounded-[1.5rem] border border-white/[0.10] bg-white/[0.045] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl">
+    <div className="mt-8 border-t border-white/[0.12] pt-5">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
-        className="flex min-h-12 w-full items-center gap-3 rounded-[1.25rem] px-4 py-3 text-left transition-colors hover:bg-white/[0.045] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200"
+        className="flex min-h-11 w-full items-center gap-3 text-left transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-200"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.12] bg-black/20">
-          <Image src="/icon.png" alt="" width={19} height={19} loading="eager" />
-        </span>
+        <SparkleSymbol className="h-4 w-4 shrink-0 text-emerald-100" />
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium text-white">How the agents found this match</span>
-          <span className="mt-0.5 block text-xs text-neutral-500">A public-safe match story</span>
+          <span className="mt-0.5 block text-xs text-neutral-400">A public-safe match story</span>
         </span>
-        <ChevronDownIcon className={`shrink-0 text-neutral-500 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+        <ChevronDownIcon className={`shrink-0 text-neutral-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
       </button>
 
       <div className={`grid transition-[grid-template-rows,opacity] duration-300 ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
         <div className="overflow-hidden">
-          <div className="px-4 pb-4 pt-2">
-            <div className="border-t border-white/[0.08] pt-4">
-              <p className="mb-4 text-xs leading-5 text-neutral-500">The full agent negotiation is private. This is the shareable version of why the introduction was made.</p>
-              <ol className="space-y-3">
-                {steps.map((step, index) => (
-                  <li key={step.label} className="relative grid grid-cols-[1.75rem_1fr] gap-3">
-                    {index < steps.length - 1 && <span className="absolute left-[0.85rem] top-7 h-[calc(100%+0.4rem)] w-px bg-white/[0.10]" />}
-                    <span className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full border border-emerald-100/[0.18] bg-emerald-200/[0.10] text-[11px] font-medium text-emerald-100">{index + 1}</span>
-                    <span className="min-w-0 rounded-xl border border-white/[0.08] bg-black/15 px-3 py-2.5">
-                      <span className="block text-[11px] font-medium uppercase tracking-[0.12em] text-emerald-100/80">{step.label}</span>
-                      <span className="mt-1 block text-sm leading-5 text-neutral-300">{step.text}</span>
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            </div>
+          <div className="pb-1 pt-5">
+            <p className="mb-5 max-w-md text-xs leading-5 text-neutral-400">The full agent negotiation is private. This is the shareable version of why the introduction was made.</p>
+            <ol className="space-y-5">
+              {steps.map((step, index) => (
+                <li key={step.label} className="relative grid grid-cols-[1.5rem_1fr] gap-3">
+                  {index < steps.length - 1 && <span className="absolute left-[0.45rem] top-6 h-[calc(100%+0.55rem)] w-px bg-white/[0.16]" />}
+                  <span className="relative z-10 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100 text-[9px] font-medium text-[#12241d]">{index + 1}</span>
+                  <span className="min-w-0">
+                    <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-emerald-100/80">{step.label}</span>
+                    <span className="mt-1 block text-sm leading-5 text-neutral-200">{step.text}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </div>
@@ -283,10 +267,15 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
   const [a, b] = data.participants;
 
   return (
-    <div className="min-h-screen bg-[#050505]">
+    <div className="relative isolate min-h-screen bg-[#020305]/45">
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'linear-gradient(rgba(1, 5, 10, 0.68), rgba(1, 5, 10, 0.84)), url("/match-share-night.png")' }}
+      />
       <Nav />
 
-      <section className="relative min-h-[calc(100vh-64px)] flex flex-col items-center justify-center px-4 overflow-hidden">
+      <section className="relative z-10 min-h-[calc(100vh-64px)] flex flex-col items-center justify-center px-4 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div
             className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[120px] animate-glow-breathe"
@@ -300,7 +289,7 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
         </div>
 
         <div className="relative w-full max-w-xl animate-card-float-in">
-          <div className="overflow-hidden rounded-[2rem] border border-white/[0.12] bg-[#111113]/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_32px_90px_rgba(0,0,0,0.42)] backdrop-blur-2xl">
+          <div className="overflow-hidden rounded-[2rem] border border-white/[0.10] bg-[#071015]/68 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_32px_90px_rgba(0,0,0,0.48)] backdrop-blur-2xl">
             <div className={`h-[1px] ${cfg.accentLine}`} />
 
             <div className="p-6 sm:p-8">
@@ -325,9 +314,11 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
                   <p className="mt-3 truncate text-sm font-medium text-white">{a.displayName}</p>
                   <p className="mx-auto mt-1 line-clamp-2 max-w-[150px] text-xs leading-5 text-neutral-500">{a.currentWork}</p>
                 </div>
-                <div className="flex min-w-0 flex-col items-center pt-3">
+                <div className="flex min-w-0 flex-col items-center pt-5">
                   <div className={`h-px w-full ${cfg.accentLine}`} />
-                  <MatchEmblem status={data.status} />
+                  <div className="flex h-[4.75rem] w-[4.75rem] items-center justify-center" aria-label="Match">
+                    <SparkleSymbol className="h-9 w-9 text-emerald-50 drop-shadow-[0_0_18px_rgba(167,243,208,0.82)]" />
+                  </div>
                   <div className={`h-px w-full ${cfg.accentLine}`} />
                 </div>
                 <div className="min-w-0 text-center">
@@ -338,7 +329,7 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
               </div>
 
               {data.overlapSummary && (
-                <div className="mt-8 rounded-[1.5rem] border border-white/[0.10] bg-black/[0.18] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                <div className="mt-8 border-l border-emerald-100/[0.35] pl-4">
                   <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">Why this match</p>
                   <p className="mt-2 text-[13px] leading-6 text-neutral-200">
                     {data.overlapSummary}
@@ -406,7 +397,7 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
 
       </section>
 
-      <section className="max-w-2xl mx-auto px-4 md:px-6 py-16">
+      <section className="relative z-10 max-w-2xl mx-auto px-4 md:px-6 py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-detail-in animate-detail-in-d1">
           {data.participants.map((p, i) => (
             <div key={i} className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-5">
