@@ -9,7 +9,7 @@ const batch: Row = {
   agentId: "agent_internal",
   cadenceKey: "2026-W26",
   delivery: "TELEGRAM",
-  status: "READY",
+  status: "ACTIVE",
   summary: null,
   expiresAt: new Date(Date.now() + 60_000),
   questions: [
@@ -20,7 +20,7 @@ const batch: Row = {
       topic: "current_need",
       prompt: "What is blocked?",
       reason: "Current need",
-      followUpPrompt: "What experience would help?",
+      followUpPrompt: null,
       isFollowUp: false,
       answer: null,
       answeredAt: null,
@@ -96,12 +96,7 @@ async function main() {
   const {
     answerContextQuestion,
     confirmContextQuestionBatch,
-    startContextQuestionBatch,
   } = await import("../src/lib/services/context-questions");
-
-  const started = await startContextQuestionBatch({ batchId: batch.id, ownerId: batch.ownerId });
-  assert.equal(batch.status, "ACTIVE");
-  assert.equal(started.question?.id, "q1");
 
   const first = await answerContextQuestion({
     questionId: "q1",
@@ -109,14 +104,7 @@ async function main() {
     ownerId: batch.ownerId,
   });
   assert.equal(first.status, "ACTIVE");
-  assert.equal(first.question?.isFollowUp, true);
-
-  const clarified = await answerContextQuestion({
-    questionId: first.question!.id,
-    answer: "Someone who launched a paid developer product in Europe",
-    ownerId: batch.ownerId,
-  });
-  assert.equal(clarified.question?.id, "q2");
+  assert.equal(first.question?.id, "q2");
 
   const finished = await answerContextQuestion({
     questionId: "q2",
@@ -125,7 +113,7 @@ async function main() {
   });
   assert.equal(finished.status, "REVIEW");
   assert.equal(batch.status, "REVIEW");
-  assert.equal((finished.summary as Row).facts.length, 3);
+  assert.equal((finished.summary as Row).facts.length, 2);
 
   const discarded = await confirmContextQuestionBatch({
     batchId: batch.id,
@@ -136,7 +124,7 @@ async function main() {
   assert.equal(batch.status, "DISCARDED");
   assert.equal(batch.questions.every((question: Row) => question.answer === null), true);
 
-  console.log("PASS: context question workflow enforces order, clarification caps, review, and discard");
+  console.log("PASS: context question workflow enforces order, no follow-ups, review, and discard");
 }
 
 main().catch((error) => {

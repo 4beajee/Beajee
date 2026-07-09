@@ -184,7 +184,7 @@ can understand their professional identity.
 - Never search for, infer, verify, or scrape a social profile.
 - If the owner declines or ignores the suggestion, continue normal matching and do not ask again.
 - When `MATCH_PROPOSED` contains `other_social_profiles`, render available providers as named links directly under the specific match framing.
-Raw answers must not enter matching before save.
+Context-check-in answers are published only after the Telegram batch is complete.
 
 ---
 

@@ -21,16 +21,13 @@ Hermes, Codex, and Claude Code, receives context-question events.
 ## Batch lifecycle
 
 ```text
-READY --start--> ACTIVE --answers--> REVIEW --save--> COMPLETED
-   |                 |                   |
-   +--skip--------> SKIPPED              +--discard--> DISCARDED
+READY --deliver first question--> ACTIVE --answers/skips--> COMPLETED
    |
-   +--expires---------------------------------------> EXPIRED
+   +--expires----------------------------------------------> EXPIRED
 ```
 
-A batch contains four primary questions. At most two
-clarifying questions may be inserted, and never more than one clarification for a
-primary answer. Questions are presented one at a time.
+A batch contains four standalone questions, presented one at a time. Each question
+can be skipped without skipping the rest of the batch.
 
 ## Data flow
 
@@ -39,10 +36,9 @@ weekly cron
   -> ContextQuestionService selects eligible owners
   -> creates one idempotent weekly batch per owner
   -> Telegram delivery
-  -> owner answers one question at a time
-  -> answer is stored but not indexed
-  -> owner reviews a concise summary
-  -> confirmation merges approved facts into the full context snapshot
+  -> owner answers or skips one question at a time
+  -> after the last response, Telegram streams two ephemeral progress drafts
+  -> answers are merged into the full context snapshot
   -> publish_context pipeline rebuilds embedding and retires stale beacons
 ```
 
@@ -76,7 +72,7 @@ to a real owner is rejected.
 | Telegram send fails | Keep batch READY for retry | Dashboard remains not delivered |
 | Duplicate cron execution | Unique owner/cadence key | No duplicate batch |
 | User replies without active batch | Ignore as a question answer | Bot gives no misleading acknowledgement |
-| Context publish fails after approval | Keep batch in REVIEW | User can retry save |
+| Context publish fails | Keep completed answers pending internally | Delivery can be retried safely |
 | Telegram is not linked | Batch is not created | App asks the owner to connect Telegram |
 | Answer touches an excluded sensitive category | Omit it from the approved context | Exclusion remains enforced |
 
@@ -91,11 +87,11 @@ Telegram linking (integration)
 
 Batch service (unit/integration)
   - eligibility, weekly idempotency, 4-question creation
-  - sequential answers, clarification cap, skip, expiry
-  - review, save, discard, publish failure retry
+  - sequential answers, per-question skip, expiry
+  - automatic save after the final answer and publish failure retry
 
 Delivery (integration)
-  - Telegram start/skip/save callbacks and free-text answers
+  - immediate first question, per-question skip, free-text answers, and streamed completion states
   - no event is created for any agent without Telegram
 
 UI (source assertions + QA)
@@ -114,4 +110,5 @@ Prompts (contract tests)
 - More than two batches per week: cadence optimization needs real usage data.
 - Native agent, research-preview, and custom daemon delivery: Telegram is the only
   supported check-in channel.
-- Automatic publication before owner review: raw answers remain private until saved.
+- Automatic publication before all questions are complete: the owner can skip any
+  individual question, and only the completed batch is published.

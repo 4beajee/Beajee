@@ -8,7 +8,6 @@ import {
   buildContextQuestions,
   getQuestionCadenceKey,
   isExcludedSensitiveAnswer,
-  shouldAskClarifyingQuestion,
 } from "../src/lib/context-questions";
 
 const ROOT = path.resolve(__dirname, "..");
@@ -35,17 +34,13 @@ function ok(label: string) {
   assert.equal(questions.length, 4);
   assert.deepEqual(questions.map((question) => question.sequence), [10, 20, 30, 40]);
   assert.equal(new Set(questions.map((question) => question.topic)).size, 4);
-  assert.match(questions[0].prompt, /privacy-safe matching/);
-  assert.equal(questions.filter((question) => question.followUpPrompt).length, 2);
-  ok("A batch contains four distinct, context-shaped themes and at most two follow-ups");
+  assert.match(questions[0].prompt, /Что сейчас сильнее всего тормозит/);
+  assert.equal(questions.filter((question) => question.followUpPrompt).length, 0);
+  assert.equal(questions.every((question) => /[А-Яа-яЁё]/.test(question.prompt)), true);
+  ok("A batch contains four standalone Russian questions without follow-ups");
 }
 
 {
-  assert.equal(shouldAskClarifyingQuestion("distribution"), true);
-  assert.equal(
-    shouldAskClarifyingQuestion("I need someone who has launched a paid developer product in Europe"),
-    false
-  );
   assert.equal(getQuestionCadenceKey(new Date("2026-06-28T12:00:00Z")), "2026-W26");
   assert.equal(getQuestionCadenceKey(new Date("2026-06-29T12:00:00Z")), "2026-W27");
   ok("Clarification and weekly idempotency rules are deterministic");
@@ -101,7 +96,11 @@ function ok(label: string) {
   assert.match(telegramWebhook, /Обдумываю ответы/);
   assert.match(telegramWebhook, /Обновляю информацию в твоём профиле/);
   assert.match(telegramWebhook, /Профиль обновлён/);
-  assert.match(telegramTopics, /message_effect_id/);
+  assert.match(telegramWebhook, /context_skip_question/);
+  assert.doesNotMatch(telegramWebhook, /context_start/);
+  assert.doesNotMatch(telegramWebhook, /context_save/);
+  assert.match(telegramTopics, /sendRichMessageDraft/);
+  assert.match(telegramTopics, /tg-thinking/);
   ok("Onboarding, Home, Settings, and generated agent instructions require Telegram delivery");
 }
 

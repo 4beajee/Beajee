@@ -306,7 +306,9 @@ Model Advice code and APIs remain available but the ordinary user entry point
 must stay hidden until the feature is explicitly enabled.
 
 Context check-ins are Telegram-only: no agent runtime may deliver, answer, or
-save them. They are unavailable until the owner links Telegram.
+save them. They are unavailable until the owner links Telegram. Telegram asks four
+standalone questions one at a time, permits skipping an individual question, and
+publishes the resulting context automatically after the final response.
 
 ## Current Priorities
 

@@ -10,9 +10,6 @@ interface TelegramApiResponse<T> {
 }
 
 const TELEGRAM_TIMEOUT_MS = 8_000;
-// Telegram's built-in message effect currently available to bots in private chats.
-// It is configurable so we can adopt a newer official effect without a code change.
-const DEFAULT_CONTEXT_CHECK_IN_EFFECT_ID = "5104841245755180586";
 
 export interface TelegramApiResult {
   sent: boolean;
@@ -102,40 +99,19 @@ export async function sendTelegramMessageToChat(args: {
   });
 }
 
-export async function editTelegramMessageText(args: {
+/** Streams Telegram's ephemeral shimmer draft while a check-in is being saved. */
+export async function streamContextCheckInStatus(args: {
   chatId: string | number;
-  messageId: number;
+  messageThreadId?: number;
+  draftId: number;
   text: string;
 }) {
-  return callTelegramApi<{ message_id: number }>("editMessageText", {
+  return callTelegramApi<boolean>("sendRichMessageDraft", {
     chat_id: args.chatId,
-    message_id: args.messageId,
-    text: args.text,
-    parse_mode: "HTML",
-    disable_web_page_preview: true,
+    draft_id: args.draftId,
+    rich_message: { html: `<tg-thinking>${escapeTelegramHtml(args.text)}</tg-thinking>` },
+    ...(args.messageThreadId ? { message_thread_id: args.messageThreadId } : {}),
   });
-}
-
-/** Sends a private-chat check-in status with Telegram's native message effect. */
-export async function sendContextCheckInStatus(args: {
-  chatId: string | number;
-  text: string;
-}) {
-  const messageEffectId =
-    process.env.TELEGRAM_CONTEXT_QUESTION_EFFECT_ID?.trim() ||
-    DEFAULT_CONTEXT_CHECK_IN_EFFECT_ID;
-  try {
-    return await sendTelegramMessageToChat({
-      chatId: args.chatId,
-      text: args.text,
-      messageEffectId,
-    });
-  } catch (error) {
-    // Effects are private-chat only and may be unavailable to older clients. The
-    // check-in itself must still complete if Telegram declines the decoration.
-    console.warn("[telegram] Context check-in effect unavailable; sending plain status", error);
-    return sendTelegramMessageToChat({ chatId: args.chatId, text: args.text });
-  }
 }
 
 export async function createUserTopics(args: {

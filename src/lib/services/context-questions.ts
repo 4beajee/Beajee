@@ -4,7 +4,6 @@ import {
   buildContextQuestions,
   getQuestionCadenceKey,
   isExcludedSensitiveAnswer,
-  shouldAskClarifyingQuestion,
 } from "@/lib/context-questions";
 import { assertContextRespectsExclusions } from "@/lib/sensitive-topics";
 import { getContextQuestionDeliveryMode } from "@/lib/agent-platform";
@@ -13,7 +12,6 @@ import { escapeTelegramHtml } from "@/lib/services/telegram";
 import { sendOwnerTopicMessage } from "@/lib/telegram/topics";
 
 const BATCH_TTL_MS = 6 * 24 * 60 * 60 * 1000;
-const MAX_CLARIFICATIONS = 2;
 
 type BatchWithQuestions = Prisma.ContextQuestionBatchGetPayload<{
   include: { questions: true };
@@ -62,23 +60,18 @@ async function dispatchBatch(batchId: string) {
   if (!batch || batch.deliveredAt || batch.status !== "READY") return batch;
 
   if (batch.delivery === "TELEGRAM") {
+    const firstQuestion = batch.questions[0];
+    if (!firstQuestion) return batch;
     const result = await sendOwnerTopicMessage({
       ownerId: batch.ownerId,
       topic: "settings",
-      text:
-        "<b>Weekly Beajee check-in · about 2 minutes</b>\n" +
-        "I have a few short questions that can make your introductions more specific.",
-      replyMarkup: {
-        inline_keyboard: [[
-          { text: "Start", callback_data: `context_start:${batch.id}` },
-          { text: "Skip this week", callback_data: `context_skip:${batch.id}` },
-        ]],
-      },
+      text: formatTelegramQuestion(firstQuestion),
+      replyMarkup: questionReplyMarkup(batch.id),
     });
     return prisma.contextQuestionBatch.update({
       where: { id: batch.id },
       data: result.sent
-        ? { deliveredAt: new Date(), deliveryError: null }
+        ? { deliveredAt: new Date(), deliveryError: null, status: "ACTIVE", startedAt: new Date() }
         : { deliveryError: result.error ?? "Telegram delivery failed" },
       include: { questions: true },
     });
@@ -177,27 +170,16 @@ async function loadOwnedBatch(args: { batchId: string; ownerId: string }) {
   return batch;
 }
 
-export async function startContextQuestionBatch(args: { batchId: string; ownerId: string }) {
+export async function skipContextQuestion(args: { batchId: string; ownerId: string }) {
   const batch = await loadOwnedBatch(args);
-  if (batch.status === "READY") {
-    await prisma.contextQuestionBatch.update({
-      where: { id: batch.id },
-      data: { status: "ACTIVE", startedAt: new Date() },
-    });
-  } else if (batch.status !== "ACTIVE") {
-    throw new Error("This context question batch cannot be started");
-  }
-  const refreshed = await loadOwnedBatch(args);
-  return { batch: refreshed, question: nextUnanswered(refreshed) };
-}
-
-export async function skipContextQuestionBatch(args: { batchId: string; ownerId: string }) {
-  const batch = await loadOwnedBatch(args);
-  if (!["READY", "ACTIVE"].includes(batch.status)) throw new Error("This batch cannot be skipped");
-  return prisma.contextQuestionBatch.update({
-    where: { id: batch.id },
-    data: { status: "SKIPPED", completedAt: new Date() },
+  if (batch.status !== "ACTIVE") throw new Error("This check-in is not accepting answers");
+  const question = nextUnanswered(batch);
+  if (!question) throw new Error("This check-in has no pending question");
+  await prisma.contextQuestion.update({
+    where: { id: question.id },
+    data: { answeredAt: new Date() },
   });
+  return nextQuestionOrReview(batch.id);
 }
 
 export async function answerContextQuestion(args: {
@@ -236,28 +218,12 @@ export async function answerContextQuestion(args: {
     data: { answer, answeredAt: new Date() },
   });
 
-  const clarificationCount = question.batch.questions.filter((item) => item.isFollowUp).length;
-  if (
-    !question.isFollowUp &&
-    question.followUpPrompt &&
-    clarificationCount < MAX_CLARIFICATIONS &&
-    shouldAskClarifyingQuestion(answer)
-  ) {
-    await prisma.contextQuestion.create({
-      data: {
-        batchId: question.batchId,
-        sequence: question.sequence + 1,
-        topic: question.topic,
-        prompt: question.followUpPrompt,
-        reason: "A short clarification makes this answer usable for matching.",
-        isFollowUp: true,
-        parentQuestionId: question.id,
-      },
-    });
-  }
+  return nextQuestionOrReview(question.batchId);
+}
 
+async function nextQuestionOrReview(batchId: string) {
   const refreshed = await prisma.contextQuestionBatch.findUniqueOrThrow({
-    where: { id: question.batchId },
+    where: { id: batchId },
     include: { questions: true },
   });
   const upcoming = nextUnanswered(refreshed);
@@ -361,8 +327,14 @@ export async function getActiveTelegramQuestion(telegramId: string) {
   return { ownerId: owner.id, batch, question: nextUnanswered(batch) };
 }
 
-export function formatTelegramQuestion(question: { prompt: string }, position: number, total: number) {
-  return `<b>${position} of ${total}</b>\n${escapeTelegramHtml(question.prompt)}`;
+export function formatTelegramQuestion(question: { prompt: string }) {
+  return escapeTelegramHtml(question.prompt);
 }
 
-export const __test = { BATCH_TTL_MS, MAX_CLARIFICATIONS, summaryPayload };
+export function questionReplyMarkup(batchId: string) {
+  return {
+    inline_keyboard: [[{ text: "Пропустить", callback_data: `context_skip_question:${batchId}` }]],
+  };
+}
+
+export const __test = { BATCH_TTL_MS, summaryPayload };

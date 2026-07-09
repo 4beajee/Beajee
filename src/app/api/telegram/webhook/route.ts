@@ -4,9 +4,8 @@ import { safeErrorResponse } from "@/lib/api-error";
 import { buildMiniAppReplyMarkup } from "@/lib/telegram/bot";
 import { redactTelegramSecrets } from "@/lib/telegram/auth";
 import {
-  editTelegramMessageText,
-  sendContextCheckInStatus,
   sendTelegramMessageToChat,
+  streamContextCheckInStatus,
 } from "@/lib/telegram/topics";
 import {
   answerTelegramCallbackQuery,
@@ -18,11 +17,10 @@ import { consumeTelegramLink } from "@/lib/telegram/link";
 import {
   answerContextQuestion,
   confirmContextQuestionBatch,
-  formatQuestionBatchSummary,
   formatTelegramQuestion,
   getActiveTelegramQuestion,
-  skipContextQuestionBatch,
-  startContextQuestionBatch,
+  questionReplyMarkup,
+  skipContextQuestion,
 } from "@/lib/services/context-questions";
 import { escapeTelegramHtml } from "@/lib/services/telegram";
 import { dismissSocialProfilePrompt } from "@/lib/services/social-profile-prompt";
@@ -85,10 +83,7 @@ function parseCallbackCommand(data: string) {
   if (action === "match_skip" && id) return { kind: "match_skip" as const, matchId: id };
   if (action === "match_dialogue" && id) return { kind: "match_dialogue" as const, matchId: id };
   if (action === "match_schedule" && id) return { kind: "match_schedule" as const, matchId: id };
-  if (action === "context_start" && id) return { kind: "context_start" as const, batchId: id };
-  if (action === "context_skip" && id) return { kind: "context_skip" as const, batchId: id };
-  if (action === "context_save" && id) return { kind: "context_save" as const, batchId: id };
-  if (action === "context_discard" && id) return { kind: "context_discard" as const, batchId: id };
+  if (action === "context_skip_question" && id) return { kind: "context_skip_question" as const, batchId: id };
   if (action === "social_profiles_dismiss" && id) return { kind: "social_profiles_dismiss" as const };
   return null;
 }
@@ -156,65 +151,63 @@ function waitForContextStatus() {
 async function handleContextCallback(
   command: { kind: string; batchId: string },
   telegramUserId?: number,
-  chatId?: number | string
+  chatId?: number | string,
+  messageThreadId?: number
 ) {
   try {
     const ownerId = await ownerIdFromTelegramUser(telegramUserId);
     if (!ownerId) return "Open the Mini App first or sync Telegram from the Beajee web app.";
 
-    if (command.kind === "context_skip") {
-      await skipContextQuestionBatch({ batchId: command.batchId, ownerId });
-      return "Skipped for this week";
-    }
-    if (command.kind === "context_save" || command.kind === "context_discard") {
-      let progressMessage: { message_id: number } | null = null;
-      if (command.kind === "context_save" && chatId) {
-        try {
-          progressMessage = await sendContextCheckInStatus({
-            chatId,
-            text: "<b>Обдумываю ответы…</b>",
-          });
-          await waitForContextStatus();
-          await editTelegramMessageText({
-            chatId,
-            messageId: progressMessage.message_id,
-            text: "<b>Обновляю информацию в твоём профиле…</b>",
-          });
-        } catch (error) {
-          console.warn("[telegram] Could not show context check-in progress", error);
-        }
-      }
-      const result = await confirmContextQuestionBatch({
-        batchId: command.batchId,
-        ownerId,
-        decision: command.kind === "context_save" ? "save" : "discard",
+    const result = await skipContextQuestion({ batchId: command.batchId, ownerId });
+    if (result.status === "ACTIVE" && result.question && chatId) {
+      await sendTelegramMessageToChat({
+        chatId,
+        messageThreadId,
+        text: formatTelegramQuestion(result.question),
+        replyMarkup: questionReplyMarkup(command.batchId),
       });
-      if (result.status === "COMPLETED" && chatId) {
-        try {
-          await sendTelegramMessageToChat({
-            chatId,
-            text:
-              "<b>Профиль обновлён.</b>\n" +
-              "Я добавил подтверждённые тобой изменения в контекст профиля и обновил matching. " +
-              "Теперь новые мэтчи будут точнее соответствовать твоим текущим целям.",
-          });
-        } catch (error) {
-          console.warn("[telegram] Could not send context check-in completion", error);
-        }
-      }
-      return result.status === "COMPLETED" ? "Профиль обновлён" : "Ответы не сохранены";
+      return "Вопрос пропущен";
     }
-
-    const started = await startContextQuestionBatch({ batchId: command.batchId, ownerId });
-    if (!started.question) return "This check-in has no pending questions";
-    const total = started.batch.questions.filter((question) => !question.isFollowUp).length;
-    await sendTelegramMessageToChat({
-      chatId: String(telegramUserId),
-      text: formatTelegramQuestion(started.question, 1, total),
-    });
-    return "Check-in started";
+    await completeContextCheckIn({ batchId: command.batchId, ownerId, chatId, messageThreadId });
+    return "Профиль обновлён";
   } catch (error) {
     return error instanceof Error ? error.message : "Could not update this check-in";
+  }
+}
+
+async function completeContextCheckIn(args: {
+  batchId: string;
+  ownerId: string;
+  chatId?: number | string;
+  messageThreadId?: number;
+}) {
+  if (args.chatId) {
+    try {
+      const draftId = Math.floor(Date.now() % 2_000_000_000) || 1;
+      await streamContextCheckInStatus({
+        chatId: args.chatId,
+        messageThreadId: args.messageThreadId,
+        draftId,
+        text: "Обдумываю ответы",
+      });
+      await waitForContextStatus();
+      await streamContextCheckInStatus({
+        chatId: args.chatId,
+        messageThreadId: args.messageThreadId,
+        draftId,
+        text: "Обновляю информацию в твоём профиле",
+      });
+    } catch (error) {
+      console.warn("[telegram] Could not show context check-in progress", error);
+    }
+  }
+  await confirmContextQuestionBatch({ batchId: args.batchId, ownerId: args.ownerId, decision: "save" });
+  if (args.chatId) {
+    await sendTelegramMessageToChat({
+      chatId: args.chatId,
+      messageThreadId: args.messageThreadId,
+      text: "Профиль обновлён. Теперь новые мэтчи будут точнее соответствовать вашим текущим целям.",
+    });
   }
 }
 
@@ -231,27 +224,19 @@ async function handleContextAnswer(message: TelegramMessage) {
     answer: text,
   });
   if (result.status === "ACTIVE" && result.question) {
-    const total = active.batch.questions.filter((question) => !question.isFollowUp).length;
-    const position = Math.min(total, Math.max(1, Math.floor(result.question.sequence / 10)));
     await sendTelegramMessageToChat({
       chatId: message.chat.id,
-      text: formatTelegramQuestion(result.question, position, total),
+      messageThreadId: message.message_thread_id,
+      text: formatTelegramQuestion(result.question),
+      replyMarkup: questionReplyMarkup(active.batch.id),
     });
     return true;
   }
-
-  const summary = formatQuestionBatchSummary(result.summary);
-  await sendTelegramMessageToChat({
+  await completeContextCheckIn({
+    batchId: active.batch.id,
+    ownerId: active.ownerId,
     chatId: message.chat.id,
-    text:
-      "<b>Done. Here is what I understood:</b>\n" +
-      `${escapeTelegramHtml(summary)}\n\nSave these facts to your Beajee matching context?`,
-    replyMarkup: {
-      inline_keyboard: [[
-        { text: "Save", callback_data: `context_save:${active.batch.id}` },
-        { text: "Discard", callback_data: `context_discard:${active.batch.id}` },
-      ]],
-    },
+    messageThreadId: message.message_thread_id,
   });
   return true;
 }
@@ -335,15 +320,13 @@ export async function POST(request: NextRequest) {
     ) {
       callbackAnswer = await handleMatchCallback(command, update.callback_query?.from?.id);
     } else if (
-      command.kind === "context_start" ||
-      command.kind === "context_skip" ||
-      command.kind === "context_save" ||
-      command.kind === "context_discard"
+      command.kind === "context_skip_question"
     ) {
       callbackAnswer = await handleContextCallback(
         command,
         update.callback_query?.from?.id,
-        update.callback_query?.message?.chat?.id
+        update.callback_query?.message?.chat?.id,
+        update.callback_query?.message?.message_thread_id
       );
     } else if (command.kind === "social_profiles_dismiss") {
       const ownerId = await ownerIdFromTelegramUser(update.callback_query?.from?.id);
