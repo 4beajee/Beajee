@@ -9,7 +9,7 @@ import { assertContextRespectsExclusions } from "@/lib/sensitive-topics";
 import { getContextQuestionDeliveryMode } from "@/lib/agent-platform";
 import { publishContext } from "@/lib/services/context-index";
 import { escapeTelegramHtml } from "@/lib/services/telegram";
-import { sendOwnerTopicMessage } from "@/lib/telegram/topics";
+import { sendOwnerContextCheckInMessage } from "@/lib/telegram/topics";
 
 const BATCH_TTL_MS = 6 * 24 * 60 * 60 * 1000;
 
@@ -62,10 +62,9 @@ async function dispatchBatch(batchId: string) {
   if (batch.delivery === "TELEGRAM") {
     const firstQuestion = batch.questions[0];
     if (!firstQuestion) return batch;
-    const result = await sendOwnerTopicMessage({
+    const result = await sendOwnerContextCheckInMessage({
       ownerId: batch.ownerId,
-      topic: "settings",
-      text: formatTelegramQuestion(firstQuestion),
+      text: formatTelegramQuestion(firstQuestion, 1, batch.questions.length),
       replyMarkup: questionReplyMarkup(batch.id),
     });
     return prisma.contextQuestionBatch.update({
@@ -327,8 +326,9 @@ export async function getActiveTelegramQuestion(telegramId: string) {
   return { ownerId: owner.id, batch, question: nextUnanswered(batch) };
 }
 
-export function formatTelegramQuestion(question: { prompt: string }) {
-  return escapeTelegramHtml(question.prompt);
+export function formatTelegramQuestion(question: { prompt: string }, position: number, total: number) {
+  const remaining = Math.max(0, total - position);
+  return `<b>Вопрос ${position} из ${total} · осталось ${remaining}</b>\n\n${escapeTelegramHtml(question.prompt)}`;
 }
 
 export function questionReplyMarkup(batchId: string) {

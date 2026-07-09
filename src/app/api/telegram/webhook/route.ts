@@ -142,10 +142,11 @@ async function handleTelegramSync(message: TelegramMessage, rawToken: string) {
   }
 }
 
-const CONTEXT_STATUS_DELAY_MS = 900;
+const FIRST_CONTEXT_STATUS_DELAY_MS = 2_900;
+const SECOND_CONTEXT_STATUS_DELAY_MS = 2_000;
 
-function waitForContextStatus() {
-  return new Promise((resolve) => setTimeout(resolve, CONTEXT_STATUS_DELAY_MS));
+function waitForContextStatus(durationMs: number) {
+  return new Promise((resolve) => setTimeout(resolve, durationMs));
 }
 
 async function handleContextCallback(
@@ -163,7 +164,7 @@ async function handleContextCallback(
       await sendTelegramMessageToChat({
         chatId,
         messageThreadId,
-        text: formatTelegramQuestion(result.question),
+        text: formatTelegramQuestion(result.question, Math.floor(result.question.sequence / 10), 4),
         replyMarkup: questionReplyMarkup(command.batchId),
       });
       return "Вопрос пропущен";
@@ -190,13 +191,14 @@ async function completeContextCheckIn(args: {
         draftId,
         text: "Обдумываю ответы",
       });
-      await waitForContextStatus();
+      await waitForContextStatus(FIRST_CONTEXT_STATUS_DELAY_MS);
       await streamContextCheckInStatus({
         chatId: args.chatId,
         messageThreadId: args.messageThreadId,
         draftId,
         text: "Обновляю информацию в твоём профиле",
       });
+      await waitForContextStatus(SECOND_CONTEXT_STATUS_DELAY_MS);
     } catch (error) {
       console.warn("[telegram] Could not show context check-in progress", error);
     }
@@ -227,7 +229,7 @@ async function handleContextAnswer(message: TelegramMessage) {
     await sendTelegramMessageToChat({
       chatId: message.chat.id,
       messageThreadId: message.message_thread_id,
-      text: formatTelegramQuestion(result.question),
+      text: formatTelegramQuestion(result.question, Math.floor(result.question.sequence / 10), active.batch.questions.length),
       replyMarkup: questionReplyMarkup(active.batch.id),
     });
     return true;

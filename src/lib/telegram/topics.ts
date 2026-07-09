@@ -99,6 +99,34 @@ export async function sendTelegramMessageToChat(args: {
   });
 }
 
+/** Check-ins are always personal DMs so they never inherit a forum-topic label. */
+export async function sendOwnerContextCheckInMessage(args: {
+  ownerId: string;
+  text: string;
+  replyMarkup?: { inline_keyboard: TelegramInlineKeyboard };
+}): Promise<TelegramApiResult> {
+  if (process.env.NODE_ENV === "test") {
+    return { sent: false, mode: "disabled", error: "Telegram disabled in test environment" };
+  }
+  const owner = await prisma.owner.findUnique({
+    where: { id: args.ownerId },
+    select: { telegramId: true },
+  });
+  if (!owner?.telegramId) {
+    return { sent: false, mode: "disabled", error: "Owner is not connected to Telegram" };
+  }
+  try {
+    await sendTelegramMessageToChat({
+      chatId: owner.telegramId,
+      text: args.text,
+      replyMarkup: args.replyMarkup,
+    });
+    return { sent: true, mode: "dm" };
+  } catch (error) {
+    return { sent: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
 /** Streams Telegram's ephemeral shimmer draft while a check-in is being saved. */
 export async function streamContextCheckInStatus(args: {
   chatId: string | number;
