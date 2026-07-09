@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { getPublicMatchUrl } from "@/lib/public-url";
@@ -112,19 +113,96 @@ function CommentIcon() {
   );
 }
 
-function ConnectionIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500">
-      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-    </svg>
-  );
-}
-
 function ChevronDownIcon({ className }: { className?: string }) {
   return (
     <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="6 9 12 15 18 9" />
     </svg>
+  );
+}
+
+function MatchEmblem({ status }: { status: string }) {
+  const isMatched = status === "MATCHED";
+
+  return (
+    <div className="relative flex h-[4.75rem] w-[4.75rem] shrink-0 items-center justify-center" aria-label="Beajee match">
+      <span className={`absolute inset-1 rounded-[1.45rem] border ${isMatched ? "border-emerald-200/[0.24]" : "border-white/[0.12]"} bg-white/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.24),0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl`} />
+      <span className={`absolute inset-0 rounded-[1.8rem] ${isMatched ? "bg-emerald-300/[0.10]" : "bg-white/[0.04]"} blur-xl`} />
+      <Image
+        src="/icon.png"
+        alt=""
+        width={42}
+        height={42}
+        priority
+        className="relative drop-shadow-[0_4px_11px_rgba(255,255,255,0.24)]"
+      />
+    </div>
+  );
+}
+
+function ProfileOrb({ participant, tone }: { participant: Participant; tone: "warm" | "cool" }) {
+  const palette = tone === "warm"
+    ? "from-amber-200/30 via-orange-100/10 to-rose-200/20"
+    : "from-cyan-100/20 via-sky-200/10 to-emerald-100/20";
+
+  return (
+    <div className="relative mx-auto flex h-[5.25rem] w-[5.25rem] items-center justify-center rounded-[1.75rem] border border-white/[0.14] bg-[#111113]/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_18px_42px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+      <span className={`absolute inset-0 rounded-[1.7rem] bg-gradient-to-br ${palette}`} />
+      <span className="absolute inset-[5px] rounded-[1.35rem] border border-white/[0.12] bg-black/10" />
+      <span className="relative text-lg font-medium tracking-[-0.06em] text-white">{getInitials(participant.displayName)}</span>
+      <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-[3px] border-[#111113] bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.48)]" />
+    </div>
+  );
+}
+
+function MatchStory({ a, b, overlapSummary }: { a: Participant; b: Participant; overlapSummary: string }) {
+  const [open, setOpen] = useState(false);
+  const steps = [
+    { label: "Signal", text: `${a.displayName}'s agent noticed a concrete opening in ${b.displayName}'s current work.` },
+    { label: "Private evaluation", text: "Both agents checked for a complementary fit and kept personal context private." },
+    { label: "Mutual yes", text: overlapSummary || "The agents agreed there was a clear reason for these two people to meet." },
+  ];
+
+  return (
+    <div className="mt-7 rounded-[1.5rem] border border-white/[0.10] bg-white/[0.045] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="flex min-h-12 w-full items-center gap-3 rounded-[1.25rem] px-4 py-3 text-left transition-colors hover:bg-white/[0.045] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200"
+      >
+        <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.12] bg-black/20">
+          <Image src="/icon.png" alt="" width={19} height={19} loading="eager" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium text-white">How the agents found this match</span>
+          <span className="mt-0.5 block text-xs text-neutral-500">A public-safe match story</span>
+        </span>
+        <ChevronDownIcon className={`shrink-0 text-neutral-500 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          <div className="px-4 pb-4 pt-2">
+            <div className="border-t border-white/[0.08] pt-4">
+              <p className="mb-4 text-xs leading-5 text-neutral-500">The full agent negotiation is private. This is the shareable version of why the introduction was made.</p>
+              <ol className="space-y-3">
+                {steps.map((step, index) => (
+                  <li key={step.label} className="relative grid grid-cols-[1.75rem_1fr] gap-3">
+                    {index < steps.length - 1 && <span className="absolute left-[0.85rem] top-7 h-[calc(100%+0.4rem)] w-px bg-white/[0.10]" />}
+                    <span className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full border border-emerald-100/[0.18] bg-emerald-200/[0.10] text-[11px] font-medium text-emerald-100">{index + 1}</span>
+                    <span className="min-w-0 rounded-xl border border-white/[0.08] bg-black/15 px-3 py-2.5">
+                      <span className="block text-[11px] font-medium uppercase tracking-[0.12em] text-emerald-100/80">{step.label}</span>
+                      <span className="mt-1 block text-sm leading-5 text-neutral-300">{step.text}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -134,7 +212,6 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
   const [shareToast, setShareToast] = useState(false);
   const [likeAnimating, setLikeAnimating] = useState(false);
   const toastTimeout = useRef<ReturnType<typeof setTimeout>>();
-  const detailsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setData(initialData);
@@ -188,10 +265,6 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
     }
   }, [data]);
 
-  const scrollToDetails = () => {
-    detailsRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   if (!data || !data.id) {
     return (
       <div className="min-h-screen bg-[#050505]">
@@ -219,21 +292,18 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
             className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[120px] animate-glow-breathe"
             style={{ background: cfg.glowColor }}
           />
-          <div
-            className="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] rounded-full blur-[100px] animate-glow-breathe"
-            style={{ background: "rgba(99, 102, 241, 0.04)", animationDelay: "2.5s" }}
-          />
+          <div className="absolute bottom-1/3 right-1/4 h-[400px] w-[400px] rounded-full bg-amber-200/[0.035] blur-[100px] animate-glow-breathe" style={{ animationDelay: "2.5s" }} />
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full blur-[150px] animate-glow-breathe"
             style={{ background: cfg.glowColor, animationDelay: "1.2s" }}
           />
         </div>
 
-        <div className="relative w-full max-w-lg animate-card-float-in">
-          <div className="bg-[#0a0a0a]/90 backdrop-blur-sm border border-[#1a1a1a] rounded-2xl overflow-hidden shadow-2xl shadow-black/40">
+        <div className="relative w-full max-w-xl animate-card-float-in">
+          <div className="overflow-hidden rounded-[2rem] border border-white/[0.12] bg-[#111113]/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_32px_90px_rgba(0,0,0,0.42)] backdrop-blur-2xl">
             <div className={`h-[1px] ${cfg.accentLine}`} />
 
-            <div className="p-8">
+            <div className="p-6 sm:p-8">
               <div className="flex items-center justify-center gap-2 mb-8">
                 <span className={`flex items-center gap-2 ${cfg.textClass} text-sm font-medium`}>
                   <span className={`w-2 h-2 rounded-full ${cfg.dotClass}`} />
@@ -249,39 +319,34 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
                 </span>
               </div>
 
-              <div className="flex items-center justify-center gap-4">
-                <div className="text-center">
-                  <div className={`w-16 h-16 rounded-full ring-2 ${cfg.ringClass} bg-[#111] flex items-center justify-center text-base font-mono text-neutral-200 mx-auto`}>
-                    {getInitials(a.displayName)}
-                  </div>
-                  <p className="text-sm font-medium text-white mt-3">{a.displayName}</p>
-                  <p className="text-xs text-neutral-500 mt-1 max-w-[140px] line-clamp-2 mx-auto">{a.currentWork}</p>
+              <div className="grid grid-cols-[minmax(0,1fr)_5rem_minmax(0,1fr)] items-start gap-2 sm:gap-4">
+                <div className="min-w-0 text-center">
+                  <ProfileOrb participant={a} tone="warm" />
+                  <p className="mt-3 truncate text-sm font-medium text-white">{a.displayName}</p>
+                  <p className="mx-auto mt-1 line-clamp-2 max-w-[150px] text-xs leading-5 text-neutral-500">{a.currentWork}</p>
                 </div>
-
-                <div className="flex flex-col items-center gap-1 px-2 flex-shrink-0">
-                  <div className={`w-16 h-[1px] ${cfg.accentLine}`} />
-                  <div className="w-8 h-8 rounded-full bg-[#0e0e0e] border border-[#1a1a1a] flex items-center justify-center">
-                    <ConnectionIcon />
-                  </div>
-                  <div className={`w-16 h-[1px] ${cfg.accentLine}`} />
+                <div className="flex min-w-0 flex-col items-center pt-3">
+                  <div className={`h-px w-full ${cfg.accentLine}`} />
+                  <MatchEmblem status={data.status} />
+                  <div className={`h-px w-full ${cfg.accentLine}`} />
                 </div>
-
-                <div className="text-center">
-                  <div className={`w-16 h-16 rounded-full ring-2 ${cfg.ringClass} bg-[#111] flex items-center justify-center text-base font-mono text-neutral-200 mx-auto`}>
-                    {getInitials(b.displayName)}
-                  </div>
-                  <p className="text-sm font-medium text-white mt-3">{b.displayName}</p>
-                  <p className="text-xs text-neutral-500 mt-1 max-w-[140px] line-clamp-2 mx-auto">{b.currentWork}</p>
+                <div className="min-w-0 text-center">
+                  <ProfileOrb participant={b} tone="cool" />
+                  <p className="mt-3 truncate text-sm font-medium text-white">{b.displayName}</p>
+                  <p className="mx-auto mt-1 line-clamp-2 max-w-[150px] text-xs leading-5 text-neutral-500">{b.currentWork}</p>
                 </div>
               </div>
 
               {data.overlapSummary && (
-                <div className={`mt-8 pl-4 border-l-2 ${cfg.borderAccent}`}>
-                  <p className="text-[13px] text-neutral-300 leading-relaxed">
+                <div className="mt-8 rounded-[1.5rem] border border-white/[0.10] bg-black/[0.18] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">Why this match</p>
+                  <p className="mt-2 text-[13px] leading-6 text-neutral-200">
                     {data.overlapSummary}
                   </p>
                 </div>
               )}
+
+              <MatchStory a={a} b={b} overlapSummary={data.overlapSummary} />
 
               <div className="flex items-center justify-center gap-4 mt-6 text-xs text-neutral-600">
                 <span>{t("activity.steps", { count: data.negotiationSteps })}</span>
@@ -294,10 +359,11 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
               </div>
             </div>
 
-            <div className="border-t border-[#1a1a1a] px-8 py-3 flex items-center justify-center gap-6 relative">
+            <div className="relative flex items-center justify-center gap-3 border-t border-white/[0.10] px-5 py-3 sm:gap-6 sm:px-8">
               <button
                 onClick={handleLike}
-                className="flex items-center gap-2 text-neutral-500 hover:text-rose-400 transition-all active:scale-95"
+                aria-label="Like this match"
+                className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-neutral-400 transition-all hover:bg-white/[0.05] hover:text-rose-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 active:scale-95"
               >
                 <span className={likeAnimating ? "animate-reaction-pop" : ""}>
                   <HeartIcon />
@@ -311,7 +377,7 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
 
               <div className="w-px h-4 bg-[#1a1a1a]" />
 
-              <span className="flex items-center gap-2 text-neutral-500">
+              <span className="flex min-h-11 items-center gap-2 px-3 text-neutral-400" aria-label={`${data.commentCount} comments`}>
                 <CommentIcon />
                 {data.commentCount > 0 && (
                   <span className="text-sm tabular-nums">{data.commentCount}</span>
@@ -322,7 +388,8 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
 
               <button
                 onClick={handleShare}
-                className="flex items-center gap-2 text-neutral-500 hover:text-white transition-all active:scale-95"
+                aria-label="Copy public match link"
+                className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-neutral-400 transition-all hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-100 active:scale-95"
               >
                 <ShareIcon />
                 <span className="text-sm">{t("common.share")}</span>
@@ -337,16 +404,9 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
           </div>
         </div>
 
-        <button
-          onClick={scrollToDetails}
-          className="mt-10 flex flex-col items-center gap-2 text-neutral-600 hover:text-neutral-400 transition-colors animate-detail-in animate-detail-in-d3"
-        >
-          <span className="text-xs">{t("activity.viewDialogue")}</span>
-          <ChevronDownIcon className="animate-bounce" />
-        </button>
       </section>
 
-      <section ref={detailsRef} className="max-w-2xl mx-auto px-4 md:px-6 py-16">
+      <section className="max-w-2xl mx-auto px-4 md:px-6 py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-detail-in animate-detail-in-d1">
           {data.participants.map((p, i) => (
             <div key={i} className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-5">
