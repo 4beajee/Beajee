@@ -29,6 +29,7 @@ yarn-error.log*
 .gitleaks-report.json
 IMAGE *.jpg
 Screenshot *.png
+public/match-preview-*.png
 
 # local env files — NEVER commit secrets
 .env

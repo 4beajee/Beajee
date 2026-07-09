@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { getPublicMatchUrl } from "@/lib/public-url";
@@ -11,6 +12,8 @@ interface Participant {
   expertise: string[];
   location: string | null;
   networkingGoal: string;
+  image?: string;
+  imagePosition?: string;
 }
 
 export interface MatchDetail {
@@ -120,10 +123,10 @@ function ChevronDownIcon({ className }: { className?: string }) {
   );
 }
 
-function SparkleSymbol({ className }: { className?: string }) {
+function FivePointStar({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 2.75c.7 5.48 3.77 8.55 9.25 9.25-5.48.7-8.55 3.77-9.25 9.25C11.3 15.77 8.23 12.7 2.75 12 8.23 11.3 11.3 8.23 12 2.75Z" fill="currentColor" />
+      <path d="m12 2.7 2.72 5.5 6.08.88-4.4 4.29 1.04 6.06L12 16.57l-5.44 2.86 1.04-6.06-4.4-4.29 6.08-.88L12 2.7Z" fill="currentColor" />
     </svg>
   );
 }
@@ -135,9 +138,22 @@ function ProfileOrb({ participant, tone }: { participant: Participant; tone: "wa
 
   return (
     <div className="relative mx-auto flex h-[5.25rem] w-[5.25rem] items-center justify-center rounded-[1.75rem] border border-white/[0.14] bg-[#111113]/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_18px_42px_rgba(0,0,0,0.28)] backdrop-blur-xl">
-      <span className={`absolute inset-0 rounded-[1.7rem] bg-gradient-to-br ${palette}`} />
-      <span className="absolute inset-[5px] rounded-[1.35rem] border border-white/[0.12] bg-black/10" />
-      <span className="relative text-lg font-medium tracking-[-0.06em] text-white">{getInitials(participant.displayName)}</span>
+      {participant.image ? (
+        <Image
+          src={participant.image}
+          alt=""
+          fill
+          sizes="84px"
+          className="rounded-[1.7rem] object-cover"
+          style={{ objectPosition: participant.imagePosition ?? "center" }}
+        />
+      ) : (
+        <>
+          <span className={`absolute inset-0 rounded-[1.7rem] bg-gradient-to-br ${palette}`} />
+          <span className="absolute inset-[5px] rounded-[1.35rem] border border-white/[0.12] bg-black/10" />
+          <span className="relative text-lg font-medium tracking-[-0.06em] text-white">{getInitials(participant.displayName)}</span>
+        </>
+      )}
       <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-[3px] border-[#111113] bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.48)]" />
     </div>
   );
@@ -159,7 +175,6 @@ function MatchStory({ a, b, overlapSummary }: { a: Participant; b: Participant; 
         aria-expanded={open}
         className="flex min-h-11 w-full items-center gap-3 text-left transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-200"
       >
-        <SparkleSymbol className="h-4 w-4 shrink-0 text-emerald-100" />
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium text-white">How the agents found this match</span>
           <span className="mt-0.5 block text-xs text-neutral-400">A public-safe match story</span>
@@ -314,12 +329,10 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
                   <p className="mt-3 truncate text-sm font-medium text-white">{a.displayName}</p>
                   <p className="mx-auto mt-1 line-clamp-2 max-w-[150px] text-xs leading-5 text-neutral-500">{a.currentWork}</p>
                 </div>
-                <div className="flex min-w-0 flex-col items-center pt-5">
-                  <div className={`h-px w-full ${cfg.accentLine}`} />
+                <div className="flex min-w-0 items-center justify-center pt-5">
                   <div className="flex h-[4.75rem] w-[4.75rem] items-center justify-center" aria-label="Match">
-                    <SparkleSymbol className="h-9 w-9 text-emerald-50 drop-shadow-[0_0_18px_rgba(167,243,208,0.82)]" />
+                    <FivePointStar className="h-9 w-9 text-white drop-shadow-[0_4px_10px_rgba(255,255,255,0.28)]" />
                   </div>
-                  <div className={`h-px w-full ${cfg.accentLine}`} />
                 </div>
                 <div className="min-w-0 text-center">
                   <ProfileOrb participant={b} tone="cool" />
@@ -377,20 +390,22 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
 
               <div className="w-px h-4 bg-[#1a1a1a]" />
 
-              <button
-                onClick={handleShare}
-                aria-label="Copy public match link"
-                className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-neutral-400 transition-all hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-100 active:scale-95"
-              >
-                <ShareIcon />
-                <span className="text-sm">{t("common.share")}</span>
-              </button>
+              <div className="relative">
+                <button
+                  onClick={handleShare}
+                  aria-label="Copy public match link"
+                  className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-neutral-400 transition-all hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-100 active:scale-95"
+                >
+                  <ShareIcon />
+                  <span className="text-sm">{t("common.share")}</span>
+                </button>
 
-              {shareToast && (
-                <div className="absolute -top-11 left-1/2 -translate-x-1/2 bg-white text-black text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg shadow-black/20 animate-card-float-in whitespace-nowrap">
-                  {t("common.linkCopied")}
-                </div>
-              )}
+                {shareToast && (
+                  <div className="absolute bottom-[calc(100%+0.5rem)] right-0 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-black shadow-lg shadow-black/20 animate-card-float-in whitespace-nowrap">
+                    {t("common.linkCopied")}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

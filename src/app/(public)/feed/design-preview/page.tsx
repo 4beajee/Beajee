@@ -13,6 +13,8 @@ const previewMatch: MatchDetail = {
       expertise: ["Product strategy", "Fintech", "Design systems"],
       location: "San Francisco, CA",
       networkingGoal: "Meet thoughtful product operators",
+      image: "/match-preview-maya.png",
+      imagePosition: "50% 37%",
     },
     {
       displayName: "Noah Williams",
@@ -20,6 +22,8 @@ const previewMatch: MatchDetail = {
       expertise: ["Research", "B2B product", "Customer trust"],
       location: "New York, NY",
       networkingGoal: "Exchange practical product lessons",
+      image: "/match-preview-noah.png",
+      imagePosition: "50% 30%",
     },
   ],
   overlapSummary: "Maya is designing the financial rituals creators need every week; Noah has deep experience making complex, high-trust workflows feel simple. A short conversation could turn that intersection into a sharper product direction.",

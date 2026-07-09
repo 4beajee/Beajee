@@ -7,6 +7,8 @@ export const PUBLIC_FILE_EXACT = [
   "/icon.png",
   "/apple-icon.png",
   "/match-share-night.png",
+  "/match-preview-maya.png",
+  "/match-preview-noah.png",
 ] as const;
 export const PUBLIC_FILE_PREFIXES = [
   "/skills",
