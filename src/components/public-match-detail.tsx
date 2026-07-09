@@ -298,7 +298,7 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
           <div className="overflow-hidden rounded-[2rem] border border-white/[0.10] bg-[#071015]/68 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_32px_90px_rgba(0,0,0,0.48)] backdrop-blur-2xl">
             <div className={`h-[1px] ${cfg.accentLine}`} />
 
-            <div className="p-6 sm:p-8">
+            <div className="px-6 pb-6 pt-12 sm:px-8 sm:pb-8 sm:pt-14">
               <div className="grid grid-cols-[minmax(0,1fr)_5rem_minmax(0,1fr)] items-start gap-2 sm:gap-4">
                 <div className="min-w-0 text-center">
                   <ProfileOrb participant={a} tone="warm" />
@@ -312,10 +312,10 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
                     <Image
                       src="/match-emblem.png"
                       alt=""
-                      width={144}
-                      height={82}
+                      width={132}
+                      height={75}
                       priority
-                      className="absolute -left-[2.42rem] -top-[0.2rem] max-w-none mix-blend-screen"
+                      className="absolute -left-7 top-0 max-w-none mix-blend-screen"
                     />
                   </div>
                 </div>
