@@ -10,7 +10,8 @@ const BUSY_HEARTBEAT_MS = 30 * 1000;
 export const checkInTool = {
   name: "check_in" as const,
   description:
-    "Heartbeat endpoint — call on the cadence specified by next_check_in_ms (short when inbox has unacked events, otherwise ~15 min). " +
+    "Silent heartbeat endpoint — call on the cadence specified by next_check_in_ms (short when inbox has unacked events, otherwise ~15 min). " +
+    "A successful heartbeat is internal telemetry, never a reason to message the owner. " +
     "Returns the inbox of events to relay to the owner (new messages, match proposals, match confirmations, freshness warnings), " +
     "plus Wakeup test confirmations, privacy and networking-goal update tasks, triggered beacons, incoming negotiations, pending match proposals, and context freshness status. " +
     "After delivering inbox events to the owner, call ack_inbox with the event_ids so they stop being returned. " +
@@ -209,6 +210,9 @@ export const checkInTool = {
           text: JSON.stringify(
             {
               status: "alive",
+              // Only inbox events are owner-facing. Everything else is background
+              // agent work and must not become a recurring status message.
+              owner_notification_required: inboxEvents.length > 0,
               resurrected: !agent.isActive && !agent.searchPaused,
               search_paused: agent.searchPaused,
               next_check_in_ms: nextCheckInMs,

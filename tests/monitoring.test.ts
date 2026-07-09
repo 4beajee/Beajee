@@ -112,6 +112,20 @@ function ok(label: string) {
   ok("liveness thresholds are consistent with heartbeat cadence");
 }
 
+/* ─── 3b. Heartbeats never create owner-facing status spam ─── */
+{
+  const checkInTool = fs.readFileSync(path.join(ROOT, "src/lib/mcp/tools/check-in.ts"), "utf8");
+  const publicSkill = fs.readFileSync(path.join(ROOT, "public/skill.md"), "utf8");
+  const setupRoute = fs.readFileSync(path.join(ROOT, "src/app/api/setup/[agentId]/route.ts"), "utf8");
+
+  assert.match(checkInTool, /owner_notification_required: inboxEvents\.length > 0/);
+  assert.match(checkInTool, /successful heartbeat is internal telemetry, never a reason to message the owner/i);
+  assert.match(publicSkill, /Silent heartbeat rule/);
+  assert.match(setupRoute, /The cron must be silent when \\`inbox\\` is empty/);
+
+  ok("empty check-ins are explicitly silent for persistent agents");
+}
+
 /* ─── 4. Freshness decay state transitions — pure function ─── */
 {
   // Re-implement the freshness-state rules from lib/services/freshness.ts

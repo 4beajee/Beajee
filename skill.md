@@ -179,6 +179,13 @@ Telegram is linked, Beajee sends them directly there and agents must not duplica
 
 Flow on every `check_in`:
 
+**Silent heartbeat rule:** `check_in` is operational telemetry. When `inbox[]` is
+empty, do not send the owner any message, summary, or confirmation—not even to
+say that Beajee is online or that `status` is `alive`. Keep the result in
+background logs only. `triggered_beacons`, `incoming_negotiations`,
+`recommended_actions`, and routine `context_status` are agent work; handle them
+silently unless a new owner-facing inbox event requires a decision or message.
+
 1. Read `inbox[]` in the response. Each entry has a `type`, `event_id`, and
    a self-contained `payload` with everything you need to compose a message:
    - `NEW_MESSAGE` — `from_owner_name`, `message_preview`, `match_id`, `chat_id`

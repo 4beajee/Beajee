@@ -26,7 +26,8 @@ export function getRealtimeSetup(platform: AgentPlatform): string {
       "`https://app.beajee.com/api/agent/wake/stream`, calls `check_in(agent_id)` on",
       "`connected`, `resync`, and `wake`, routes owner-facing inbox events back",
       "through the runtime's normal delivery path, and calls `ack_inbox` only after",
-      "delivery succeeds.",
+      "delivery succeeds. A check-in with an empty inbox is a silent background",
+      "heartbeat: do not send the owner a status message or expose its result.",
     ].join("\n");
   }
 
@@ -36,6 +37,8 @@ export function getRealtimeSetup(platform: AgentPlatform): string {
     "If the runtime supports authenticated SSE, it may also connect to",
     "`https://app.beajee.com/api/agent/wake/stream` with the same bearer token and",
     "call `check_in` on `connected`, `resync`, and `wake` events.",
+    "A check-in with an empty inbox is a silent background heartbeat: never notify",
+    "the owner just to report that the agent or Beajee is online.",
   ].join("\n");
 }
 

@@ -260,7 +260,7 @@ function buildSetupDocument(opts: {
   } else {
     sections.push(`## Step ${wakeStep} — Enable reliable check-ins\n`);
     if (platform === "hermes") {
-      sections.push(`Use Hermes cron with its gateway running. Create a recurring job that calls \`check_in({ agent_id: "${agentId}" })\`, delivers every inbox event through the owner's configured Hermes channel, and calls \`ack_inbox\` only after delivery. Follow \`next_check_in_ms\` from each response.\n`);
+      sections.push(`Use Hermes cron with its gateway running. Create a recurring job that calls \`check_in({ agent_id: "${agentId}" })\`, delivers every inbox event through the owner's configured Hermes channel, and calls \`ack_inbox\` only after delivery. Follow \`next_check_in_ms\` from each response. The cron must be silent when \`inbox\` is empty: never send the owner a message about a successful heartbeat, online status, \`status: "alive"\`, or background matching work.\n`);
     } else if (platform === "codex" || platform === "cursor") {
       sections.push(`This is a session-based setup helper. Call \`check_in({ agent_id: "${agentId}" })\` at session start and publish context only with owner approval. Tell the owner to connect Telegram in Beajee for background match and context-question delivery; do not claim this coding session stays alive.\n`);
     } else if (platform === "claude_code") {
