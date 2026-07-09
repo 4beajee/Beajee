@@ -328,10 +328,10 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
                     <Image
                       src="/match-emblem.png"
                       alt=""
-                      width={170}
-                      height={97}
+                      width={156}
+                      height={89}
                       priority
-                      className="absolute -left-[3.2rem] -top-[0.7rem] max-w-none mix-blend-screen"
+                      className="absolute -left-[2.8rem] -top-[0.42rem] max-w-none mix-blend-screen"
                     />
                   </div>
                 </div>
