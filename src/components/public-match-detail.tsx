@@ -126,7 +126,7 @@ function ChevronDownIcon({ className }: { className?: string }) {
 function FivePointStar({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="m12 2.7 2.72 5.5 6.08.88-4.4 4.29 1.04 6.06L12 16.57l-5.44 2.86 1.04-6.06-4.4-4.29 6.08-.88L12 2.7Z" fill="currentColor" />
+      <path d="m12 2.7 2.72 5.5 6.08.88-4.4 4.29 1.04 6.06L12 16.57l-5.44 2.86 1.04-6.06-4.4-4.29 6.08-.88L12 2.7Z" fill="currentColor" stroke="currentColor" strokeWidth="1.15" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -329,9 +329,10 @@ export function PublicMatchDetail({ initialData }: { initialData: MatchDetail | 
                   <p className="mt-3 truncate text-sm font-medium text-white">{a.displayName}</p>
                   <p className="mx-auto mt-1 line-clamp-2 max-w-[150px] text-xs leading-5 text-neutral-500">{a.currentWork}</p>
                 </div>
-                <div className="flex min-w-0 items-center justify-center pt-5">
+                <div className="relative flex min-w-0 items-center justify-center pt-5">
+                  <span aria-hidden="true" className="absolute right-full top-[3.8rem] h-px w-11 bg-white/[0.34] sm:w-14" />
                   <div className="flex h-[4.75rem] w-[4.75rem] items-center justify-center" aria-label="Match">
-                    <FivePointStar className="h-9 w-9 text-white drop-shadow-[0_4px_10px_rgba(255,255,255,0.28)]" />
+                    <FivePointStar className="h-11 w-11 text-white" />
                   </div>
                 </div>
                 <div className="min-w-0 text-center">
