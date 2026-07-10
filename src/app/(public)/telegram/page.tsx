@@ -340,15 +340,33 @@ export default function TelegramWebAppPage() {
   const sendMessage = async (event: FormEvent) => {
     event.preventDefault();
     if (!selectedChatId || !message.trim()) return;
-    const content = message.trim(); setPending("send");
+    const content = message.trim();
+    const optimisticMessage = {
+      id: `optimistic-${crypto.randomUUID()}`,
+      fromOwner: auth?.owner.id ?? "",
+      kind: "HUMAN",
+      content,
+      createdAt: new Date().toISOString(),
+    };
+    setChat((current) => current ? { ...current, messages: [...current.messages, optimisticMessage] } : current);
+    setMessage(""); localStorage.removeItem(`beajee-chat-draft:${selectedChatId}`);
+    requestAnimationFrame(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }));
     try {
       const data = await api("/api/telegram/chats", { method: "POST", body: JSON.stringify({ matchId: selectedChatId, content }) });
-      setChat((current) => current ? { ...current, messages: [...current.messages, data.message] } : current);
-      setMessage(""); localStorage.removeItem(`beajee-chat-draft:${selectedChatId}`);
+      setChat((current) => current ? {
+        ...current,
+        messages: current.messages.map((item) => item.id === optimisticMessage.id ? data.message : item),
+      } : current);
       telegramHost()?.HapticFeedback?.impactOccurred?.("light");
-      requestAnimationFrame(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }));
-    } catch (error) { setNotice(error instanceof Error ? error.message : "Message was not sent"); }
-    finally { setPending(null); }
+    } catch (error) {
+      setChat((current) => current ? {
+        ...current,
+        messages: current.messages.filter((item) => item.id !== optimisticMessage.id),
+      } : current);
+      setMessage((current) => current || content);
+      localStorage.setItem(`beajee-chat-draft:${selectedChatId}`, content);
+      setNotice(error instanceof Error ? error.message : "Message was not sent");
+    }
   };
 
   const chatAction = async (action: "archive" | "block" | "report", reason?: string) => {
@@ -496,7 +514,7 @@ function ChatView({ chat, ownerId, message, pending, onBack, onMessage, onSubmit
     <div className="telegram-float flex items-center gap-3 rounded-[30px] bg-white/[0.055] p-3 shadow-[0_28px_80px_rgba(0,0,0,0.58)] backdrop-blur-2xl"><button onClick={onBack} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/[0.08] text-xl text-white">←</button><Avatar name={chat.otherPerson.name} image={chat.otherPerson.image} size="sm"/><div className="min-w-0 flex-1"><h1 className="truncate font-semibold text-white">{personLabel(chat)}</h1><p className="truncate text-xs text-neutral-500">{chat.otherPerson.currentWork ?? "Your new connection"}</p></div><button onClick={() => setShowControls((value) => !value)} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-lg text-black" aria-label="Chat controls">···</button></div>
     {showControls ? <div className="telegram-float-delayed mt-4 rounded-[30px] bg-white/[0.055] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl"><div className="grid grid-cols-2 gap-2"><button disabled={!!pending} onClick={() => onAction("archive")} className="h-12 rounded-full bg-white/[0.08] text-sm text-neutral-300">Archive chat</button><button disabled={!!pending} onClick={() => { if (window.confirm(`Block ${personLabel(chat)}? They won’t be notified.`)) onAction("block"); }} className="h-12 rounded-full bg-white text-sm font-medium text-black">Block user</button></div><textarea value={reportReason} onChange={(event) => setReportReason(event.target.value)} rows={2} placeholder="Describe a safety or relevance issue" className="mt-3 w-full rounded-[24px] bg-black/50 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-700 focus:ring-2 focus:ring-white/20"/><button disabled={reportReason.trim().length < 12 || !!pending} onClick={() => { onAction("report", reportReason.trim()); setReportReason(""); }} className="mt-3 h-12 w-full rounded-full bg-white/[0.08] text-sm text-neutral-300 disabled:opacity-30">Submit report</button></div> : null}
     <div className="flex-1 space-y-4 py-8 telegram-chat-messages">{chat.messages.map((item) => { const mine = item.fromOwner === ownerId; const agent = item.kind === "AGENT_INTRO"; return <div key={item.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}><div className={`max-w-[84%] rounded-[26px] px-5 py-3.5 text-sm leading-6 shadow-[0_18px_50px_rgba(0,0,0,0.38)] ${mine ? "bg-white text-black" : agent ? "w-full max-w-none bg-white/[0.055] text-neutral-300 backdrop-blur-xl" : "bg-white/[0.09] text-white backdrop-blur-xl"}`}>{agent ? <p className="mb-1 text-[10px] uppercase tracking-[0.16em] text-neutral-500">Agent introduction</p> : null}<p className="whitespace-pre-wrap break-words">{item.content}</p></div></div>; })}<div ref={chatEndRef}/></div>
-    {chat.status === "OPEN" ? <form onSubmit={onSubmit} className="telegram-chat-composer telegram-float-delayed fixed left-1/2 z-40 flex w-[calc(100%-24px)] max-w-[536px] -translate-x-1/2 items-end gap-2 rounded-[32px] bg-white/[0.07] p-2.5 shadow-[0_28px_85px_rgba(0,0,0,0.62)] backdrop-blur-2xl"><textarea value={message} onChange={(event) => onMessage(event.target.value)} rows={1} maxLength={5000} placeholder="Message" className="max-h-32 min-h-14 flex-1 resize-none rounded-[24px] bg-black/50 px-5 py-4 text-base text-white outline-none placeholder:text-neutral-700 focus:ring-2 focus:ring-white/20"/><button disabled={!message.trim() || pending === "send"} className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white text-xl text-black shadow-[0_14px_40px_rgba(0,0,0,0.45)] transition-transform active:scale-95 disabled:opacity-30">↑</button></form> : <div className="rounded-full bg-white/[0.06] px-5 py-4 text-center text-sm text-neutral-500">This chat is {chat.status.toLowerCase()}.</div>}
+    {chat.status === "OPEN" ? <form onSubmit={onSubmit} className="telegram-chat-composer telegram-float-delayed fixed left-1/2 z-40 flex w-[calc(100%-24px)] max-w-[536px] -translate-x-1/2 items-end gap-2 rounded-[32px] bg-white/[0.07] p-2.5 shadow-[0_28px_85px_rgba(0,0,0,0.62)] backdrop-blur-2xl"><textarea value={message} onChange={(event) => onMessage(event.target.value)} rows={1} maxLength={5000} placeholder="Message" className="max-h-32 min-h-14 flex-1 resize-none rounded-[24px] bg-black/50 px-5 py-4 text-base text-white outline-none placeholder:text-neutral-700 focus:ring-2 focus:ring-white/20"/><button disabled={!message.trim()} className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white text-xl text-black shadow-[0_14px_40px_rgba(0,0,0,0.45)] transition-transform active:scale-95 disabled:opacity-30">↑</button></form> : <div className="rounded-full bg-white/[0.06] px-5 py-4 text-center text-sm text-neutral-500">This chat is {chat.status.toLowerCase()}.</div>}
   </section>;
 }
 
