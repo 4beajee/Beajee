@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import type { OAuthConfig } from "next-auth/providers/oauth";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { normalizeEmail } from "@/lib/email";
@@ -15,6 +16,50 @@ import {
 // Strip surrounding quotes to be safe across different env-file parsers
 const cookieDomain = process.env.NEXTAUTH_COOKIE_DOMAIN?.replace(/^["']|["']$/g, "") || undefined;
 const useSecureCookies = process.env.NEXTAUTH_URL?.startsWith("https://") ?? false;
+
+type TelegramProfile = {
+  sub?: string;
+  id?: string | number;
+  name?: string;
+  preferred_username?: string;
+  picture?: string;
+};
+
+function telegramDisplayName(profile: TelegramProfile) {
+  return profile.name || profile.preferred_username || "Telegram user";
+}
+
+function telegramProvider(): OAuthConfig<TelegramProfile> {
+  return {
+    id: "telegram",
+    name: "Telegram",
+    type: "oauth",
+    wellKnown: "https://oauth.telegram.org/.well-known/openid-configuration",
+    clientId: process.env.TELEGRAM_LOGIN_CLIENT_ID,
+    clientSecret: process.env.TELEGRAM_LOGIN_CLIENT_SECRET,
+    authorization: { params: { scope: "openid profile" } },
+    idToken: true,
+    // Telegram supports the OIDC authorization-code flow. These checks prevent
+    // login CSRF, code interception, and replay of an ID token.
+    checks: ["pkce", "state", "nonce"],
+    profile(profile) {
+      const telegramId = String(profile.id ?? profile.sub ?? "");
+      if (!telegramId) throw new Error("Telegram profile did not include an identifier");
+
+      return {
+        id: telegramId,
+        email: `telegram-${telegramId}@telegram.beajee.local`,
+        name: telegramDisplayName(profile),
+        image: profile.picture ?? null,
+        onboarded: false,
+      };
+    },
+  };
+}
+
+const telegramLoginConfigured = Boolean(
+  process.env.TELEGRAM_LOGIN_CLIENT_ID && process.env.TELEGRAM_LOGIN_CLIENT_SECRET
+);
 
 export const authOptions: NextAuthOptions = {
   debug: process.env.NEXTAUTH_DEBUG === "true",
@@ -77,6 +122,8 @@ export const authOptions: NextAuthOptions = {
         },
       },
     }),
+
+    ...(telegramLoginConfigured ? [telegramProvider()] : []),
 
     CredentialsProvider({
       name: "Email",
@@ -216,6 +263,70 @@ export const authOptions: NextAuthOptions = {
 
         } catch (err) {
           console.error("[auth] Google signIn callback error:", err);
+          return false;
+        }
+      }
+
+      if (account?.provider === "telegram") {
+        try {
+          const telegramId = account.providerAccountId;
+          if (!telegramId) return false;
+
+          // The Telegram ID is the stable identity shared by the Mini App and
+          // browser login. It lets an owner who started in Telegram continue on
+          // the web without an email, password, or account-merging step.
+          const owner = await prisma.owner.upsert({
+            where: { telegramId },
+            update: {
+              name: user.name ?? undefined,
+              image: user.image ?? undefined,
+            },
+            create: {
+              telegramId,
+              email: `telegram-${telegramId}@telegram.beajee.local`,
+              name: user.name,
+              image: user.image,
+              emailVerified: new Date(),
+              onboarded: false,
+            },
+          });
+
+          const linkedAccount = await prisma.account.findUnique({
+            where: {
+              provider_providerAccountId: {
+                provider: "telegram",
+                providerAccountId: telegramId,
+              },
+            },
+          });
+          if (linkedAccount && linkedAccount.userId !== owner.id) {
+            console.error("[auth] Telegram identity is linked to a different owner");
+            return false;
+          }
+          if (!linkedAccount) {
+            await prisma.account.create({
+              data: {
+                userId: owner.id,
+                type: account.type,
+                provider: "telegram",
+                providerAccountId: telegramId,
+                access_token: account.access_token as string | undefined,
+                refresh_token: account.refresh_token as string | undefined,
+                expires_at: account.expires_at as number | undefined,
+                token_type: account.token_type as string | undefined,
+                scope: account.scope,
+                id_token: account.id_token,
+              },
+            });
+          }
+
+          user.id = owner.id;
+          user.email = owner.email;
+          user.name = owner.name;
+          user.image = owner.image;
+          user.onboarded = owner.onboarded;
+        } catch (err) {
+          console.error("[auth] Telegram signIn callback error:", err);
           return false;
         }
       }

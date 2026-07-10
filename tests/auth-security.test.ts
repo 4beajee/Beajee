@@ -44,6 +44,16 @@ assert.match(authOptions, /recordLoginFailure\(throttleKey/);
 assert.match(authOptions, /owner\.sessionVersion !== token\.sessionVersion/);
 assert.match(authOptions, /debug: process\.env\.NEXTAUTH_DEBUG === "true"/);
 assert.doesNotMatch(authOptions, /debug: process\.env\.NODE_ENV === "development"/);
+assert.match(authOptions, /id: "telegram"/);
+assert.match(authOptions, /wellKnown: "https:\/\/oauth\.telegram\.org\/\.well-known\/openid-configuration"/);
+assert.match(authOptions, /checks: \["pkce", "state", "nonce"\]/);
+assert.match(authOptions, /where: \{ telegramId \}/);
+assert.match(authOptions, /provider_providerAccountId/);
+assert.match(authOptions, /linkedAccount\.userId !== owner\.id/);
+
+const telegramLoginDocs = read("docs/TELEGRAM_WEB_LOGIN.md");
+assert.match(telegramLoginDocs, /api\/auth\/callback\/telegram/);
+assert.match(telegramLoginDocs, /TELEGRAM_LOGIN_CLIENT_SECRET/);
 
 const rateLimit = read("src/lib/rate-limit.ts");
 assert.match(rateLimit, /prisma\.\$transaction/);

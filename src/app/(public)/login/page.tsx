@@ -16,6 +16,7 @@ export default function LoginPage() {
 }
 
 const landingUrl = process.env.NEXT_PUBLIC_LANDING_URL ?? "";
+const telegramLoginEnabled = process.env.NEXT_PUBLIC_TELEGRAM_LOGIN_ENABLED === "true";
 
 function LoginContent() {
   const t = useTranslations();
@@ -81,6 +82,10 @@ function LoginContent() {
     signIn("google", { callbackUrl });
   }
 
+  function handleTelegram() {
+    signIn("telegram", { callbackUrl });
+  }
+
   return (
     <div className="min-h-dvh flex items-start sm:items-center justify-center px-4 py-8 sm:p-6 bg-[#050505]">
       <div className="w-full max-w-sm">
@@ -122,6 +127,18 @@ function LoginContent() {
           </svg>
           {t("auth.signInGoogle")}
         </button>
+
+        {telegramLoginEnabled ? (
+          <button
+            onClick={handleTelegram}
+            className="mt-3 w-full flex items-center justify-center gap-3 py-3 rounded-lg bg-[#229ED9] text-sm font-medium text-white hover:bg-[#1d8cc1] transition-colors"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M21.6 3.2 2.8 10.5c-1.3.5-1.3 1.3-.2 1.7l4.8 1.5 1.9 5.8c.2.6.1.8.7.8.4 0 .6-.2.8-.4l2.3-2.2 4.8 3.5c.9.5 1.5.3 1.8-.8l3.2-15.3c.4-1.4-.5-2-1.5-1.5ZM8.4 13.3l10.9-6.9c.5-.3 1-.2.6.2l-8.8 8-.3 3.3-2.4-4.6Z" />
+            </svg>
+            {t("auth.signInTelegram")}
+          </button>
+        ) : null}
 
         {/* Divider */}
         <div className="flex items-center gap-4 my-6">
