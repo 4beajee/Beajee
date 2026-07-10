@@ -25,9 +25,15 @@ function ok(label: string) {
   assert.match(page, /rounded-full/);
   assert.doesNotMatch(page, /#d9ff7a|red-|green-|amber-|emerald-/);
   assert.match(page, /telegram-bottom-nav/);
+  assert.match(page, /!selectedChatId \? <nav/);
+  assert.match(page, /telegram-chat-composer[^`]*fixed/);
+  assert.match(styles, /\.telegram-chat-composer/);
+  assert.match(styles, /\.telegram-chat-messages/);
   assert.match(styles, /prefers-reduced-motion/);
   assert.match(layout, /themeColor:\s*"#000000"/);
   ok("the visual system stays monochrome, rounded, floating, and uses safe fixed bottom navigation");
+
+  ok("chat details replace bottom navigation with a safe-area-aware fixed message composer");
 
   assert.match(page, /function TelegramSocialIcon/);
   assert.equal(page.match(/<TelegramSocialIcon provider=\{provider\} \/>/g)?.length, 2);

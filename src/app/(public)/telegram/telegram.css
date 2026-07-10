@@ -12,6 +12,15 @@
   bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--telegram-safe-bottom, 0px)) + 12px);
 }
 
+.telegram-chat-composer {
+  bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--telegram-safe-bottom, 0px)) + 12px);
+}
+
+.telegram-chat-messages {
+  /* Keep the final message above the fixed composer in every Telegram client. */
+  padding-bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--telegram-safe-bottom, 0px)) + 112px);
+}
+
 .telegram-notice {
   bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--telegram-safe-bottom, 0px)) + 88px);
 }
