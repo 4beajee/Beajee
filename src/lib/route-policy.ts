@@ -19,6 +19,10 @@ export const PUBLIC_FILE_PREFIXES = [
   "/sounds",
 ] as const;
 export const APP_ASSET_PREFIXES = ["/agent-platforms", "/sounds"] as const;
+export const APP_ASSET_EXACT = [
+  "/match-share-night.png",
+  "/match-emblem.png",
+] as const;
 export const APP_PREFIXES = [
   "/home",
   "/matches",
@@ -57,6 +61,13 @@ export function matchesSegment(pathname: string, prefix: string) {
 
 export function matchesAnySegment(pathname: string, prefixes: readonly string[]) {
   return prefixes.some((prefix) => matchesSegment(pathname, prefix));
+}
+
+export function isAppAssetPath(pathname: string) {
+  return (
+    APP_ASSET_EXACT.includes(pathname as (typeof APP_ASSET_EXACT)[number]) ||
+    matchesAnySegment(pathname, APP_ASSET_PREFIXES)
+  );
 }
 
 export function isPublicApiPath(pathname: string) {
