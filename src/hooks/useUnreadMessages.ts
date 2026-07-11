@@ -67,12 +67,12 @@ export function useUnreadMessages() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Draw base favicon (simple G letter)
+    // Draw the Beajee favicon. Keep this in sync with the current product name.
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 24px -apple-system, system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("G", 16, 17);
+    ctx.fillText("B", 16, 17);
 
     if (count > 0) {
       // Draw red dot
