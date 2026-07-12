@@ -20,10 +20,10 @@ function AssetLogo({ platform, src }: { platform: AgentPlatformValue; src: strin
       <Image
         src={src}
         alt=""
-        width={isPerplexity ? 28 : 24}
-        height={isPerplexity ? 28 : 24}
+        width={isPerplexity ? 36 : 24}
+        height={isPerplexity ? 36 : 24}
         unoptimized
-        className={`${isHermes ? "h-full w-full" : isPerplexity ? "h-7 w-7 shrink-0" : "h-6 w-6 shrink-0"} object-contain ${platform === "folk" || platform === "cursor" ? "rounded-md" : "rounded-[5px]"}`}
+        className={`${isHermes ? "h-full w-full" : isPerplexity ? "h-9 w-9 shrink-0" : "h-6 w-6 shrink-0"} object-contain ${platform === "folk" || platform === "cursor" ? "rounded-md" : "rounded-[5px]"}`}
       />
     </span>
   );
