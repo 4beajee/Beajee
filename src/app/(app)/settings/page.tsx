@@ -68,6 +68,8 @@ const OPTION_BUTTON =
 const OPTION_ACTIVE = "bg-white/[0.07] text-white ring-white/[0.18]";
 const OPTION_IDLE =
   "bg-neutral-950/38 text-neutral-400 ring-white/[0.07] hover:bg-neutral-900/70 hover:text-neutral-200 hover:ring-white/[0.13]";
+const LINK_INPUT_CLASS =
+  "rounded-xl bg-white/[0.035] shadow-none ring-0 hover:bg-white/[0.055] hover:ring-0 focus-within:bg-white/[0.07] focus-within:ring-0 focus-within:shadow-[0_0_0_2px_rgba(255,255,255,0.22)]";
 
 /* ── Types ── */
 
@@ -411,7 +413,7 @@ function ChangeAgentPlatformSection({
       </p>
 
       {!open ? (
-        <button type="button" onClick={() => setOpen(true)} className={SECONDARY_BUTTON_SM}>
+        <button type="button" onClick={() => setOpen(true)} className={PRIMARY_BUTTON_SM}>
           {t("settings.changeAgent")}
         </button>
       ) : (
@@ -850,7 +852,7 @@ function SchedulingUrlSection({
     <Section title={t("settings.schedulingTitle")}>
       <p className={cx(sectionDescriptionClass, "mb-4")}>{t("settings.schedulingDesc")}</p>
       <FormField label={t("settings.schedulingFieldLabel")} inputId={fieldId} helperText={!err ? t("settings.schedulingFieldHelp") : undefined} errorText={err} successText={saved ? t("common.saved") : undefined}>
-        <TextInput id={fieldId} type="url" value={value} onChange={(e) => setValue(e.target.value)} placeholder="https://cal.com/you/30min" autoComplete="url" inputMode="url" tone={err ? "error" : saved ? "success" : "default"} describedBy={`${fieldId}-message`} leading={<LinkIcon />} />
+        <TextInput id={fieldId} type="url" value={value} onChange={(e) => setValue(e.target.value)} placeholder="https://cal.com/you/30min" autoComplete="url" inputMode="url" tone={err ? "error" : saved ? "success" : "default"} describedBy={`${fieldId}-message`} leading={<LinkIcon />} className={err ? undefined : LINK_INPUT_CLASS} />
       </FormField>
       <div className="mt-3 flex items-center gap-3">
         <button type="button" onClick={submit} disabled={saving} className={PRIMARY_BUTTON_SM}>
@@ -949,23 +951,20 @@ function SocialProfileField({
   const fieldId = useFieldId(`${provider}-url`);
   return (
     <FormField label={label} inputId={fieldId} optional optionalLabel={optionalLabel} helperText={!errorText ? helperText : undefined} errorText={errorText}>
-      <div className="flex items-center gap-3">
-        <SocialProfileLogo provider={provider} />
-        <div className="flex-1">
-          <TextInput
-            id={fieldId}
-            type="url"
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-            placeholder={placeholder}
-            autoComplete="url"
-            inputMode="url"
-            disabled={disabled}
-            tone={errorText ? "error" : "default"}
-            describedBy={`${fieldId}-message`}
-          />
-        </div>
-      </div>
+      <TextInput
+        id={fieldId}
+        type="url"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        autoComplete="url"
+        inputMode="url"
+        disabled={disabled}
+        tone={errorText ? "error" : "default"}
+        describedBy={`${fieldId}-message`}
+        leading={<SocialProfileLogo provider={provider} />}
+        className={errorText ? undefined : LINK_INPUT_CLASS}
+      />
     </FormField>
   );
 }
@@ -973,7 +972,7 @@ function SocialProfileField({
 function SocialProfileLogo({ provider }: { provider: "linkedin" | "twitter" }) {
   if (provider === "linkedin") {
     return (
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#0A66C2]/12 text-[#0A66C2] ring-1 ring-inset ring-[#0A66C2]/20" aria-hidden="true">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[#0A66C2]" aria-hidden="true">
         <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
           <path d="M5.34 3.5A1.84 1.84 0 1 1 5.34 7.18 1.84 1.84 0 0 1 5.34 3.5ZM3.75 8.62h3.18V20.5H3.75V8.62Zm5.1 0h3.05v1.62h.04c.43-.8 1.47-1.95 3.58-1.95 3.83 0 4.54 2.52 4.54 5.8v6.41h-3.18v-5.68c0-1.36-.03-3.1-1.9-3.1-1.89 0-2.18 1.47-2.18 3v5.78H8.85V8.62Z" />
         </svg>
@@ -982,9 +981,9 @@ function SocialProfileLogo({ provider }: { provider: "linkedin" | "twitter" }) {
   }
 
   return (
-    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/5 text-white ring-1 ring-inset ring-white/10" aria-hidden="true">
-      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-current">
-        <path d="M18.9 2.75h3.68l-8.04 9.19L24 21.25h-7.4l-5.8-7.58-6.63 7.58H.48l8.6-9.83L0 2.75h7.59l5.24 6.93 6.07-6.93Zm-1.3 16.86h2.04L6.48 4.3H4.3L17.6 19.61Z" />
+    <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[#1D9BF0]" aria-hidden="true">
+      <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+        <path d="M23.03 4.79c-.8.36-1.67.6-2.58.71a4.5 4.5 0 0 0 1.97-2.48 8.96 8.96 0 0 1-2.85 1.09 4.49 4.49 0 0 0-7.76 3.07c0 .35.04.69.12 1.02A12.74 12.74 0 0 1 2.67 3.5a4.49 4.49 0 0 0 1.39 5.99 4.45 4.45 0 0 1-2.03-.56v.06a4.5 4.5 0 0 0 3.6 4.41 4.52 4.52 0 0 1-2.03.08 4.5 4.5 0 0 0 4.2 3.12A9.04 9.04 0 0 1 1 18.47 12.75 12.75 0 0 0 7.88 20.5c8.25 0 12.76-6.83 12.76-12.76l-.02-.58a9.07 9.07 0 0 0 2.24-2.37l.17-.3Z" />
       </svg>
     </span>
   );
