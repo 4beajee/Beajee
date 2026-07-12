@@ -14,16 +14,16 @@ const OFFICIAL_ASSETS: Partial<Record<AgentPlatformValue, string>> = {
 
 function AssetLogo({ platform, src }: { platform: AgentPlatformValue; src: string }) {
   const isHermes = platform === "hermes";
-  const largerMark = platform === "cursor" || platform === "folk" || platform === "perplexity_personal_computer";
+  const isPerplexity = platform === "perplexity_personal_computer";
   return (
     <span className={isHermes ? "flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white p-[3px]" : "contents"}>
       <Image
         src={src}
         alt=""
-        width={largerMark ? 32 : 24}
-        height={largerMark ? 32 : 24}
+        width={isPerplexity ? 28 : 24}
+        height={isPerplexity ? 28 : 24}
         unoptimized
-        className={`${isHermes ? "h-full w-full" : largerMark ? "h-8 w-8 shrink-0" : "h-6 w-6 shrink-0"} object-contain ${platform === "folk" || platform === "cursor" ? "rounded-md" : "rounded-[5px]"}`}
+        className={`${isHermes ? "h-full w-full" : isPerplexity ? "h-7 w-7 shrink-0" : "h-6 w-6 shrink-0"} object-contain ${platform === "folk" || platform === "cursor" ? "rounded-md" : "rounded-[5px]"}`}
       />
     </span>
   );
