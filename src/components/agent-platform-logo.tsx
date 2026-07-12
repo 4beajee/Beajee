@@ -16,14 +16,14 @@ function AssetLogo({ platform, src }: { platform: AgentPlatformValue; src: strin
   const isHermes = platform === "hermes";
   const isPerplexity = platform === "perplexity_personal_computer";
   return (
-    <span className={isHermes ? "flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white p-[3px]" : "contents"}>
+    <span className={isHermes ? "flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white p-[3px]" : "relative flex h-6 w-6 shrink-0 items-center justify-center"}>
       <Image
         src={src}
         alt=""
         width={isPerplexity ? 36 : 24}
         height={isPerplexity ? 36 : 24}
         unoptimized
-        className={`${isHermes ? "h-full w-full" : isPerplexity ? "h-9 w-9 shrink-0" : "h-6 w-6 shrink-0"} object-contain ${platform === "folk" || platform === "cursor" ? "rounded-md" : "rounded-[5px]"}`}
+        className={`${isHermes ? "h-full w-full" : isPerplexity ? "absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2" : "h-6 w-6"} shrink-0 object-contain ${platform === "folk" || platform === "cursor" ? "rounded-md" : "rounded-[5px]"}`}
       />
     </span>
   );
