@@ -145,7 +145,7 @@ export const authOptions: NextAuthOptions = {
           where: { email },
         });
 
-        if (!owner || !owner.passwordHash) {
+        if (!owner || !owner.passwordHash || !owner.emailVerified) {
           await recordLoginFailure(throttleKey, owner?.id ?? null);
           return null;
         }
@@ -187,66 +187,58 @@ export const authOptions: NextAuthOptions = {
         try {
           if (!user.email) return false;
           const normalizedEmail = normalizeEmail(user.email);
-          // Link Google account to existing or new Owner
-          const existing = await prisma.owner.findUnique({
-            where: { email: normalizedEmail },
+          const existingGoogleAccount = await prisma.account.findUnique({
+            where: {
+              provider_providerAccountId: {
+                provider: "google",
+                providerAccountId: account.providerAccountId,
+              },
+            },
+            include: { user: true },
           });
 
-          if (existing) {
-            // Update image/name if not set
-            await prisma.owner.update({
-              where: { id: existing.id },
-              data: {
-                emailVerified: new Date(),
-                image: existing.image ?? user.image,
-                name: existing.name ?? user.name,
-              },
-            });
+          if (existingGoogleAccount) {
+            if (existingGoogleAccount.user.email !== normalizedEmail) return false;
+            user.id = existingGoogleAccount.user.id;
+            user.onboarded = existingGoogleAccount.user.onboarded;
+            return true;
+          }
 
-            // Link Google account if not already linked
-            const linked = await prisma.account.findFirst({
-              where: {
-                userId: existing.id,
-                provider: "google",
-              },
-            });
-
-            if (!linked) {
-              await prisma.account.create({
-                data: {
-                  userId: existing.id,
-                  type: account.type,
-                  provider: account.provider,
-                  providerAccountId: account.providerAccountId,
-                  access_token: account.access_token as string | undefined,
-                  refresh_token: account.refresh_token as string | undefined,
-                  expires_at: account.expires_at as number | undefined,
-                  token_type: account.token_type as string | undefined,
-                  scope: account.scope as string | undefined,
-                  id_token: account.id_token as string | undefined,
-                },
-              });
+          const owner = await prisma.$transaction(async (tx) => {
+            const existing = await tx.owner.findUnique({ where: { email: normalizedEmail } });
+            if (existing?.emailVerified) {
+              // Never merge a new OAuth identity merely because two accounts
+              // report the same email. Linking must start from an authenticated
+              // Settings session.
+              return null;
             }
 
-            user.id = existing.id;
-            user.onboarded = existing.onboarded;
-          } else {
-            // Create new Owner from Google profile
-            const newOwner = await prisma.owner.create({
-              data: {
-                email: normalizedEmail,
-                name: user.name,
-                image: user.image,
-                emailVerified: new Date(),
-                onboarded: false,
-              },
-            });
+            const claimedOwner = existing
+              ? await tx.owner.update({
+                  where: { id: existing.id },
+                  data: {
+                    emailVerified: new Date(),
+                    passwordHash: null,
+                    sessionVersion: { increment: 1 },
+                    image: existing.image ?? user.image,
+                    name: existing.name ?? user.name,
+                  },
+                })
+              : await tx.owner.create({
+                  data: {
+                    email: normalizedEmail,
+                    name: user.name,
+                    image: user.image,
+                    emailVerified: new Date(),
+                    onboarded: false,
+                  },
+                });
 
-            await prisma.account.create({
+            await tx.account.create({
               data: {
-                userId: newOwner.id,
+                userId: claimedOwner.id,
                 type: account.type,
-                provider: account.provider,
+                provider: "google",
                 providerAccountId: account.providerAccountId,
                 access_token: account.access_token as string | undefined,
                 refresh_token: account.refresh_token as string | undefined,
@@ -256,10 +248,12 @@ export const authOptions: NextAuthOptions = {
                 id_token: account.id_token as string | undefined,
               },
             });
+            return claimedOwner;
+          });
 
-            user.id = newOwner.id;
-            user.onboarded = false;
-          }
+          if (!owner) return false;
+          user.id = owner.id;
+          user.onboarded = owner.onboarded;
 
         } catch (err) {
           console.error("[auth] Google signIn callback error:", err);

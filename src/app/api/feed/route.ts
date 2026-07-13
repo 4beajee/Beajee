@@ -33,8 +33,8 @@ export async function GET(req: NextRequest) {
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       orderBy: { createdAt: "desc" },
       include: {
-        agentA: { include: { context: true } },
-        agentB: { include: { context: true } },
+        agentA: { select: { agentId: true, displayName: true } },
+        agentB: { select: { agentId: true, displayName: true } },
         negotiationLogs: { select: { id: true } },
         reactions: { select: { ownerId: true, type: true } },
         _count: { select: { comments: true } },
@@ -86,20 +86,14 @@ export async function GET(req: NextRequest) {
 }
 
 function formatParticipant(agent: {
-  displayName?: string | null;
+  displayName: string | null;
   agentId: string;
-  context?: {
-    currentWork: string;
-    expertise: string[];
-    location: string | null;
-    networkingGoal: string;
-  } | null;
 }) {
   return {
     displayName: agent.displayName || `Agent #${agent.agentId.slice(0, 4)}`,
-    currentWork: agent.context?.currentWork ?? "",
-    expertise: agent.context?.expertise ?? [],
-    location: agent.context?.location ?? null,
-    networkingGoal: agent.context?.networkingGoal ?? "",
+    currentWork: "",
+    expertise: [],
+    location: null,
+    networkingGoal: "",
   };
 }

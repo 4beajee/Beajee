@@ -23,6 +23,9 @@ assert.match(migration, /rate_limit_buckets/);
 
 const tokens = read("src/lib/tokens.ts");
 assert.match(tokens, /DELETE FROM verification_tokens[\s\S]*RETURNING identifier/);
+assert.match(tokens, /EMAIL_VERIFICATION/);
+assert.match(tokens, /purpose = 'PASSWORD_RESET'/);
+assert.match(tokens, /purpose = 'EMAIL_VERIFICATION'/);
 assert.match(tokens, /sessionVersion: \{ increment: 1 \}/);
 assert.ok(
   tokens.indexOf("DELETE FROM verification_tokens") < tokens.indexOf("tx.owner.update"),
@@ -41,6 +44,9 @@ assert.match(regenerate, /oAuthAccessToken\.updateMany/);
 const authOptions = read("src/lib/auth-options.ts");
 assert.match(authOptions, /isLoginBlocked\(throttleKey\)/);
 assert.match(authOptions, /recordLoginFailure\(throttleKey/);
+assert.match(authOptions, /!owner\.emailVerified/);
+assert.match(authOptions, /Never merge a new OAuth identity merely because two accounts/);
+assert.match(authOptions, /passwordHash: null/);
 assert.match(authOptions, /owner\.sessionVersion !== token\.sessionVersion/);
 assert.match(authOptions, /debug: process\.env\.NEXTAUTH_DEBUG === "true"/);
 assert.doesNotMatch(authOptions, /debug: process\.env\.NODE_ENV === "development"/);

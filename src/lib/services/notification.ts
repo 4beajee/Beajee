@@ -84,6 +84,23 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
   );
 }
 
+export async function sendEmailVerificationEmail(email: string, verificationUrl: string) {
+  return sendEmail(
+    email,
+    "Verify your email — Beajee",
+    emailLayout(`
+      <h2 style="font-size: 20px; color: #111; margin-bottom: 8px;">Verify your email</h2>
+      <p style="color: #555; line-height: 1.6; margin-bottom: 24px;">
+        Confirm this email address before using a password to sign in to Beajee.
+      </p>
+      ${ctaButton("Verify email", verificationUrl)}
+      <p style="margin-top: 24px; color: #555; line-height: 1.6;">
+        This link expires in 24 hours. If you did not create this account, ignore this email.
+      </p>
+    `)
+  );
+}
+
 /* ── 2. Password changed ── */
 
 export async function sendPasswordChangedEmail(email: string) {

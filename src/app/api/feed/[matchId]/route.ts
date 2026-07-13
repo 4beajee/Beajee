@@ -20,8 +20,8 @@ export async function GET(
           : {}),
       },
       include: {
-        agentA: { include: { context: true } },
-        agentB: { include: { context: true } },
+        agentA: { select: { agentId: true, displayName: true } },
+        agentB: { select: { agentId: true, displayName: true } },
         negotiationLogs: {
           select: { id: true },
         },
@@ -64,20 +64,14 @@ export async function GET(
 }
 
 function formatParticipant(agent: {
-  displayName?: string | null;
+  displayName: string | null;
   agentId: string;
-  context?: {
-    currentWork: string;
-    expertise: string[];
-    location: string | null;
-    networkingGoal: string;
-  } | null;
 }) {
   return {
     displayName: agent.displayName || `Agent #${agent.agentId.slice(0, 4)}`,
-    currentWork: agent.context?.currentWork ?? "",
-    expertise: agent.context?.expertise ?? [],
-    location: agent.context?.location ?? null,
-    networkingGoal: agent.context?.networkingGoal ?? "",
+    currentWork: "",
+    expertise: [],
+    location: null,
+    networkingGoal: "",
   };
 }

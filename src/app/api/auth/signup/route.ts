@@ -4,6 +4,8 @@ import { rateLimit } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { normalizeEmail } from "@/lib/email";
+import { createEmailVerificationToken } from "@/lib/tokens";
+import { sendEmailVerificationEmail } from "@/lib/services/notification";
 
 const SignupSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -33,24 +35,38 @@ export async function POST(request: NextRequest) {
   const { password, name } = parsed.data;
   const email = normalizeEmail(parsed.data.email);
 
-  const existing = await prisma.owner.findUnique({ where: { email } });
-  if (existing) {
-    return NextResponse.json(
-      { error: "An account with this email already exists. Try signing in." },
-      { status: 409 }
-    );
-  }
-
-  const passwordHash = await bcrypt.hash(password, 12);
-
-  await prisma.owner.create({
-    data: {
-      email,
-      name: name || null,
-      passwordHash,
-      onboarded: false,
-    },
+  const existing = await prisma.owner.findUnique({
+    where: { email },
+    select: { id: true, emailVerified: true, passwordHash: true },
   });
 
-  return NextResponse.json({ ok: true });
+  // A generic response prevents account enumeration. An existing unverified
+  // password account may receive a fresh verification email; verified accounts
+  // are never modified by an anonymous signup request.
+  if (!existing) {
+    const passwordHash = await bcrypt.hash(password, 12);
+    await prisma.owner.create({
+      data: {
+        email,
+        name: name || null,
+        passwordHash,
+        onboarded: false,
+      },
+    });
+  }
+
+  if (!existing || (!existing.emailVerified && existing.passwordHash)) {
+    const token = await createEmailVerificationToken(email);
+    const baseUrl = process.env.NEXTAUTH_URL ?? new URL(request.url).origin;
+    const verificationUrl = new URL("/api/auth/verify-email", baseUrl);
+    verificationUrl.searchParams.set("token", token);
+    sendEmailVerificationEmail(email, verificationUrl.toString()).catch((error) => {
+      console.error("[signup] Failed to send verification email:", error);
+    });
+  }
+
+  return NextResponse.json(
+    { ok: true, message: "If this email can use password sign-in, a verification link has been sent." },
+    { status: 202 }
+  );
 }

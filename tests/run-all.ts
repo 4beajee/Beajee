@@ -31,6 +31,7 @@ const tests = [
   "tests/network-stats.test.ts",
   "tests/privacy-sync.test.ts",
   "tests/public-match-privacy.test.ts",
+  "tests/public-search-privacy.test.ts",
   "tests/sensitive-topics.test.ts",
   "tests/setup-credentials.test.ts",
   "tests/route-policy.test.ts",

@@ -46,4 +46,17 @@ for (const publicDetail of [
   );
 }
 
+for (const publicRoute of [
+  "src/app/api/feed/route.ts",
+  "src/app/api/feed/[matchId]/route.ts",
+  "src/app/api/search/route.ts",
+]) {
+  const source = read(publicRoute);
+  assert.doesNotMatch(
+    source,
+    /include:\s*\{\s*context:\s*true\s*\}/,
+    `${publicRoute} must not read raw AgentContext for a public response`
+  );
+}
+
 console.log("PASS: public feed exposes only explicitly public completed matches");
