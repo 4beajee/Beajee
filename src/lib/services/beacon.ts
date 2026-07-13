@@ -2,6 +2,8 @@ import { prisma } from "@/lib/db";
 import { generateEmbeddingWithUsage } from "@/lib/embeddings";
 import type { NetworkingGoal } from "@/types/context";
 import { recordAnalyticsEvent } from "@/lib/analytics-tracking";
+import { assertContextRespectsExclusions } from "@/lib/sensitive-topics";
+import { SEARCH_CUTOFF_MS } from "@/lib/config/liveness";
 
 export async function setBeacon(
   agentId: string,
@@ -14,13 +16,20 @@ export async function setBeacon(
   }
   const agent = await prisma.agent.findUnique({
     where: { agentId },
-    include: { context: true },
+    include: { context: true, owner: { select: { excludedTopics: true } } },
   });
 
   if (!agent) throw new Error(`Agent not found: ${agentId}`);
   if (agent.searchPaused) {
     throw new Error("Match search is paused by the owner. Resume search before setting beacons.");
   }
+  if (!agent.context || ["STALE", "INACTIVE"].includes(agent.context.freshnessState)) {
+    throw new Error("Publish a current context before setting a beacon.");
+  }
+
+  // A beacon is agent-visible matching input just like published context. Never
+  // embed a query that contains a topic the owner excluded from matching.
+  assertContextRespectsExclusions({ context_query: normalizedQuery }, agent.owner.excludedTopics);
 
   // Generate embedding for the beacon query
   const { embedding } = await generateEmbeddingWithUsage(normalizedQuery, {
@@ -55,12 +64,13 @@ export async function setBeacon(
     agentId: agent.id,
     beaconId,
     metadata: {
-      context_query: normalizedQuery,
+      context_query_length: normalizedQuery.length,
       networking_goal_filter: effectiveGoalFilter,
     },
   });
 
   // Check if any existing agent contexts match this beacon
+  const livenessCutoff = new Date(Date.now() - SEARCH_CUTOFF_MS);
   const immediateMatches = await prisma.$queryRaw<
     Array<{ agent_id: string; external_agent_id: string; similarity: number; current_work: string }>
   >`
@@ -74,6 +84,8 @@ export async function setBeacon(
     WHERE ac.agent_id != ${agent.id}
       AND a.is_active = true
       AND a.search_paused = false
+      AND a.last_active_at > ${livenessCutoff}
+      AND ac.freshness_state NOT IN ('STALE', 'INACTIVE')
       AND NOT EXISTS (
         SELECT 1 FROM blocks block
         WHERE (block.blocker_id = ${agent.ownerId} AND block.blocked_id = a.owner_id)

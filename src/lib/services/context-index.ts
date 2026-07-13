@@ -12,6 +12,7 @@ import { recordAnalyticsEvent } from "@/lib/analytics-tracking";
 import { createInboxEvent } from "@/lib/services/inbox";
 import { signalAgentWork } from "@/lib/services/agent-delivery";
 import { assertContextRespectsExclusions } from "@/lib/sensitive-topics";
+import { SEARCH_CUTOFF_MS } from "@/lib/config/liveness";
 
 interface RawContextInput {
   // From USER.md
@@ -172,6 +173,7 @@ export async function publishContext(agentId: string, rawContext: RawContextInpu
   }
 
   // Check if new context triggers any existing beacons
+  const livenessCutoff = new Date(Date.now() - SEARCH_CUTOFF_MS);
   const triggeredBeacons = agent.searchPaused
     ? []
     : await prisma.$queryRaw<
@@ -183,6 +185,8 @@ export async function publishContext(agentId: string, rawContext: RawContextInpu
         WHERE b.is_active = true
           AND b.triggered_at IS NULL
           AND beacon_agent.search_paused = false
+          AND beacon_agent.is_active = true
+          AND beacon_agent.last_active_at > ${livenessCutoff}
           AND b.agent_id != ${agent.id}
           AND NOT EXISTS (
             SELECT 1 FROM blocks block
@@ -210,7 +214,7 @@ export async function publishContext(agentId: string, rawContext: RawContextInpu
           agentId: beacon.agent_id,
           beaconId: beacon.id,
           metadata: {
-            context_query: beacon.context_query,
+            context_query_length: beacon.context_query.length,
             matched_agent_id: agent.id,
             matched_external_agent_id: agent.agentId,
           },

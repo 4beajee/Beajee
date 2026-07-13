@@ -143,10 +143,10 @@ export async function syncPrivacyTopicsForAgent(args: {
             updated_at = NOW()
         WHERE agent_id = ${agent.id}
       `;
-      await tx.beacon.updateMany({
-        where: { agentId: agent.id, isActive: true },
-        data: { isActive: false, preservable: true },
-      });
+      // Privacy tightening invalidates the intent encoded in every beacon.
+      // Delete them rather than pausing them: a later context refresh must not
+      // silently reactivate a query created under weaker privacy settings.
+      await tx.beacon.deleteMany({ where: { agentId: agent.id } });
     }
 
     await tx.inboxEvent.updateMany({

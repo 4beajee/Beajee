@@ -33,7 +33,7 @@ import path from "node:path";
   assert.match(service, /prisma\.\$transaction\(async \(tx\)/);
   assert.match(service, /tx\.owner\.update/);
   assert.match(service, /SET embedding = NULL/);
-  assert.match(service, /tx\.beacon\.updateMany/);
+  assert.match(service, /tx\.beacon\.deleteMany/);
   assert.match(service, /tx\.inboxEvent\.create/);
 
   const settings = fs.readFileSync(path.join(root, "src/app/api/settings/route.ts"), "utf8");
