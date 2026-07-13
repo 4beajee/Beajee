@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -69,7 +70,7 @@ const OPTION_ACTIVE = "bg-white/[0.07] text-white ring-white/[0.18]";
 const OPTION_IDLE =
   "bg-neutral-950/38 text-neutral-400 ring-white/[0.07] hover:bg-neutral-900/70 hover:text-neutral-200 hover:ring-white/[0.13]";
 const LINK_INPUT_CLASS =
-  "rounded-xl bg-white/[0.035] shadow-none ring-0 hover:bg-white/[0.055] hover:ring-0 focus-within:bg-white/[0.07] focus-within:ring-0 focus-within:shadow-[0_0_0_2px_rgba(255,255,255,0.22)]";
+  "rounded-xl bg-transparent shadow-none ring-0 hover:bg-transparent hover:ring-0 focus-within:bg-transparent focus-within:ring-0 focus-within:shadow-none";
 
 /* ── Types ── */
 
@@ -972,19 +973,15 @@ function SocialProfileField({
 function SocialProfileLogo({ provider }: { provider: "linkedin" | "twitter" }) {
   if (provider === "linkedin") {
     return (
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[#0A66C2]" aria-hidden="true">
-        <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
-          <path d="M5.34 3.5A1.84 1.84 0 1 1 5.34 7.18 1.84 1.84 0 0 1 5.34 3.5ZM3.75 8.62h3.18V20.5H3.75V8.62Zm5.1 0h3.05v1.62h.04c.43-.8 1.47-1.95 3.58-1.95 3.83 0 4.54 2.52 4.54 5.8v6.41h-3.18v-5.68c0-1.36-.03-3.1-1.9-3.1-1.89 0-2.18 1.47-2.18 3v5.78H8.85V8.62Z" />
-        </svg>
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center" aria-hidden="true">
+        <Image src="/social-icons/linkedin.png" alt="" width={20} height={20} className="h-5 w-5 rounded-[5px]" />
       </span>
     );
   }
 
   return (
-    <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[#1D9BF0]" aria-hidden="true">
-      <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
-        <path d="M23.03 4.79c-.8.36-1.67.6-2.58.71a4.5 4.5 0 0 0 1.97-2.48 8.96 8.96 0 0 1-2.85 1.09 4.49 4.49 0 0 0-7.76 3.07c0 .35.04.69.12 1.02A12.74 12.74 0 0 1 2.67 3.5a4.49 4.49 0 0 0 1.39 5.99 4.45 4.45 0 0 1-2.03-.56v.06a4.5 4.5 0 0 0 3.6 4.41 4.52 4.52 0 0 1-2.03.08 4.5 4.5 0 0 0 4.2 3.12A9.04 9.04 0 0 1 1 18.47 12.75 12.75 0 0 0 7.88 20.5c8.25 0 12.76-6.83 12.76-12.76l-.02-.58a9.07 9.07 0 0 0 2.24-2.37l.17-.3Z" />
-      </svg>
+    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] bg-black" aria-hidden="true">
+      <Image src="/social-icons/twitter.png" alt="" width={20} height={20} className="h-3.5 w-3.5 object-contain invert" />
     </span>
   );
 }
