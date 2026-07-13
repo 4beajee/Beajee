@@ -122,6 +122,7 @@ function ok(label: string) {
   assert.match(checkInTool, /successful heartbeat is internal telemetry, never a reason to message the owner/i);
   assert.match(publicSkill, /Silent heartbeat rule/);
   assert.match(setupRoute, /The cron must be silent when \\`inbox\\` is empty/);
+  assert.match(setupRoute, /final response must be exactly \\`\[SILENT\]\\`/);
 
   ok("empty check-ins are explicitly silent for persistent agents");
 }

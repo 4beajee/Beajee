@@ -238,7 +238,6 @@ export default function ChatPage() {
   const [chat, setChat] = useState<ChatData | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [advicePresetId, setAdvicePresetId] = useState<string>(MODEL_ADVICE_PRESETS[0]?.id ?? "");
   const [submittingAdvice, setSubmittingAdvice] = useState(false);
@@ -574,30 +573,58 @@ export default function ChatPage() {
   }
 
   async function handleSend() {
-    if (!newMessage.trim() || !ownerId || sending) return;
-    setSending(true);
+    const content = newMessage.trim();
+    if (!content || !ownerId) return;
+
+    const optimisticMessage: Message = {
+      id: `optimistic-${crypto.randomUUID()}`,
+      fromOwner: ownerId,
+      kind: "HUMAN",
+      adviceSessionId: null,
+      content,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Show the message immediately; the network request completes in the background.
+    setChat((current) =>
+      current ? { ...current, messages: [...current.messages, optimisticMessage] } : current
+    );
+    setNewMessage("");
+    setError(null);
+    markAsRead();
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId, content: newMessage.trim() }),
+        body: JSON.stringify({ matchId, content }),
       });
 
       const msg = await res.json();
-      if (msg.error) {
-        setError(msg.error);
-        return;
-      }
+      if (!res.ok || msg.error) throw new Error(msg.error ?? "Failed to send message");
 
-      if (chat) {
-        setChat({ ...chat, messages: [...chat.messages, msg] });
-        messageIdsRef.current.add(msg.id);
-      }
-      setNewMessage("");
-      markAsRead();
-    } finally {
-      setSending(false);
+      setChat((current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          messages: current.messages.map((message) =>
+            message.id === optimisticMessage.id ? msg : message
+          ),
+        };
+      });
+      messageIdsRef.current.delete(optimisticMessage.id);
+      messageIdsRef.current.add(msg.id);
+    } catch (err) {
+      setChat((current) =>
+        current
+          ? {
+              ...current,
+              messages: current.messages.filter((message) => message.id !== optimisticMessage.id),
+            }
+          : current
+      );
+      setNewMessage((current) => current || content);
+      setError(err instanceof Error ? err.message : "Failed to send message");
     }
   }
 
@@ -1076,30 +1103,11 @@ export default function ChatPage() {
           />
           <button
             onClick={handleSend}
-            disabled={sending || !newMessage.trim()}
+            disabled={!newMessage.trim()}
             aria-label={t("common.send")}
             className="relative px-5 py-3 text-sm font-semibold bg-white text-black rounded-2xl hover:bg-neutral-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <span className={sending ? "invisible" : ""}>{t("common.send")}</span>
-            {sending && (
-              <span
-                className="absolute inset-0 flex items-center justify-center gap-1"
-                aria-hidden="true"
-              >
-                <span
-                  className="w-1 h-1 bg-black rounded-full animate-dot-blink"
-                  style={{ animationDelay: "0ms" }}
-                />
-                <span
-                  className="w-1 h-1 bg-black rounded-full animate-dot-blink"
-                  style={{ animationDelay: "200ms" }}
-                />
-                <span
-                  className="w-1 h-1 bg-black rounded-full animate-dot-blink"
-                  style={{ animationDelay: "400ms" }}
-                />
-              </span>
-            )}
+            {t("common.send")}
           </button>
         </div>
       </section>

@@ -61,7 +61,7 @@ export function getReconnectionGuide(platform: AgentPlatformValue): Reconnection
         pasteTarget: "Open a Hermes chat and paste the setup prompt as one message.",
         setupNotes: [
           "Hermes adds Beajee to ~/.hermes/config.yaml and reloads MCP without exposing the credential in chat output.",
-          "Keep the Hermes gateway running and let Hermes create the recurring check-in job for background delivery.",
+          "Keep the Hermes gateway running and let Hermes create the recurring check-in job for background delivery; an empty inbox must end with exactly [SILENT], so Hermes does not send a cron response.",
         ],
         verificationSteps: [
           "Run hermes mcp test beajee or ask Hermes to verify the server.",
