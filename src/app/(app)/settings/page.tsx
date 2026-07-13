@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -70,7 +69,7 @@ const OPTION_ACTIVE = "bg-white/[0.07] text-white ring-white/[0.18]";
 const OPTION_IDLE =
   "bg-neutral-950/38 text-neutral-400 ring-white/[0.07] hover:bg-neutral-900/70 hover:text-neutral-200 hover:ring-white/[0.13]";
 const LINK_INPUT_CLASS =
-  "rounded-xl bg-transparent shadow-none ring-0 hover:bg-transparent hover:ring-0 focus-within:bg-transparent focus-within:ring-0 focus-within:shadow-none";
+  "rounded-xl !bg-neutral-800/80 !shadow-none !ring-0 hover:!bg-neutral-800/80 hover:!ring-0 focus-within:!bg-neutral-800/80 focus-within:!shadow-none focus-within:!ring-0";
 
 /* ── Types ── */
 
@@ -853,7 +852,7 @@ function SchedulingUrlSection({
     <Section title={t("settings.schedulingTitle")}>
       <p className={cx(sectionDescriptionClass, "mb-4")}>{t("settings.schedulingDesc")}</p>
       <FormField label={t("settings.schedulingFieldLabel")} inputId={fieldId} helperText={!err ? t("settings.schedulingFieldHelp") : undefined} errorText={err} successText={saved ? t("common.saved") : undefined}>
-        <TextInput id={fieldId} type="url" value={value} onChange={(e) => setValue(e.target.value)} placeholder="https://cal.com/you/30min" autoComplete="url" inputMode="url" tone={err ? "error" : saved ? "success" : "default"} describedBy={`${fieldId}-message`} leading={<LinkIcon />} className={err ? undefined : LINK_INPUT_CLASS} />
+        <TextInput id={fieldId} type="url" value={value} onChange={(e) => setValue(e.target.value)} placeholder="https://cal.com/you/30min" autoComplete="url" inputMode="url" tone={err ? "error" : saved ? "success" : "default"} describedBy={`${fieldId}-message`} leading={<LinkIcon />} className={LINK_INPUT_CLASS} />
       </FormField>
       <div className="mt-3 flex items-center gap-3">
         <button type="button" onClick={submit} disabled={saving} className={PRIMARY_BUTTON_SM}>
@@ -964,7 +963,7 @@ function SocialProfileField({
         tone={errorText ? "error" : "default"}
         describedBy={`${fieldId}-message`}
         leading={<SocialProfileLogo provider={provider} />}
-        className={errorText ? undefined : LINK_INPUT_CLASS}
+        className={LINK_INPUT_CLASS}
       />
     </FormField>
   );
@@ -974,14 +973,14 @@ function SocialProfileLogo({ provider }: { provider: "linkedin" | "twitter" }) {
   if (provider === "linkedin") {
     return (
       <span className="flex h-5 w-5 shrink-0 items-center justify-center" aria-hidden="true">
-        <Image src="/social-icons/linkedin.png" alt="" width={20} height={20} className="h-5 w-5 rounded-[5px]" />
+        <img src="/social-icons/linkedin.png" alt="" className="h-5 w-5 rounded-[5px]" />
       </span>
     );
   }
 
   return (
     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] bg-black" aria-hidden="true">
-      <Image src="/social-icons/twitter.png" alt="" width={20} height={20} className="h-3.5 w-3.5 object-contain invert" />
+      <img src="/social-icons/twitter.png" alt="" className="h-3.5 w-3.5 object-contain invert" />
     </span>
   );
 }
