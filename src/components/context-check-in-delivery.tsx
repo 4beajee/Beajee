@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { ContextQuestionDeliveryMode } from "@/lib/agent-platform";
+import { TelegramLogo } from "@/components/telegram-connect-card";
 
 export function ContextCheckInDelivery({
   mode,
@@ -104,8 +105,9 @@ export function ContextCheckInDelivery({
               type="button"
               onClick={connect}
               disabled={loading || awaitingVerification}
-              className="rounded-xl bg-white px-3.5 py-2 text-xs font-semibold text-black transition hover:bg-neutral-200 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-semibold text-black transition hover:bg-neutral-200 disabled:opacity-50"
             >
+              <TelegramLogo />
               {loading ? "Opening…" : awaitingVerification ? "Waiting for Telegram…" : "Sync Telegram with Web App"}
             </button>
             <button

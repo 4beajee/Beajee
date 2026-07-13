@@ -134,7 +134,7 @@ export function TelegramConnectCard({
   );
 }
 
-function TelegramLogo() {
+export function TelegramLogo() {
   return (
     <svg
       aria-hidden="true"
