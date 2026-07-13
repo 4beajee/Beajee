@@ -25,4 +25,9 @@ for (const tool of [
   assert.doesNotMatch(source, /\n\s+agent_id:\s*\{/);
 }
 
+const checkIn = fs.readFileSync(path.join(root, "src/lib/mcp/tools/check-in.ts"), "utf8");
+assert.match(checkIn, /initiatorAgentId: \{ not: agent\.id \}/);
+assert.match(checkIn, /OR: \[\{ agentAId: agent\.id \}, \{ agentBId: agent\.id \}\]/);
+assert.match(checkIn, /n\.initiatorAgentId === n\.agentAId \? n\.agentA : n\.agentB/);
+
 console.log("PASS: negotiation roles and authority follow the persisted initiator");

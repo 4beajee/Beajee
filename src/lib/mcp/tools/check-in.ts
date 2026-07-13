@@ -98,7 +98,8 @@ export const checkInTool = {
     const incomingNegotiations = await prisma.match.findMany({
       where: {
         status: "NEGOTIATING",
-        agentBId: agent.id,
+        initiatorAgentId: { not: agent.id },
+        OR: [{ agentAId: agent.id }, { agentBId: agent.id }],
         negotiationLogs: {
           none: {
             agentId: agent.id,
@@ -109,7 +110,23 @@ export const checkInTool = {
       select: {
         id: true,
         overlapSummary: true,
+        initiatorAgentId: true,
+        agentAId: true,
         agentA: {
+          select: {
+            agentId: true,
+            displayName: true,
+            context: {
+              select: {
+                currentWork: true,
+                expertise: true,
+                lookingFor: true,
+                networkingGoal: true,
+              },
+            },
+          },
+        },
+        agentB: {
           select: {
             agentId: true,
             displayName: true,
@@ -236,16 +253,18 @@ export const checkInTool = {
                 framing: m.agentAId === agent.id ? m.framingForA : m.framingForB,
                 proposed_at: m.createdAt,
               })),
-              incoming_negotiations: incomingNegotiations.map((n) => ({
+              incoming_negotiations: incomingNegotiations.map((n) => {
+                const initiator = n.initiatorAgentId === n.agentAId ? n.agentA : n.agentB;
+                return {
                 match_id: n.id,
-                from_agent: n.agentA.agentId,
-                from_display_name: n.agentA.displayName,
-                their_context: n.agentA.context
+                from_agent: initiator.agentId,
+                from_display_name: initiator.displayName,
+                their_context: initiator.context
                   ? {
-                      current_work: n.agentA.context.currentWork,
-                      expertise: n.agentA.context.expertise,
-                      looking_for: n.agentA.context.lookingFor,
-                      networking_goal: n.agentA.context.networkingGoal,
+                      current_work: initiator.context.currentWork,
+                      expertise: initiator.context.expertise,
+                      looking_for: initiator.context.lookingFor,
+                      networking_goal: initiator.context.networkingGoal,
                     }
                   : null,
                 their_reasoning: n.negotiationLogs.map((l) => ({
@@ -253,7 +272,8 @@ export const checkInTool = {
                   content: l.content,
                 })),
                 initiated_at: n.createdAt,
-              })),
+                };
+              }),
               recommended_actions: recommendedActions,
             },
             null,
