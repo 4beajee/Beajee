@@ -1,6 +1,5 @@
 // Regression: ISSUE-003 — obsolete and pseudo-region codes appeared as countries
-// Found by /qa on 2026-07-02
-// Report: .gstack/qa-reports/qa-report-localhost-2026-07-02.md
+// Found during QA on 2026-07-02
 
 import assert from "node:assert/strict";
 import { getCountryOptions, isSupportedCountryCode } from "../src/lib/countries";

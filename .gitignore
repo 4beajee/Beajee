@@ -60,7 +60,6 @@ next-env.d.ts
 /src/generated/prisma
 
 # tooling
-.gstack/
 # ignore local Claude tooling, but version-control the auto-commit automation
 .claude/*
 !.claude/settings.json

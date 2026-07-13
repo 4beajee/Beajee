@@ -17,15 +17,6 @@ container when application code changed.
 The DigitalOcean droplet running Docker Compose behind nginx is the current
 production target. Older Vercel references are not production instructions.
 
-## gstack
-
-Use the `/browse` skill from gstack for web browsing. Never use
-`mcp__claude-in-chrome__*` tools.
-
-Available gstack skills include `/plan-ceo-review`, `/plan-eng-review`,
-`/review`, `/ship`, `/browse`, `/qa`, `/setup-browser-cookies`, and
-`/retro`.
-
 ## Product Boundary
 
 Beajee is an AI-powered personal networking platform where an owner's agent
