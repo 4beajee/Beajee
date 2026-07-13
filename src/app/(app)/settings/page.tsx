@@ -972,15 +972,15 @@ function SocialProfileField({
 function SocialProfileLogo({ provider }: { provider: "linkedin" | "twitter" }) {
   if (provider === "linkedin") {
     return (
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center" aria-hidden="true">
-        <img src="/social-icons/linkedin.png" alt="" className="h-5 w-5 rounded-[5px]" />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center" aria-hidden="true">
+        <img src="/social-icons/linkedin.png" alt="" className="h-10 w-10 rounded-[10px]" />
       </span>
     );
   }
 
   return (
-    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] bg-black" aria-hidden="true">
-      <img src="/social-icons/twitter.png" alt="" className="h-3.5 w-3.5 object-contain invert" />
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-black" aria-hidden="true">
+      <img src="/social-icons/twitter.png" alt="" className="h-7 w-7 object-contain invert" />
     </span>
   );
 }
