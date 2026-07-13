@@ -33,6 +33,7 @@ const tests = [
   "tests/public-match-privacy.test.ts",
   "tests/public-search-privacy.test.ts",
   "tests/beacon-privacy.test.ts",
+  "tests/inbox-idempotency.test.ts",
   "tests/sensitive-topics.test.ts",
   "tests/setup-credentials.test.ts",
   "tests/route-policy.test.ts",

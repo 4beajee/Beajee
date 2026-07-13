@@ -522,6 +522,7 @@ export async function proposeMatch(matchId: string, proposingAgentExternalId?: s
       agentId: match.agentAId,
       type: "MATCH_PROPOSED",
       referenceId: matchId,
+      dedupeKey: `match:${matchId}:proposed:${match.agentAId}`,
       payload: {
         match_id: matchId,
         other_agent_id: match.agentB.agentId,
@@ -541,6 +542,7 @@ export async function proposeMatch(matchId: string, proposingAgentExternalId?: s
       agentId: match.agentBId,
       type: "MATCH_PROPOSED",
       referenceId: matchId,
+      dedupeKey: `match:${matchId}:proposed:${match.agentBId}`,
       payload: {
         match_id: matchId,
         other_agent_id: match.agentA.agentId,
@@ -746,6 +748,7 @@ export async function confirmMatch(matchId: string, ownerId: string) {
         agentId: confirmation.agentAId,
         type: "MATCH_CONFIRMED",
         referenceId: matchId,
+        dedupeKey: `match:${matchId}:confirmed:${confirmation.agentAId}`,
         payload: {
           match_id: matchId,
           chat_id: chat.id,
@@ -762,6 +765,7 @@ export async function confirmMatch(matchId: string, ownerId: string) {
         agentId: confirmation.agentBId,
         type: "MATCH_CONFIRMED",
         referenceId: matchId,
+        dedupeKey: `match:${matchId}:confirmed:${confirmation.agentBId}`,
         payload: {
           match_id: matchId,
           chat_id: chat.id,

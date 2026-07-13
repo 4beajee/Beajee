@@ -26,17 +26,32 @@ interface CreateArgs {
   agentId: string;
   type: InboxEventType;
   referenceId: string;
+  dedupeKey?: string;
   payload: Prisma.InputJsonValue;
 }
 
-export async function createInboxEvent(args: CreateArgs) {
-  return prisma.inboxEvent.create({
+export async function createInboxEvent(
+  args: CreateArgs,
+  db: Prisma.TransactionClient | typeof prisma = prisma
+) {
+  const data = {
+    ownerId: args.ownerId,
+    agentId: args.agentId,
+    type: args.type,
+    referenceId: args.referenceId,
+    dedupeKey: args.dedupeKey,
+    payload: args.payload,
+  };
+  if (args.dedupeKey) {
+    return db.inboxEvent.upsert({
+      where: { dedupeKey: args.dedupeKey },
+      create: data,
+      update: {},
+    });
+  }
+  return db.inboxEvent.create({
     data: {
-      ownerId: args.ownerId,
-      agentId: args.agentId,
-      type: args.type,
-      referenceId: args.referenceId,
-      payload: args.payload,
+      ...data,
     },
   });
 }

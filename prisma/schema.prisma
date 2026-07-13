@@ -691,6 +691,7 @@ model InboxEvent {
   agentId     String    @map("agent_id") // internal Agent.id
   type        String // NEW_MESSAGE | MATCH_PROPOSED | MATCH_CONFIRMED | BEACON_TRIGGERED | FRESHNESS_WARNING
   referenceId String    @map("reference_id") // matchId | beaconId | agentId
+  dedupeKey   String?   @unique @map("dedupe_key") // stable key for exactly-once delivery
   payload     Json // self-contained fields for the agent
   createdAt   DateTime  @default(now()) @map("created_at")
   deliveredAt DateTime? @map("delivered_at") // first time check_in returned this event
