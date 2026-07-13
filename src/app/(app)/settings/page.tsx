@@ -973,15 +973,15 @@ function SocialProfileLogo({ provider }: { provider: "linkedin" | "twitter" }) {
   if (provider === "linkedin") {
     return (
       <span className="relative flex h-10 w-10 shrink-0 items-center justify-center" aria-hidden="true">
-        <img src="/social-icons/linkedin.png" alt="" className="absolute h-[60px] w-[60px] rounded-[15px]" />
+        <img src="/social-icons/linkedin.png" alt="" className="absolute h-[27px] w-[27px] rounded-[7px]" />
       </span>
     );
   }
 
   return (
     <span className="relative flex h-10 w-10 shrink-0 items-center justify-center" aria-hidden="true">
-      <span className="absolute flex h-[60px] w-[60px] items-center justify-center rounded-[15px] bg-black">
-        <img src="/social-icons/twitter.png" alt="" className="h-[42px] w-[42px] object-contain invert" />
+      <span className="absolute flex h-[27px] w-[27px] items-center justify-center rounded-[7px] bg-black">
+        <img src="/social-icons/twitter.png" alt="" className="h-[19px] w-[19px] object-contain invert" />
       </span>
     </span>
   );
