@@ -115,7 +115,7 @@ async function main() {
   }) as typeof fetch;
   const wrongBot = await sendDailyStatsTelegramMessage("private stats");
   assert.equal(wrongBot.sent, false);
-  assert.match(wrongBot.error ?? "", /@gennety_alerts_bot/);
+  assert.match(wrongBot.error ?? "", /@beajee_alerts_bot/);
   assert.equal(telegramCalls.length, 1);
   globalThis.fetch = previousFetch;
   ok("a token for the user-facing bot is rejected before report delivery");

@@ -1,6 +1,6 @@
 # Daily Telegram Statistics
 
-The backend sends one simple daily report to the private `@gennety_alerts_bot`.
+The backend sends one simple daily report to the private `@beajee_alerts_bot`.
 The report uses direct PostgreSQL counts only; it does not call an AI model.
 
 ## Metrics
@@ -19,7 +19,7 @@ previously removed without a durable aggregate event.
 
 The report requires `TELEGRAM_ALERTS_BOT_TOKEN` and `TELEGRAM_ALERTS_CHAT_ID`.
 Before sending, the backend calls Telegram `getMe` and refuses any token that does not
-belong to `@gennety_alerts_bot`. `TELEGRAM_BOT_TOKEN` remains exclusive to the
+belong to `@beajee_alerts_bot`. `TELEGRAM_BOT_TOKEN` remains exclusive to the
 user-facing Beajee bot.
 
 OpenClaw operator reports use their own optional credentials. Immediate registration

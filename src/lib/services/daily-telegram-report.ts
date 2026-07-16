@@ -5,7 +5,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const REPORT_EVENT_TYPE = "DAILY_TELEGRAM_STATS_SENT";
 const DELETION_EVENT_TYPE = "ACCOUNT_DELETED";
 const REPORT_TIME_ZONE = "America/Los_Angeles";
-const EXPECTED_ALERTS_BOT_USERNAME = "gennety_alerts_bot";
+const EXPECTED_ALERTS_BOT_USERNAME = "beajee_alerts_bot";
 const TELEGRAM_TIMEOUT_MS = 8_000;
 
 export interface DailyTelegramStats {

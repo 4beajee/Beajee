@@ -144,7 +144,7 @@ Optional but recommended:
 | `RESEND_API_KEY` | Resend API key for password reset and account security emails |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
 | `TELEGRAM_BOT_TOKEN` | Personal user-facing Telegram bot |
-| `TELEGRAM_ALERTS_BOT_TOKEN` / `TELEGRAM_ALERTS_CHAT_ID` | Daily statistics through `@gennety_alerts_bot` |
+| `TELEGRAM_ALERTS_BOT_TOKEN` / `TELEGRAM_ALERTS_CHAT_ID` | Daily statistics through `@beajee_alerts_bot` |
 | `CRON_SECRET` | Secret for authenticating cron job requests |
 
 ---

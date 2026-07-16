@@ -246,7 +246,7 @@ Telegram topics are personal: `matches`, `dates`, `settings`, and
 `agent_log`. There is no Team Space topic.
 
 The user-facing Telegram bot and the private daily-statistics bot are separate.
-`@gennety_alerts_bot` uses dedicated credentials and must never reuse the personal
+`@beajee_alerts_bot` uses dedicated credentials and must never reuse the personal
 bot token.
 
 ## MCP Tools
